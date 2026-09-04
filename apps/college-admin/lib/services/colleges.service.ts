@@ -368,6 +368,53 @@ export async function updateStaffMember(
   return api.patch<StaffMemberDto>(`/api/v1/college-admin/staff/${id}`, data);
 }
 
+export interface StaffSessionDto {
+  id: string;
+  userAgent: string | null;
+  ipAddress: string | null;
+  lastActiveAt: string;
+  createdAt: string;
+  expiresAt: string;
+  isCurrent: boolean;
+}
+
+export interface AllStaffSessionDto extends StaffSessionDto {
+  staff: {
+    id: string;
+    fullName: string;
+    email: string;
+    avatarUrl: string | null;
+    roleName: string;
+  };
+}
+
+export async function getStaffSessions(
+  staffId: string,
+): Promise<StaffSessionDto[]> {
+  return api.get<StaffSessionDto[]>(
+    `/api/v1/college-admin/staff/${staffId}/sessions`,
+  );
+}
+
+export async function getAllStaffSessions(): Promise<AllStaffSessionDto[]> {
+  return api.get<AllStaffSessionDto[]>("/api/v1/college-admin/staff/sessions");
+}
+
+export async function forceLogoutStaffSession(
+  staffId: string,
+  sessionId: string,
+): Promise<void> {
+  return api.delete(
+    `/api/v1/college-admin/staff/${staffId}/sessions/${sessionId}`,
+  );
+}
+
+export async function forceLogoutAllStaffSessions(
+  staffId: string,
+): Promise<void> {
+  return api.delete(`/api/v1/college-admin/staff/${staffId}/sessions`);
+}
+
 export interface HostelRoomTypeDto {
   id: string;
   name: string;

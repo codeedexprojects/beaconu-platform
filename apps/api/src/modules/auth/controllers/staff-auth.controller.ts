@@ -57,6 +57,10 @@ export class StaffAuthController {
     const session = await AuthRepository.createSession({
       userId: staff.id,
       userType: USER_TYPES.STAFF,
+      ipAddress: req.ip,
+      deviceInfo: req.headers["user-agent"]
+        ? { userAgent: req.headers["user-agent"] }
+        : undefined,
     });
 
     await CollegeProvisioningRepository.updateLastLogin(staff.id);
@@ -150,6 +154,10 @@ export class StaffAuthController {
     const session = await AuthRepository.createSession({
       userId: staff.id,
       userType: USER_TYPES.STAFF,
+      ipAddress: req.ip,
+      deviceInfo: req.headers["user-agent"]
+        ? { userAgent: req.headers["user-agent"] }
+        : undefined,
     });
 
     const accessToken = JwtUtils.generateAccessToken({

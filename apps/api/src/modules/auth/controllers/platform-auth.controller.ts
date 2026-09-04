@@ -5,7 +5,10 @@ import { AuthService } from "../services/auth.service";
 
 export class PlatformAuthController {
   static async login(req: Request, res: Response) {
-    const result = await AuthService.loginPlatformAdmin(req.body);
+    const result = await AuthService.loginPlatformAdmin(req.body, {
+      ipAddress: req.ip,
+      userAgent: req.headers["user-agent"],
+    });
     res.cookie(
       "refreshToken",
       result.tokens.refreshToken,

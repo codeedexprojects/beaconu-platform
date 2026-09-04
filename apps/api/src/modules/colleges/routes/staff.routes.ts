@@ -55,6 +55,13 @@ router.get(
   CollegeRolesController.listStaff,
 );
 
+router.get(
+  "/staff/sessions",
+  ...staffAuth,
+  authorize("staff.sessions.manage"),
+  CollegeRolesController.listAllStaffSessions,
+);
+
 router.post(
   "/staff",
   ...staffWriteAuth,
@@ -67,6 +74,27 @@ router.patch(
   ...staffWriteAuth,
   authorize("staff.manage"),
   CollegeRolesController.updateStaff,
+);
+
+router.get(
+  "/staff/:id/sessions",
+  ...staffAuth,
+  authorize("staff.sessions.manage"),
+  CollegeRolesController.listStaffSessions,
+);
+
+router.delete(
+  "/staff/:id/sessions/:sessionId",
+  ...staffWriteAuth,
+  authorize("staff.sessions.manage"),
+  CollegeRolesController.forceLogoutStaffSession,
+);
+
+router.delete(
+  "/staff/:id/sessions",
+  ...staffWriteAuth,
+  authorize("staff.sessions.manage"),
+  CollegeRolesController.forceLogoutAllStaffSessions,
 );
 
 export default router;

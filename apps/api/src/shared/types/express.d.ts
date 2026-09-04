@@ -6,6 +6,7 @@ declare global {
       requestId?: string;
       userId?: string;
       userType?: UserType;
+      sessionId?: string;
       collegeId?: string;
       roleId?: string;
       permissions?: string[];

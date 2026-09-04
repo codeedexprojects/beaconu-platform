@@ -38,6 +38,7 @@ import {
   Wallet,
   TrendingUp,
   Headset,
+  MonitorSmartphone,
   Phone,
 } from "lucide-react";
 import { useAuthStore } from "@/store";
@@ -248,6 +249,7 @@ export default function DashboardLayout({
     if (path.includes("/setup/academics")) return "academics.view";
     if (path.includes("/quotas")) return "academics.view";
     if (path.includes("/roles")) return "staff.view";
+    if (path.includes("/staff/sessions")) return "staff.sessions.manage";
     if (path.includes("/staff")) return "staff.view";
     if (path.includes("/hostels")) return "hostel.view";
     if (path.includes("/libraries")) return "library.view";
@@ -372,6 +374,13 @@ export default function DashboardLayout({
                     path: "/staff",
                     icon: Users,
                     permission: "staff.view",
+                    exactMatch: true,
+                  },
+                  {
+                    name: "Active Sessions",
+                    path: "/staff/sessions",
+                    icon: MonitorSmartphone,
+                    permission: "staff.sessions.manage",
                   },
                   {
                     name: "Hostels Occupancy",
@@ -562,10 +571,15 @@ export default function DashboardLayout({
                   .filter((item) => hasPermission(item.permission))
                   .map((item) => {
                     const Icon = item.icon;
-                    // Dashboard root "/" only active at exact root; others active when path starts with the item path
+                    // Dashboard root "/" and any item marked exactMatch (e.g.
+                    // "/staff", which now has an unrelated sibling route at
+                    // "/staff/sessions" that must not also light this up)
+                    // are only active at their exact path; others active
+                    // when the path starts with the item path (nested
+                    // sub-pages of that section).
                     const isActive =
-                      item.path === "/"
-                        ? appPathname === "/"
+                      item.path === "/" || "exactMatch" in item
+                        ? appPathname === item.path
                         : appPathname === item.path ||
                           appPathname.startsWith(`${item.path}/`);
                     const children =

@@ -22,7 +22,9 @@ import {
   Trash2,
   Ban,
   CheckCircle,
+  MonitorSmartphone,
 } from "lucide-react";
+import Link from "next/link";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -168,6 +170,12 @@ export default function PlatformAdminsPage() {
                                   onClick={() => handleEdit(admin)}
                                 >
                                   <Pencil className="h-4 w-4 mr-2" /> Edit
+                                </DropdownMenuItem>
+                                <DropdownMenuItem asChild>
+                                  <Link href="/platform-admins/sessions">
+                                    <MonitorSmartphone className="h-4 w-4 mr-2" />
+                                    View Sessions
+                                  </Link>
                                 </DropdownMenuItem>
                                 <DropdownMenuItem
                                   onClick={() =>

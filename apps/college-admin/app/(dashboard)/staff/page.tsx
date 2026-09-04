@@ -19,6 +19,7 @@ import {
   Eye,
   EyeOff,
   Pencil,
+  MonitorSmartphone,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -51,6 +52,7 @@ import {
 } from "@/hooks/use-roles";
 import { useAuthStore } from "@/store";
 import type { StaffMemberDto } from "@/lib/services/colleges.service";
+import { StaffSessionsDialog } from "@/components/staff/staff-sessions-dialog";
 
 const staffSchema = z.object({
   fullName: z
@@ -86,6 +88,9 @@ export default function StaffDirectoryPage() {
   const canManageStaff =
     user?.roleSlug === "college_admin" ||
     (user?.permissions?.includes("staff.manage") ?? false);
+  const canManageSessions =
+    user?.roleSlug === "college_admin" ||
+    (user?.permissions?.includes("staff.sessions.manage") ?? false);
 
   const isSelf = (memberId: string) => memberId === user?.id;
 
@@ -96,6 +101,9 @@ export default function StaffDirectoryPage() {
   const [showInviteModal, setShowInviteModal] = useState(false);
   const [showStaffPassword, setShowStaffPassword] = useState(false);
   const [editTarget, setEditTarget] = useState<StaffMemberDto | null>(null);
+  const [sessionsTarget, setSessionsTarget] = useState<StaffMemberDto | null>(
+    null,
+  );
   const [statusTarget, setStatusTarget] = useState<{
     id: string;
     name: string;
@@ -325,39 +333,52 @@ export default function StaffDirectoryPage() {
                     </TableCell>
 
                     <TableCell className="text-right pr-6">
-                      {canManageStaff && !isSelf(member.id) ? (
-                        <div className="flex items-center justify-end gap-1">
+                      <div className="flex items-center justify-end gap-1">
+                        {canManageSessions && (
                           <Button
                             variant="ghost"
                             size="sm"
                             className="h-7 px-2.5 text-xs text-muted-foreground hover:text-foreground"
-                            onClick={() => handleOpenEdit(member)}
+                            onClick={() => setSessionsTarget(member)}
                           >
-                            <Pencil className="mr-1 h-3 w-3" />
-                            Edit
+                            <MonitorSmartphone className="mr-1 h-3 w-3" />
+                            Sessions
                           </Button>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className={`text-xs px-2.5 py-1 h-7 ${
-                              member.status === "active"
-                                ? "text-amber-600 hover:text-amber-700"
-                                : "text-green-600 hover:text-green-700"
-                            }`}
-                            onClick={() =>
-                              handleToggleStatus(
-                                member.id,
-                                member.status,
-                                member.fullName,
-                              )
-                            }
-                          >
-                            {member.status === "active"
-                              ? "Suspend"
-                              : "Re-activate"}
-                          </Button>
-                        </div>
-                      ) : null}
+                        )}
+                        {canManageStaff && !isSelf(member.id) ? (
+                          <>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="h-7 px-2.5 text-xs text-muted-foreground hover:text-foreground"
+                              onClick={() => handleOpenEdit(member)}
+                            >
+                              <Pencil className="mr-1 h-3 w-3" />
+                              Edit
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className={`text-xs px-2.5 py-1 h-7 ${
+                                member.status === "active"
+                                  ? "text-amber-600 hover:text-amber-700"
+                                  : "text-green-600 hover:text-green-700"
+                              }`}
+                              onClick={() =>
+                                handleToggleStatus(
+                                  member.id,
+                                  member.status,
+                                  member.fullName,
+                                )
+                              }
+                            >
+                              {member.status === "active"
+                                ? "Suspend"
+                                : "Re-activate"}
+                            </Button>
+                          </>
+                        ) : null}
+                      </div>
                     </TableCell>
                   </TableRow>
                 ))}
@@ -614,6 +635,14 @@ export default function StaffDirectoryPage() {
         onCancel={() => setStatusTarget(null)}
         onConfirm={confirmToggleStatus}
       />
+
+      {sessionsTarget && (
+        <StaffSessionsDialog
+          staffId={sessionsTarget.id}
+          staffName={sessionsTarget.fullName}
+          onClose={() => setSessionsTarget(null)}
+        />
+      )}
     </div>
   );
 }

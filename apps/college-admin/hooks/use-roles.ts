@@ -11,6 +11,10 @@ import {
   getStaffDirectory,
   inviteStaffMember,
   updateStaffMember,
+  getStaffSessions,
+  getAllStaffSessions,
+  forceLogoutStaffSession,
+  forceLogoutAllStaffSessions,
   type CreateCollegeRoleInput,
   type UpdateCollegeRoleInput,
   type InviteStaffInput,
@@ -110,5 +114,56 @@ export function useUpdateStaffMember() {
     onError: (error) => {
       toast.error(getErrorMessage(error));
     },
+  });
+}
+
+export function useStaffSessions(staffId: string, enabled = true) {
+  return useQuery({
+    queryKey: QUERY_KEYS.staffSessions(staffId),
+    queryFn: () => getStaffSessions(staffId),
+    enabled: enabled && !!staffId,
+  });
+}
+
+export function useForceLogoutStaffSession(staffId: string) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (sessionId: string) =>
+      forceLogoutStaffSession(staffId, sessionId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: QUERY_KEYS.staffSessions(staffId),
+      });
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.allStaffSessions });
+    },
+    onError: (error) => {
+      toast.error(getErrorMessage(error));
+    },
+  });
+}
+
+export function useForceLogoutAllStaffSessions(staffId: string) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: () => forceLogoutAllStaffSessions(staffId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: QUERY_KEYS.staffSessions(staffId),
+      });
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.allStaffSessions });
+    },
+    onError: (error) => {
+      toast.error(getErrorMessage(error));
+    },
+  });
+}
+
+export function useAllStaffSessions(enabled = true) {
+  return useQuery({
+    queryKey: QUERY_KEYS.allStaffSessions,
+    queryFn: getAllStaffSessions,
+    enabled,
   });
 }

@@ -38,3 +38,53 @@ export async function updatePlatformAdminStatus(
 export async function deletePlatformAdmin(id: string) {
   return api.delete(`/api/v1/admin/platform-admins/${id}`);
 }
+
+export interface PlatformAdminSessionDto {
+  id: string;
+  userAgent: string | null;
+  ipAddress: string | null;
+  lastActiveAt: string;
+  createdAt: string;
+  expiresAt: string;
+  isCurrent: boolean;
+}
+
+export async function getPlatformAdminSessions(
+  adminId: string,
+): Promise<PlatformAdminSessionDto[]> {
+  return api.get<PlatformAdminSessionDto[]>(
+    `/api/v1/admin/platform-admins/${adminId}/sessions`,
+  );
+}
+
+export async function forceLogoutPlatformAdminSession(
+  adminId: string,
+  sessionId: string,
+): Promise<void> {
+  return api.delete(
+    `/api/v1/admin/platform-admins/${adminId}/sessions/${sessionId}`,
+  );
+}
+
+export async function forceLogoutAllPlatformAdminSessions(
+  adminId: string,
+): Promise<void> {
+  return api.delete(`/api/v1/admin/platform-admins/${adminId}/sessions`);
+}
+
+export interface AllPlatformAdminSessionDto extends PlatformAdminSessionDto {
+  admin: {
+    id: string;
+    fullName: string;
+    email: string;
+    roleName: string;
+  };
+}
+
+export async function getAllPlatformAdminSessions(): Promise<
+  AllPlatformAdminSessionDto[]
+> {
+  return api.get<AllPlatformAdminSessionDto[]>(
+    "/api/v1/admin/platform-admins/sessions",
+  );
+}

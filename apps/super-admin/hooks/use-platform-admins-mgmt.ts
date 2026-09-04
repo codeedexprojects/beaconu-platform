@@ -54,3 +54,49 @@ export function usePlatformAdminMutations() {
 
   return { create, update, updateStatus, remove };
 }
+
+const sessionsKey = (adminId: string) => ["platform-admin-sessions", adminId];
+
+export function usePlatformAdminSessions(adminId: string, enabled = true) {
+  return useQuery({
+    queryKey: sessionsKey(adminId),
+    queryFn: () => service.getPlatformAdminSessions(adminId),
+    enabled: enabled && !!adminId,
+  });
+}
+
+export function useForceLogoutPlatformAdminSession(adminId: string) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (sessionId: string) =>
+      service.forceLogoutPlatformAdminSession(adminId, sessionId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: sessionsKey(adminId) });
+    },
+    onError: (err) => toast.error(getErrorMessage(err)),
+  });
+}
+
+export function useForceLogoutAllPlatformAdminSessions(adminId: string) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: () => service.forceLogoutAllPlatformAdminSessions(adminId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: sessionsKey(adminId) });
+      queryClient.invalidateQueries({ queryKey: allSessionsKey });
+    },
+    onError: (err) => toast.error(getErrorMessage(err)),
+  });
+}
+
+const allSessionsKey = ["platform-admin-sessions-all"];
+
+export function useAllPlatformAdminSessions(enabled = true) {
+  return useQuery({
+    queryKey: allSessionsKey,
+    queryFn: service.getAllPlatformAdminSessions,
+    enabled,
+  });
+}

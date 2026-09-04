@@ -1,9 +1,14 @@
 import * as dotenv from "dotenv";
 import { resolve } from "path";
 dotenv.config({ path: resolve(__dirname, "../../.env") });
-import { prisma } from "../src/index";
 
 async function main() {
+  // Imported dynamically, after dotenv.config() above has run — a static
+  // top-level import is hoisted before any code in this file executes, so
+  // ../src/index would read process.env.DATABASE_URL as undefined and the
+  // Prisma client would try to connect with no connection string at all.
+  const { prisma } = await import("../src/index");
+
   const platformPermissionsToSeed = [
     {
       code: "platform.roles.view",
@@ -20,6 +25,11 @@ async function main() {
     {
       code: "platform.admins.manage",
       description: "Manage platform administrators",
+    },
+    {
+      code: "platform.admins.sessions.manage",
+      description:
+        "View platform administrator active login sessions and force sign-out on specific devices",
     },
     {
       code: "platform.settings.view",
@@ -170,13 +180,10 @@ async function main() {
   }
 
   console.log("\nPlatform Admin permissions seeded successfully!");
+  await prisma.$disconnect();
 }
 
-main()
-  .catch((e) => {
-    console.error(e);
-    process.exit(1);
-  })
-  .finally(async () => {
-    await prisma.$disconnect();
-  });
+main().catch((e) => {
+  console.error(e);
+  process.exit(1);
+});

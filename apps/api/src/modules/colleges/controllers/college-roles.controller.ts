@@ -9,6 +9,8 @@ import {
   BadRequestError,
 } from "@/shared/errors";
 import { generateSlug, CryptoUtils } from "@/shared/utils";
+import { AuthService } from "@/modules/auth/services/auth.service";
+import type { UserType } from "@/modules/auth/auth.types";
 
 const COLLEGE_PERMISSIONS = [
   {
@@ -65,6 +67,11 @@ const COLLEGE_PERMISSIONS = [
     code: "staff.manage",
     description:
       "Manage staff member profiles, custom roles, and security permissions",
+  },
+  {
+    code: "staff.sessions.manage",
+    description:
+      "View staff active login sessions and force sign-out on specific devices",
   },
   {
     code: "finance.view",
@@ -568,5 +575,121 @@ export class CollegeRolesController {
     return res
       .status(200)
       .json(ApiResponse.success("Staff member updated", updated));
+  }
+
+  // ── Staff Sessions ───────────────────────────────────────────────────────
+
+  /** Every active session across the whole college's staff, flattened and
+   * tagged with the owning staff member's identity — the "Active Sessions"
+   * sidebar page, as opposed to listStaffSessions (one staff member's own
+   * session list, opened from their row in the directory). */
+  static async listAllStaffSessions(req: Request, res: Response) {
+    const collegeId = req.collegeId!;
+
+    const staffList = await prisma.staffMember.findMany({
+      where: { collegeId },
+      select: {
+        id: true,
+        fullName: true,
+        email: true,
+        avatarUrl: true,
+        collegeRole: { select: { name: true } },
+      },
+    });
+
+    const sessionsByUser = await AuthService.listSessionsForUsers(
+      staffList.map((s) => s.id),
+      "staff_member" as UserType,
+    );
+
+    const flattened = staffList.flatMap((staff) => {
+      const sessions = sessionsByUser.get(staff.id) ?? [];
+      return sessions.map((session) => ({
+        ...session,
+        isCurrent: session.id === req.sessionId,
+        staff: {
+          id: staff.id,
+          fullName: staff.fullName,
+          email: staff.email,
+          avatarUrl: staff.avatarUrl,
+          roleName: staff.collegeRole.name,
+        },
+      }));
+    });
+
+    flattened.sort(
+      (a, b) =>
+        new Date(b.lastActiveAt).getTime() - new Date(a.lastActiveAt).getTime(),
+    );
+
+    return res
+      .status(200)
+      .json(ApiResponse.success("Active sessions listed", flattened));
+  }
+
+  private static async loadStaffForCollege(collegeId: string, id?: string) {
+    const staff = await prisma.staffMember.findUnique({ where: { id } });
+    if (!staff || staff.collegeId !== collegeId) {
+      throw new NotFoundError("Staff member not found");
+    }
+    return staff;
+  }
+
+  static async listStaffSessions(req: Request, res: Response) {
+    const collegeId = req.collegeId!;
+    const idParam = req.params.id;
+    const id = Array.isArray(idParam) ? idParam[0] : idParam;
+
+    await CollegeRolesController.loadStaffForCollege(collegeId, id);
+
+    const sessions = await AuthService.listSessionsForUser(
+      id!,
+      "staff_member" as UserType,
+      req.sessionId,
+    );
+
+    return res
+      .status(200)
+      .json(ApiResponse.success("Active sessions listed", sessions));
+  }
+
+  static async forceLogoutStaffSession(req: Request, res: Response) {
+    const collegeId = req.collegeId!;
+    const idParam = req.params.id;
+    const id = Array.isArray(idParam) ? idParam[0] : idParam;
+    const sessionIdParam = req.params.sessionId;
+    const sessionId = Array.isArray(sessionIdParam)
+      ? sessionIdParam[0]
+      : sessionIdParam;
+
+    await CollegeRolesController.loadStaffForCollege(collegeId, id);
+
+    const revoked = await AuthService.forceLogoutSession(
+      sessionId!,
+      id!,
+      "staff_member" as UserType,
+    );
+    if (!revoked) throw new NotFoundError("Session not found");
+
+    return res
+      .status(200)
+      .json(ApiResponse.success("Session signed out", null));
+  }
+
+  static async forceLogoutAllStaffSessions(req: Request, res: Response) {
+    const collegeId = req.collegeId!;
+    const idParam = req.params.id;
+    const id = Array.isArray(idParam) ? idParam[0] : idParam;
+
+    await CollegeRolesController.loadStaffForCollege(collegeId, id);
+
+    const count = await AuthService.forceLogoutAllSessions(
+      id!,
+      "staff_member" as UserType,
+    );
+
+    return res
+      .status(200)
+      .json(ApiResponse.success(`Signed out ${count} active session(s)`, null));
   }
 }

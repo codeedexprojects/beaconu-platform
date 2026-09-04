@@ -9,6 +9,7 @@ import {
 } from "@/shared/errors";
 import { ACCOUNT_STATUS, USER_TYPES } from "@/shared/constants";
 import { auth as firebaseAuth } from "@/shared/lib/firebase";
+import { markSessionRevoked } from "@/shared/lib/session-revocation";
 import {
   BLINK_ROLE_PERMISSIONS,
   BLINK_ROLES,
@@ -16,7 +17,7 @@ import {
 import { JwtUtils } from "../auth.jwt";
 import { AuthRepository } from "../repositories/auth.repository";
 import { CounsellorRequestRepository } from "@/modules/counselling/repositories/counsellor-request.repository";
-import { UserType, TokenResponse } from "../auth.types";
+import { UserType, TokenResponse, SessionMeta } from "../auth.types";
 import {
   LoginInput,
   CounsellorLoginInput,
@@ -394,7 +395,10 @@ export class AuthService {
     };
   }
 
-  static async loginPlatformAdmin(data: PlatformLoginInput) {
+  static async loginPlatformAdmin(
+    data: PlatformLoginInput,
+    sessionMeta?: SessionMeta,
+  ) {
     const normalizedEmail = data.email.trim().toLowerCase();
 
     const admin =
@@ -422,6 +426,10 @@ export class AuthService {
     const session = await AuthRepository.createSession({
       userId: admin.id,
       userType: USER_TYPES.PLATFORM_ADMIN,
+      ipAddress: sessionMeta?.ipAddress,
+      deviceInfo: sessionMeta?.userAgent
+        ? { userAgent: sessionMeta.userAgent }
+        : undefined,
     });
 
     const rolePermissions = admin.platformRole.permissions.map(
@@ -768,7 +776,139 @@ export class AuthService {
   }
 
   static async logout(refreshToken: string): Promise<void> {
-    await AuthRepository.invalidateSession(refreshToken);
+    const sessionId = await AuthRepository.invalidateSession(refreshToken);
+    if (sessionId) await markSessionRevoked(sessionId);
+  }
+
+  /** Deduped to one entry per distinct (userAgent, ip) fingerprint —
+   * refresh-token rotation creates a new UserSession row on every refresh,
+   * so without this the same real-world device/browser would appear many
+   * times. Assumes `sessions` is already ordered most-recently-active
+   * first, so the first row seen per fingerprint wins. */
+  private static dedupeSessionsByDevice<
+    T extends {
+      id: string;
+      deviceInfo: unknown;
+      ipAddress: string | null;
+    },
+  >(sessions: T[]): T[] {
+    const seen = new Set<string>();
+    return sessions.filter((s) => {
+      const deviceInfo = (s.deviceInfo ?? {}) as { userAgent?: string };
+      const fingerprint = `${deviceInfo.userAgent ?? "unknown"}::${s.ipAddress ?? "unknown"}`;
+      if (seen.has(fingerprint)) return false;
+      seen.add(fingerprint);
+      return true;
+    });
+  }
+
+  private static formatSession(
+    s: {
+      id: string;
+      deviceInfo: unknown;
+      ipAddress: string | null;
+      lastActiveAt: Date;
+      createdAt: Date;
+      expiresAt: Date;
+    },
+    currentSessionId?: string,
+  ) {
+    const deviceInfo = (s.deviceInfo ?? {}) as { userAgent?: string };
+    return {
+      id: s.id,
+      userAgent: deviceInfo.userAgent ?? null,
+      ipAddress: s.ipAddress,
+      lastActiveAt: s.lastActiveAt,
+      createdAt: s.createdAt,
+      expiresAt: s.expiresAt,
+      isCurrent: s.id === currentSessionId,
+    };
+  }
+
+  /** Active sessions for one user, most-recently-active first, deduped by
+   * device fingerprint. */
+  static async listSessionsForUser(
+    userId: string,
+    userType: UserType,
+    currentSessionId?: string,
+  ) {
+    const sessions = await AuthRepository.listActiveSessionsForUser(
+      userId,
+      userType,
+    );
+    const deduped = this.dedupeSessionsByDevice(sessions);
+    return deduped.map((s) => this.formatSession(s, currentSessionId));
+  }
+
+  /** Active sessions across many users of the same type, most-recently-active
+   * first within each user, deduped by device fingerprint per user (not
+   * globally — two different staff members legitimately sharing a device
+   * fingerprint, e.g. the same shared front-desk PC, must both still show
+   * up). Returns a Map keyed by userId so callers can attach owner info. */
+  static async listSessionsForUsers(
+    userIds: string[],
+    userType: UserType,
+  ): Promise<Map<string, ReturnType<typeof AuthService.formatSession>[]>> {
+    const sessions = await AuthRepository.listActiveSessionsForUsers(
+      userIds,
+      userType,
+    );
+
+    const byUser = new Map<string, typeof sessions>();
+    for (const s of sessions) {
+      const bucket = byUser.get(s.userId);
+      if (bucket) bucket.push(s);
+      else byUser.set(s.userId, [s]);
+    }
+
+    const result = new Map<
+      string,
+      ReturnType<typeof AuthService.formatSession>[]
+    >();
+    for (const [userId, userSessions] of byUser) {
+      const deduped = this.dedupeSessionsByDevice(userSessions);
+      result.set(
+        userId,
+        deduped.map((s) => this.formatSession(s)),
+      );
+    }
+    return result;
+  }
+
+  /** Force-signs-out a single session by id, scoped to the expected owner
+   * so a caller can't revoke an arbitrary session by guessing its id.
+   * Returns false if the session doesn't exist, is already inactive, or
+   * doesn't belong to (userId, userType). */
+  static async forceLogoutSession(
+    sessionId: string,
+    userId: string,
+    userType: UserType,
+  ): Promise<boolean> {
+    const session = await AuthRepository.findActiveSessionById(sessionId);
+    if (
+      !session ||
+      session.userId !== userId ||
+      session.userType !== userType
+    ) {
+      return false;
+    }
+
+    await AuthRepository.deactivateSessionById(sessionId);
+    await markSessionRevoked(sessionId);
+    return true;
+  }
+
+  /** Force-signs-out every active session for one user (all devices). */
+  static async forceLogoutAllSessions(
+    userId: string,
+    userType: UserType,
+  ): Promise<number> {
+    const sessionIds = await AuthRepository.invalidateAllUserSessions(
+      userId,
+      userType,
+    );
+    await Promise.all(sessionIds.map((id) => markSessionRevoked(id)));
+    return sessionIds.length;
   }
 
   private static async getUserForRefresh(userId: string, userType: UserType) {

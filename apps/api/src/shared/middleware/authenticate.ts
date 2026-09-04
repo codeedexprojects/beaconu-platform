@@ -3,12 +3,13 @@ import jwt from "jsonwebtoken";
 import { env } from "@/shared/config/env";
 import { UnauthorizedError } from "@/shared/errors";
 import { JwtPayload } from "@/modules/auth/auth.types";
+import { isSessionRevoked } from "@/shared/lib/session-revocation";
 
-export function authenticate(
+export async function authenticate(
   req: Request,
   _res: Response,
   next: NextFunction,
-): void {
+): Promise<void> {
   const authHeader = req.headers.authorization;
 
   if (!authHeader?.startsWith("Bearer ")) {
@@ -20,8 +21,15 @@ export function authenticate(
 
   try {
     const payload = jwt.verify(token, env.JWT_SECRET) as JwtPayload;
+
+    if (payload.sessionId && (await isSessionRevoked(payload.sessionId))) {
+      next(new UnauthorizedError("Session has been signed out"));
+      return;
+    }
+
     req.userId = payload.userId;
     req.userType = payload.userType;
+    req.sessionId = payload.sessionId;
 
     req.collegeId = payload.collegeId;
     req.roleId = payload.roleId;
