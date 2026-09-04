@@ -1,3 +1,5 @@
+import type { PaginationMeta } from "./api";
+
 export interface StudentApplicationDto {
   id: string;
   applicationNumber: string;
@@ -785,6 +787,13 @@ export interface ApplicationDetailCourseItem {
   statusUpdatedAt: string | null;
 }
 
+export interface ApplicationDocumentVerificationHistoryEntry {
+  reason: string;
+  rejectedBy: string;
+  rejectedByName: string;
+  rejectedAt: string;
+}
+
 export interface ApplicationDetailDocumentItem {
   id: string;
   documentType: string;
@@ -793,7 +802,48 @@ export interface ApplicationDetailDocumentItem {
   fileName: string | null;
   verificationStatus: string;
   rejectionReason: string | null;
+  verifiedByName: string | null;
+  verifiedAt: string | null;
+  resubmissionCount: number;
+  verificationHistory: ApplicationDocumentVerificationHistoryEntry[];
   createdAt: string;
+  updatedAt: string;
+}
+
+export interface DocumentVerificationListItem {
+  applicationId: string;
+  applicationNumber: string;
+  studentId: string;
+  studentName: string;
+  profilePhotoUrl: string | null;
+  submittedAt: string | null;
+  lastDocumentUpdateAt: string | null;
+  totalDocuments: number;
+  verifiedCount: number;
+  pendingCount: number;
+  rejectedCount: number;
+}
+
+export interface DocumentVerificationListResponse {
+  applications: DocumentVerificationListItem[];
+  meta: PaginationMeta;
+}
+
+export interface DocumentVerificationDetail {
+  applicationId: string;
+  applicationNumber: string;
+  studentId: string;
+  studentName: string;
+  studentEmail: string | null;
+  studentPhone: string | null;
+  profilePhotoUrl: string | null;
+  primaryCourseName: string | null;
+  submittedAt: string | null;
+  documents: ApplicationDetailDocumentItem[];
+}
+
+export interface RejectApplicationDocumentInput {
+  reason: string;
 }
 
 export interface ApplicationDetailTransactionItem {

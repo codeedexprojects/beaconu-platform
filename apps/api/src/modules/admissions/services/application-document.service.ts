@@ -1,4 +1,6 @@
 import { ConflictError, NotFoundError, ValidationError } from "@/shared/errors";
+import { logger } from "@/shared/lib/logger";
+import { PushService } from "@/modules/notifications/services/push.service";
 import { ApplicationDocumentRepository } from "../repositories/application-document.repository";
 import { DOCUMENT_MIME_TYPES } from "../validators/document-upload-config.validator";
 import type { RegisterApplicationDocumentInput } from "../validators/application-document.validator";
@@ -39,6 +41,45 @@ function isApplicable(
     }
   }
   return true;
+}
+
+async function notifyStudentOfDocumentApproval(document: {
+  id: string;
+  studentId: string;
+  documentType: string;
+}): Promise<void> {
+  try {
+    await PushService.sendToUser(document.studentId, "student", {
+      title: "Document approved",
+      body: `Your "${document.documentType.replace(/_/g, " ")}" document was approved`,
+      data: { type: "application_document_approved", documentId: document.id },
+    });
+  } catch (error) {
+    logger.error(
+      { err: error, documentId: document.id },
+      "Failed to notify student of application document approval",
+    );
+  }
+}
+
+async function notifyStudentOfDocumentRejection(document: {
+  id: string;
+  studentId: string;
+  documentType: string;
+  reason: string;
+}): Promise<void> {
+  try {
+    await PushService.sendToUser(document.studentId, "student", {
+      title: "Document rejected",
+      body: `Your "${document.documentType.replace(/_/g, " ")}" document was rejected: ${document.reason}`,
+      data: { type: "application_document_rejected", documentId: document.id },
+    });
+  } catch (error) {
+    logger.error(
+      { err: error, documentId: document.id },
+      "Failed to notify student of application document rejection",
+    );
+  }
 }
 
 export class ApplicationDocumentService {
@@ -90,10 +131,10 @@ export class ApplicationDocumentService {
     documents: RegisterApplicationDocumentInput[],
   ) {
     const application = await assertOwnApplication(applicationId, studentId);
-    if (application.formStatus !== "draft") {
-      throw new ConflictError(
-        "This application has already been submitted and can no longer be edited",
-      );
+    const isDraft = application.formStatus === "draft";
+    const isSubmitted = application.formStatus === "submitted";
+    if (!isDraft && !isSubmitted) {
+      throw new ConflictError("This application can no longer be edited");
     }
     if (application.feePaymentStatus !== "paid") {
       throw new ConflictError(
@@ -141,6 +182,26 @@ export class ApplicationDocumentService {
       return { body, config };
     });
 
+    // Once submitted, a document can only be resubmitted — never freshly
+    // added or touched — if it's currently rejected. This is the only way
+    // a student can act on college-admin's rejection after the application
+    // has already been finalized.
+    if (isSubmitted) {
+      const uploaded =
+        await ApplicationDocumentRepository.findUploadedByApplicationId(
+          applicationId,
+        );
+      const uploadedByType = new Map(uploaded.map((d) => [d.documentType, d]));
+      for (const { body } of resolved) {
+        const existing = uploadedByType.get(body.document_type);
+        if (!existing || existing.verificationStatus !== "rejected") {
+          throw new ConflictError(
+            `${body.document_type} can only be resubmitted if it was rejected`,
+          );
+        }
+      }
+    }
+
     const results = [];
     for (const { body, config } of resolved) {
       results.push(
@@ -151,6 +212,7 @@ export class ApplicationDocumentService {
           fileUrl: body.file_url,
           fileName: body.file_name ?? null,
           fileSizeBytes: body.file_size_bytes ?? null,
+          isResubmission: isSubmitted,
         }),
       );
     }
@@ -162,5 +224,64 @@ export class ApplicationDocumentService {
     return ApplicationDocumentRepository.findUploadedByApplicationId(
       applicationId,
     );
+  }
+
+  private static async loadForCollege(collegeId: string, documentId: string) {
+    const doc = await ApplicationDocumentRepository.findByIdForCollege(
+      documentId,
+      collegeId,
+    );
+    if (!doc) throw new NotFoundError("Document not found");
+    if (doc.application.formStatus !== "submitted") {
+      throw new ConflictError(
+        "This application hasn't been submitted yet — documents can't be verified until it is",
+      );
+    }
+    return doc;
+  }
+
+  static async verify(collegeId: string, staffId: string, documentId: string) {
+    const doc = await ApplicationDocumentService.loadForCollege(
+      collegeId,
+      documentId,
+    );
+    const updated = await ApplicationDocumentRepository.verify(
+      documentId,
+      staffId,
+    );
+    await notifyStudentOfDocumentApproval({
+      id: doc.id,
+      studentId: doc.application.studentId,
+      documentType: updated.documentType,
+    });
+    return updated;
+  }
+
+  static async reject(
+    collegeId: string,
+    staffId: string,
+    documentId: string,
+    reason: string,
+  ) {
+    const doc = await ApplicationDocumentService.loadForCollege(
+      collegeId,
+      documentId,
+    );
+    const staffName =
+      await ApplicationDocumentRepository.findStaffName(staffId);
+    const updated = await ApplicationDocumentRepository.reject(
+      documentId,
+      staffId,
+      staffName,
+      reason,
+      doc.verificationHistory,
+    );
+    await notifyStudentOfDocumentRejection({
+      id: doc.id,
+      studentId: doc.application.studentId,
+      documentType: updated.documentType,
+      reason,
+    });
+    return updated;
   }
 }

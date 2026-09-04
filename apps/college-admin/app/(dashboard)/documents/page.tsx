@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { Suspense, useState } from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@/lib/zod-resolver";
 import { z } from "zod";
@@ -119,9 +120,12 @@ function formatDate(dateStr: string) {
   });
 }
 
-export default function DocumentSubmissionRequestsPage() {
+function DocumentSubmissionRequestsPageContent() {
+  const searchParams = useSearchParams();
   const [open, setOpen] = useState(false);
-  const [statusFilter, setStatusFilter] = useState("");
+  const [statusFilter, setStatusFilter] = useState(
+    () => searchParams.get("status") ?? "",
+  );
   const [page, setPage] = useState(1);
   const [rejectingId, setRejectingId] = useState<string | null>(null);
   const [rejectReason, setRejectReason] = useState("");
@@ -726,5 +730,19 @@ export default function DocumentSubmissionRequestsPage() {
         </div>
       )}
     </div>
+  );
+}
+
+export default function DocumentSubmissionRequestsPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="flex justify-center py-16">
+          <Skeleton className="h-8 w-40" />
+        </div>
+      }
+    >
+      <DocumentSubmissionRequestsPageContent />
+    </Suspense>
   );
 }

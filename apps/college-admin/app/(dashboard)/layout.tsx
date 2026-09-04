@@ -446,6 +446,10 @@ export default function DashboardLayout({
                         name: "Document Templates",
                         path: "/documents/templates",
                       },
+                      {
+                        name: "Document Verification",
+                        path: "/documents/verification",
+                      },
                     ],
                   },
                   {

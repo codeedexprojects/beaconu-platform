@@ -168,4 +168,14 @@ export const QUERY_KEYS = {
     filters ? ["finance-overview", filters] : ["finance-overview"],
   financeTransactions: (filters?: object) =>
     filters ? ["finance-transactions", filters] : ["finance-transactions"],
+  documentsUnderReview: (page?: number, search?: string) =>
+    page !== undefined
+      ? (["documents-under-review", page, search ?? ""] as const)
+      : (["documents-under-review"] as const),
+  partiallyVerifiedDocuments: (page?: number, search?: string) =>
+    page !== undefined
+      ? (["partially-verified-documents", page, search ?? ""] as const)
+      : (["partially-verified-documents"] as const),
+  documentVerificationDetail: (applicationId: string) =>
+    ["document-verification-detail", applicationId] as const,
 } as const;

@@ -38,13 +38,12 @@ body:json {
 
 docs {
   Registers one or more uploaded files against document requirements on
-  the student's own draft application (409 if already submitted) in a
-  single call — `documents` accepts 1..N entries, each shaped like the
-  old single-document body. Each file itself must already be uploaded via
-  the existing generic student upload flow first: POST
-  /api/v1/student/uploads/document/presign -> PUT to the returned
-  uploadUrl -> POST /api/v1/student/uploads/document/verify -> use the
-  returned permanentUrl as that entry's file_url.
+  the student's own application in a single call — `documents` accepts
+  1..N entries, each shaped like the old single-document body. Each file
+  itself must already be uploaded via the existing generic student upload
+  flow first: POST /api/v1/student/uploads/document/presign -> PUT to the
+  returned uploadUrl -> POST /api/v1/student/uploads/document/verify -> use
+  the returned permanentUrl as that entry's file_url.
 
   Every entry's `document_type` must match a document requirement
   currently applicable to this application (404 if any one isn't — e.g.
@@ -54,9 +53,22 @@ docs {
   anything is written, so if any single entry is invalid, none of the
   documents in the request are saved.
 
+  Two allowed states for the parent application:
+  - `draft` — freely add/replace any document_type, exactly as before.
+  - `submitted` — only allowed as a **resubmission of a rejected
+    document**: every document_type in the batch must already have an
+    uploaded row with verificationStatus "rejected" (409 ConflictError,
+    naming the offending type, otherwise). This is how a student acts on
+    college-admin's rejection after the application is finalized — no
+    other edits are possible once submitted.
+  Any other formStatus -> 409 ConflictError ("This application can no
+  longer be edited").
+
   Upsert semantics (per entry): registering the same document_type again
   replaces the prior file (not a duplicate row) and resets
-  verificationStatus back to "pending".
+  verificationStatus back to "pending". A submitted-stage resubmission also
+  increments resubmissionCount and leaves the document's verificationHistory
+  untouched (it keeps every past rejection for the admin-side timeline).
 
   Response `data` is an array, one saved document per entry, in request order.
 }

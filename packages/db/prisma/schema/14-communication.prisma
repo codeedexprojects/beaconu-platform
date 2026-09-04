@@ -47,19 +47,19 @@ model BroadcastNotification {
 }
 
 model Announcement {
-  id          String    @id @default(dbgenerated("('ANN-'::text || (nextval('announcement_seq'::regclass))::text)"))
-  collegeId   String    @map("college_id")
-  title       String    @db.VarChar(255)
-  content     String    @db.Text
-  category    String    @default("general") @db.VarChar(30)
-  isPinned    Boolean   @default(false) @map("is_pinned")
-  status      String    @default("published") @db.VarChar(20)
-  publishedAt DateTime? @map("published_at") @db.Timestamptz
-  requiredDocuments Json @default("[]") @map("required_documents")
-  attachments Json      @default("[]")
-  createdBy   String    @map("created_by")
-  createdAt   DateTime  @default(now()) @map("created_at") @db.Timestamptz
-  updatedAt   DateTime  @updatedAt @map("updated_at") @db.Timestamptz
+  id                String    @id @default(dbgenerated("('ANN-'::text || (nextval('announcement_seq'::regclass))::text)"))
+  collegeId         String    @map("college_id")
+  title             String    @db.VarChar(255)
+  content           String    @db.Text
+  category          String    @default("general") @db.VarChar(30)
+  isPinned          Boolean   @default(false) @map("is_pinned")
+  status            String    @default("published") @db.VarChar(20)
+  publishedAt       DateTime? @map("published_at") @db.Timestamptz
+  requiredDocuments Json      @default("[]") @map("required_documents")
+  attachments       Json      @default("[]")
+  createdBy         String    @map("created_by")
+  createdAt         DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt         DateTime  @updatedAt @map("updated_at") @db.Timestamptz
 
   college College     @relation(fields: [collegeId], references: [id], onDelete: Cascade)
   creator StaffMember @relation(fields: [createdBy], references: [id])
@@ -206,8 +206,8 @@ model CallRequest {
   createdAt     DateTime  @default(now()) @map("created_at") @db.Timestamptz
   updatedAt     DateTime  @updatedAt @map("updated_at") @db.Timestamptz
 
-  student  Student      @relation(fields: [studentId], references: [id])
-  college  College      @relation(fields: [collegeId], references: [id])
+  student   Student      @relation(fields: [studentId], references: [id])
+  college   College      @relation(fields: [collegeId], references: [id])
   responder StaffMember? @relation(fields: [respondedBy], references: [id])
 
   @@index([studentId], name: "idx_call_requests_student")

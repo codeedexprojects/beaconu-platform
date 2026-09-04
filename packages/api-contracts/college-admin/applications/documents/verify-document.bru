@@ -1,0 +1,40 @@
+meta {
+  name: Verify Application Document
+  type: http
+  seq: 4
+}
+
+patch {
+  url: {{baseUrl}}/api/v1/college-admin/applications/documents/{{applicationDocumentId}}/verify
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{staffAccessToken}}
+}
+
+script:post-response {
+  if (res.status === 200) {
+    const data = res.getBody();
+    if (data.data && data.data.id) {
+      bru.setEnvVar("applicationDocumentId", data.data.id);
+    }
+  }
+}
+
+docs {
+  Approves one uploaded ApplicationDocument — sets verificationStatus to
+  "approved", clears any prior rejectionReason, records verifiedBy/
+  verifiedAt. No confirmation step, no history entry (the timeline only
+  ever records past rejections). Notifies the student via push
+  (best-effort).
+
+  Requires staff_member auth, admissions.manage. Works regardless of the
+  document's current status (re-approving an already-rejected document is
+  allowed — a legitimate "actually this was fine" correction).
+
+  404 if the document doesn't exist or belongs to a different college's
+  application. 409 ConflictError if the parent application hasn't been
+  submitted yet.
+}
