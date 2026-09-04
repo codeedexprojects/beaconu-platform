@@ -2,13 +2,14 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
-import { Calendar, Eye } from "lucide-react";
+import { Calendar, Eye, Clock, ArrowLeft } from "lucide-react";
 import {
   getPublicBlogBySlug,
   getPublicBlogs,
 } from "@/lib/services/blogs.server";
 import { formatDate } from "@/lib/utils";
-import { BlogHeader } from "@/components/blogs/BlogHeader";
+import { SiteNav } from "@/components/landing/site-nav";
+import { SiteFooter } from "@/components/landing/site-footer";
 
 export const revalidate = 60;
 
@@ -76,7 +77,7 @@ export default async function BlogDetailPage({ params }: Props) {
   const readingMins = Math.max(1, Math.ceil(wordCount / 200));
 
   return (
-    <main className="min-h-screen bg-[#F3F4F6]">
+    <main className="min-h-screen bg-cream">
       {/* JSON-LD */}
       <script
         type="application/ld+json"
@@ -112,13 +113,21 @@ export default async function BlogDetailPage({ params }: Props) {
         }}
       />
 
-      <BlogHeader backHref="/blogs" backLabel="All blogs" title="All Blogs" />
+      <SiteNav />
 
-      <div className="max-w-5xl mx-auto px-4 md:px-6 py-6">
-        <article className="max-w-2xl mx-auto bg-white rounded-2xl overflow-hidden border border-gray-100 shadow-[0_2px_12px_rgba(0,0,0,0.07)]">
+      <div className="mx-auto max-w-3xl px-4 pb-16 pt-28 md:px-6">
+        <Link
+          href="/blogs"
+          className="mb-6 inline-flex items-center gap-1.5 text-sm font-semibold text-gray-label transition-colors hover:text-landing"
+        >
+          <ArrowLeft size={15} aria-hidden />
+          All Blogs
+        </Link>
+
+        <article>
           {/* Cover image */}
           {blog.coverImageUrl ? (
-            <div className="relative h-64 md:h-80 w-full bg-gray-100">
+            <div className="relative h-64 w-full overflow-hidden rounded-2xl bg-gray-100 md:h-80">
               <Image
                 src={blog.coverImageUrl}
                 alt={blog.title}
@@ -127,16 +136,15 @@ export default async function BlogDetailPage({ params }: Props) {
                 className="object-cover"
                 sizes="(max-width: 768px) 100vw, 768px"
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent pointer-events-none" />
             </div>
           ) : (
-            <div className="h-48 w-full bg-gradient-to-br from-[#FEF0EB] to-[#FDE8D8] flex items-center justify-center">
+            <div className="flex h-48 w-full items-center justify-center rounded-2xl bg-gradient-to-br from-landing/10 to-landing/20">
               <svg
                 width="52"
                 height="52"
                 viewBox="0 0 24 24"
                 fill="none"
-                stroke="#E8521A"
+                stroke="#F46A12"
                 strokeWidth="1.4"
                 opacity="0.35"
               >
@@ -146,14 +154,14 @@ export default async function BlogDetailPage({ params }: Props) {
             </div>
           )}
 
-          <div className="p-5 md:p-8">
+          <div className="pt-7">
             {/* Tags */}
             {blog.tags.length > 0 && (
-              <div className="flex flex-wrap gap-1.5 mb-4">
+              <div className="mb-4 flex flex-wrap gap-1.5">
                 {blog.tags.map((tag: string) => (
                   <span
                     key={tag}
-                    className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-[#FEF0EB] text-[#C04010] border border-[#E8521A]/15 uppercase tracking-wide"
+                    className="inline-flex items-center rounded-full border border-landing/15 bg-landing/10 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-landing-dark"
                   >
                     {tag}
                   </span>
@@ -162,29 +170,29 @@ export default async function BlogDetailPage({ params }: Props) {
             )}
 
             {/* Title */}
-            <h1 className="text-[24px] md:text-[28px] font-bold text-gray-900 leading-tight tracking-tight mb-3">
+            <h1 className="mb-3 font-sans text-[26px] font-black leading-tight tracking-tight text-navy-dark md:text-[32px]">
               {blog.title}
             </h1>
 
             {/* Summary */}
             {blog.summary && (
-              <p className="text-[15px] text-gray-500 leading-relaxed mb-5 border-l-2 border-[#E8521A]/30 pl-4">
+              <p className="mb-5 border-l-2 border-landing/30 pl-4 text-[15px] leading-relaxed text-gray-label">
                 {blog.summary}
               </p>
             )}
 
             {/* Author meta strip */}
-            <div className="flex items-center gap-3 bg-gray-50 border border-gray-100 rounded-2xl px-4 py-3 mb-7">
-              <div className="w-11 h-11 rounded-full bg-[#FEF0EB] border-2 border-white ring-1 ring-[#E8521A]/20 flex items-center justify-center shrink-0">
-                <span className="text-[13px] font-bold text-[#E8521A]">
+            <div className="mb-7 flex items-center gap-3">
+              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-landing/10 ring-1 ring-landing/20">
+                <span className="text-[13px] font-bold text-landing">
                   {blog.authorName?.slice(0, 2).toUpperCase()}
                 </span>
               </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-[13px] font-bold text-gray-900 truncate">
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-[13px] font-bold text-navy-dark">
                   {blog.authorName}
                 </p>
-                <div className="flex items-center flex-wrap gap-x-3 gap-y-0.5 mt-0.5">
+                <div className="mt-0.5 flex flex-wrap items-center gap-x-3 gap-y-0.5">
                   {blog.publishedAt && (
                     <span className="inline-flex items-center gap-1 text-[11px] text-gray-400">
                       <Calendar size={11} aria-hidden />
@@ -196,26 +204,14 @@ export default async function BlogDetailPage({ params }: Props) {
                     {blog.viewCount.toLocaleString()} views
                   </span>
                   <span className="inline-flex items-center gap-1 text-[11px] text-gray-400">
-                    <svg
-                      width="11"
-                      height="11"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      aria-hidden
-                    >
-                      <circle cx="12" cy="12" r="10" />
-                      <polyline points="12,6 12,12 16,14" />
-                    </svg>
+                    <Clock size={11} aria-hidden />
                     {readingMins} min read
                   </span>
                 </div>
               </div>
             </div>
 
-            {/* Divider */}
-            <div className="border-t border-gray-100 mb-7" />
+            <div className="mb-7 border-t border-navy-dark/5" />
 
             {/* Content body */}
             <div className="space-y-5">
@@ -223,7 +219,7 @@ export default async function BlogDetailPage({ params }: Props) {
                 paragraph.trim() ? (
                   <p
                     key={i}
-                    className="text-[15px] text-gray-700 leading-[1.8]"
+                    className="text-[15px] leading-[1.8] text-navy-dark/80"
                   >
                     {paragraph}
                   </p>
@@ -232,27 +228,9 @@ export default async function BlogDetailPage({ params }: Props) {
             </div>
           </div>
         </article>
-
-        {/* Back CTA */}
-        <Link
-          href="/blogs"
-          className="max-w-2xl mx-auto mt-5 w-full h-12 rounded-2xl bg-[#E8521A] hover:bg-[#D04718] active:scale-[0.98] transition-all flex items-center justify-center gap-2 text-white text-[14px] font-semibold"
-        >
-          <svg
-            width="15"
-            height="15"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2.5"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          >
-            <path d="M19 12H5M12 19l-7-7 7-7" />
-          </svg>
-          Back to All Blogs
-        </Link>
       </div>
+
+      <SiteFooter />
     </main>
   );
 }

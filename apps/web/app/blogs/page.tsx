@@ -1,12 +1,11 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import Image from "next/image";
-import { Search, LogIn, LayoutDashboard, Eye, ArrowRight } from "lucide-react";
-import { cookies } from "next/headers";
+import { Search, Eye, ArrowRight } from "lucide-react";
 import { getPublicBlogs } from "@/lib/services/blogs.server";
 import { formatDate } from "@/lib/utils";
-import { BLOG_TOKEN_KEY } from "@/lib/constants";
-import { BlogHeader } from "@/components/blogs/BlogHeader";
+import { SiteNav } from "@/components/landing/site-nav";
+import { SiteFooter } from "@/components/landing/site-footer";
 import type { Blog } from "@/lib/services/blogs.service";
 
 export const dynamic = "force-dynamic";
@@ -53,9 +52,6 @@ export default async function BlogsPage({ searchParams }: PageProps) {
   const page = Number(params.page ?? 1);
   const search = params.search ?? "";
 
-  const cookieStore = await cookies();
-  const isLoggedIn = !!cookieStore.get(BLOG_TOKEN_KEY)?.value;
-
   const { data: blogs, meta } = await getPublicBlogs({
     page,
     limit: 12,
@@ -66,7 +62,7 @@ export default async function BlogsPage({ searchParams }: PageProps) {
   }));
 
   return (
-    <main className="min-h-screen bg-[#F8F9FA]">
+    <main className="min-h-screen bg-cream">
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{
@@ -91,51 +87,39 @@ export default async function BlogsPage({ searchParams }: PageProps) {
         }}
       />
 
-      <BlogHeader
-        backHref="/home"
-        backLabel="Home"
-        title="Student Blogs"
-        rightAction={
-          isLoggedIn ? (
-            <Link
-              href="/my/blogs"
-              className="inline-flex items-center gap-1.5 h-9 px-3.5 rounded-full bg-[#FEF0EB] text-[#E8521A] text-[13px] font-semibold hover:bg-[#FDDFD1] transition-colors"
-            >
-              <LayoutDashboard size={14} aria-hidden />
-              My Blogs
-            </Link>
-          ) : (
-            <Link
-              href="/blog-login"
-              className="inline-flex items-center gap-1.5 h-9 px-3.5 rounded-full border-[1.5px] border-gray-200 text-gray-600 text-[13px] font-semibold hover:border-[#E8521A] hover:text-[#E8521A] transition-colors"
-            >
-              <LogIn size={14} aria-hidden />
-              Login
-            </Link>
-          )
-        }
-      >
+      <SiteNav />
+
+      <div className="mx-auto max-w-5xl px-4 pb-6 pt-28 md:px-6">
+        <div className="mb-8 flex flex-col gap-1">
+          <p className="text-xs font-bold uppercase tracking-[0.12em] text-landing">
+            Stories from campus
+          </p>
+          <h1 className="font-sans text-3xl font-black tracking-tight text-navy-dark sm:text-4xl">
+            BeaconU Blog
+          </h1>
+        </div>
+
         {/* Search */}
-        <div className="flex gap-2.5 pb-3">
+        <div className="mb-8 flex gap-2.5">
           <form
             action="/blogs"
             method="GET"
-            className="flex-1 flex items-center gap-2 h-10 bg-gray-50 border-[1.5px] border-gray-200 rounded-xl px-3.5 focus-within:border-[#E8521A] transition-colors"
+            className="flex h-11 flex-1 items-center gap-2 rounded-xl border-[1.5px] border-navy-dark/10 bg-white px-3.5 transition-colors focus-within:border-landing"
           >
-            <Search className="shrink-0 text-gray-400" size={15} aria-hidden />
+            <Search className="shrink-0 text-gray-400" size={16} aria-hidden />
             <input
               type="text"
               name="search"
               defaultValue={search}
               placeholder="Search articles, topics..."
               autoComplete="off"
-              className="flex-1 bg-transparent text-sm text-gray-900 placeholder:text-gray-400 outline-none min-w-0"
+              className="min-w-0 flex-1 bg-transparent text-sm text-navy-dark outline-none placeholder:text-gray-400"
             />
             {search && (
               <Link
                 href="/blogs"
                 aria-label="Clear search"
-                className="text-gray-400 hover:text-gray-600 transition-colors"
+                className="text-gray-400 transition-colors hover:text-navy-dark"
               >
                 <svg
                   width="14"
@@ -156,32 +140,30 @@ export default async function BlogsPage({ searchParams }: PageProps) {
             <button
               type="submit"
               aria-label="Search"
-              className="w-10 h-10 rounded-xl bg-[#E8521A] hover:bg-[#D04718] active:scale-95 transition-all flex items-center justify-center shrink-0"
+              className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-landing transition-all hover:bg-landing-dark active:scale-95"
             >
-              <Search size={16} color="white" aria-hidden />
+              <Search size={17} color="white" aria-hidden />
             </button>
           </form>
         </div>
         {search && (
-          <div className="pb-2.5">
-            <span className="inline-flex items-center gap-1.5 text-[12px] font-medium text-[#E8521A] bg-[#FEF0EB] px-3 py-1 rounded-full">
+          <div className="-mt-4 mb-6">
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-landing/10 px-3 py-1 text-xs font-medium text-landing">
               {meta.total} result{meta.total !== 1 ? "s" : ""} for &ldquo;
               {search}&rdquo;
             </span>
           </div>
         )}
-      </BlogHeader>
 
-      <div className="max-w-5xl mx-auto px-4 md:px-6 py-6">
         {blogs.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-24 gap-4">
-            <div className="w-16 h-16 rounded-2xl bg-[#FEF0EB] flex items-center justify-center">
+          <div className="flex flex-col items-center justify-center gap-4 py-24">
+            <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-landing/10">
               <svg
                 width="28"
                 height="28"
                 viewBox="0 0 24 24"
                 fill="none"
-                stroke="#E8521A"
+                stroke="#F46A12"
                 strokeWidth="1.8"
                 strokeLinecap="round"
                 strokeLinejoin="round"
@@ -192,10 +174,10 @@ export default async function BlogsPage({ searchParams }: PageProps) {
                 <line x1="16" y1="17" x2="8" y2="17" />
               </svg>
             </div>
-            <p className="text-[17px] font-bold text-gray-900">
+            <p className="text-[17px] font-bold text-navy-dark">
               No blogs found
             </p>
-            <p className="text-[13px] text-gray-500 text-center max-w-xs">
+            <p className="max-w-xs text-center text-[13px] text-gray-label">
               {search
                 ? `No articles match "${search}". Try a different keyword.`
                 : "No blogs have been published yet. Check back soon!"}
@@ -203,14 +185,14 @@ export default async function BlogsPage({ searchParams }: PageProps) {
             {search && (
               <Link
                 href="/blogs"
-                className="mt-1 h-11 px-6 rounded-full bg-[#E8521A] hover:bg-[#D04718] text-white text-sm font-semibold flex items-center transition-colors"
+                className="mt-1 flex h-11 items-center rounded-full bg-landing px-6 text-sm font-semibold text-white transition-colors hover:bg-landing-dark"
               >
                 Clear search
               </Link>
             )}
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+          <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
             {blogs.map((blog) => (
               <BlogCard key={blog.id} blog={blog} />
             ))}
@@ -222,7 +204,7 @@ export default async function BlogsPage({ searchParams }: PageProps) {
             {page > 1 && (
               <Link
                 href={`/blogs?page=${page - 1}${search ? `&search=${encodeURIComponent(search)}` : ""}`}
-                className="h-11 px-5 rounded-full border-[1.5px] border-gray-200 bg-white text-sm font-semibold text-gray-700 hover:border-[#E8521A] hover:text-[#E8521A] transition-colors flex items-center gap-1.5"
+                className="flex h-11 items-center gap-1.5 rounded-full border-[1.5px] border-navy-dark/10 bg-white px-5 text-sm font-semibold text-navy-dark transition-colors hover:border-landing hover:text-landing"
               >
                 <svg
                   width="15"
@@ -239,13 +221,13 @@ export default async function BlogsPage({ searchParams }: PageProps) {
                 Previous
               </Link>
             )}
-            <span className="text-[13px] font-medium text-gray-400 px-2">
+            <span className="px-2 text-[13px] font-medium text-gray-400">
               Page {page}
             </span>
             {meta.hasNext && (
               <Link
                 href={`/blogs?page=${page + 1}${search ? `&search=${encodeURIComponent(search)}` : ""}`}
-                className="h-11 px-5 rounded-full border-[1.5px] border-gray-200 bg-white text-sm font-semibold text-gray-700 hover:border-[#E8521A] hover:text-[#E8521A] transition-colors flex items-center gap-1.5"
+                className="flex h-11 items-center gap-1.5 rounded-full border-[1.5px] border-navy-dark/10 bg-white px-5 text-sm font-semibold text-navy-dark transition-colors hover:border-landing hover:text-landing"
               >
                 Next
                 <svg
@@ -265,6 +247,8 @@ export default async function BlogsPage({ searchParams }: PageProps) {
           </div>
         )}
       </div>
+
+      <SiteFooter />
     </main>
   );
 }
@@ -273,7 +257,7 @@ function BlogCard({ blog }: { blog: Blog }) {
   return (
     <Link
       href={`/blogs/${blog.slug}`}
-      className="group flex flex-col bg-white rounded-2xl overflow-hidden border border-gray-100 shadow-[0_2px_8px_rgba(0,0,0,0.06)] hover:shadow-[0_8px_28px_rgba(0,0,0,0.10)] hover:-translate-y-0.5 transition-all duration-200"
+      className="group flex flex-col overflow-hidden rounded-2xl border border-navy-dark/5 bg-white shadow-[0_2px_8px_rgba(0,0,0,0.06)] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_8px_28px_rgba(0,0,0,0.10)]"
     >
       {/* Cover */}
       {blog.coverImageUrl ? (
@@ -282,18 +266,18 @@ function BlogCard({ blog }: { blog: Blog }) {
             src={blog.coverImageUrl}
             alt={blog.title}
             fill
-            className="object-cover group-hover:scale-105 transition-transform duration-300"
+            className="object-cover transition-transform duration-300 group-hover:scale-105"
             sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
           />
         </div>
       ) : (
-        <div className="h-40 w-full flex-shrink-0 bg-gradient-to-br from-[#FEF0EB] to-[#FDE8D8] flex items-center justify-center">
+        <div className="flex h-40 w-full flex-shrink-0 items-center justify-center bg-gradient-to-br from-landing/10 to-landing/20">
           <svg
             width="36"
             height="36"
             viewBox="0 0 24 24"
             fill="none"
-            stroke="#E8521A"
+            stroke="#F46A12"
             strokeWidth="1.5"
             strokeLinecap="round"
             strokeLinejoin="round"
@@ -306,16 +290,16 @@ function BlogCard({ blog }: { blog: Blog }) {
       )}
 
       {/* Body */}
-      <div className="flex-1 flex flex-col p-4">
+      <div className="flex flex-1 flex-col p-4">
         {/* Author */}
-        <div className="flex items-center gap-2 mb-3">
-          <div className="w-7 h-7 rounded-full bg-[#FEF0EB] ring-1 ring-[#E8521A]/20 flex items-center justify-center shrink-0">
-            <span className="text-[10px] font-bold text-[#E8521A]">
+        <div className="mb-3 flex items-center gap-2">
+          <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-landing/10 ring-1 ring-landing/20">
+            <span className="text-[10px] font-bold text-landing">
               {blog.authorName?.slice(0, 2).toUpperCase()}
             </span>
           </div>
           <div className="min-w-0">
-            <p className="text-[11px] font-semibold text-gray-700 truncate">
+            <p className="truncate text-[11px] font-semibold text-navy-dark">
               {blog.authorName}
             </p>
             <p className="text-[10px] text-gray-400">
@@ -326,11 +310,11 @@ function BlogCard({ blog }: { blog: Blog }) {
 
         {/* Tags */}
         {blog.tags?.length > 0 && (
-          <div className="flex flex-wrap gap-1 mb-2">
+          <div className="mb-2 flex flex-wrap gap-1">
             {blog.tags.slice(0, 2).map((tag: string) => (
               <span
                 key={tag}
-                className="px-2 py-0.5 rounded-full text-[9px] font-bold bg-[#FEF0EB] text-[#C04010] border border-[#E8521A]/15 uppercase tracking-wide"
+                className="rounded-full border border-landing/15 bg-landing/10 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wide text-landing-dark"
               >
                 {tag}
               </span>
@@ -339,24 +323,24 @@ function BlogCard({ blog }: { blog: Blog }) {
         )}
 
         {/* Title */}
-        <h2 className="text-[14px] font-bold text-gray-900 leading-snug line-clamp-2 group-hover:text-[#E8521A] transition-colors mb-1.5">
+        <h2 className="mb-1.5 line-clamp-2 text-[14px] font-bold leading-snug text-navy-dark transition-colors group-hover:text-landing">
           {blog.title}
         </h2>
 
         {/* Summary */}
         {blog.summary && (
-          <p className="text-[12px] text-gray-500 leading-relaxed line-clamp-2 mb-3">
+          <p className="mb-3 line-clamp-2 text-[12px] leading-relaxed text-gray-label">
             {blog.summary}
           </p>
         )}
 
         {/* Footer */}
-        <div className="flex items-center justify-between mt-auto pt-3 border-t border-gray-100">
+        <div className="mt-auto flex items-center justify-between border-t border-navy-dark/5 pt-3">
           <span className="inline-flex items-center gap-1 text-[11px] text-gray-400">
             <Eye size={11} aria-hidden />
             {blog.viewCount.toLocaleString()} views
           </span>
-          <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-[#E8521A] group-hover:gap-2 transition-all">
+          <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-landing transition-all group-hover:gap-2">
             Read <ArrowRight size={11} />
           </span>
         </div>
