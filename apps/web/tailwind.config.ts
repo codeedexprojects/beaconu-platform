@@ -25,6 +25,10 @@ const config: Config = {
           DEFAULT: "#B6904F",
           pale: "#FBEFD6",
         },
+        landing: {
+          DEFAULT: "#F46A12",
+          dark: "#D6570A",
+        },
         cream: {
           DEFAULT: "#FDFBF7",
         },

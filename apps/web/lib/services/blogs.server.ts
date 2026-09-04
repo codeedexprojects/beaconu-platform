@@ -1,14 +1,7 @@
-import { cookies } from "next/headers";
-import { API_BASE, STUDENT_TOKEN_KEY } from "@/lib/constants";
+import { API_BASE } from "@/lib/constants";
 import type { Blog } from "./blogs.service";
 
-async function getAuthHeaders(): Promise<Record<string, string>> {
-  const cookieStore = await cookies();
-  const token = cookieStore.get(STUDENT_TOKEN_KEY)?.value;
-  return token ? { Authorization: `Bearer ${token}` } : {};
-}
-
-// ── Student (auth required, used in Server Components with fetch) ──
+// ── Public (no auth required, used in Server Components with fetch) ──
 
 export async function getPublicBlogs(params: {
   page?: number;
@@ -24,8 +17,8 @@ export async function getPublicBlogs(params: {
   if (params.search) query.set("search", params.search);
 
   const res = await fetch(
-    `${API_BASE}/api/v1/student/blogs?${query.toString()}`,
-    { cache: "no-store", headers: await getAuthHeaders() },
+    `${API_BASE}/api/v1/public/blogs?${query.toString()}`,
+    { cache: "no-store" },
   );
 
   if (!res.ok) throw new Error("Failed to fetch blogs");
@@ -34,9 +27,8 @@ export async function getPublicBlogs(params: {
 }
 
 export async function getPublicBlogBySlug(slug: string): Promise<Blog> {
-  const res = await fetch(`${API_BASE}/api/v1/student/blogs/${slug}`, {
+  const res = await fetch(`${API_BASE}/api/v1/public/blogs/${slug}`, {
     next: { revalidate: 60 },
-    headers: await getAuthHeaders(),
   });
   if (!res.ok) throw new Error("Blog not found");
   const body = await res.json();

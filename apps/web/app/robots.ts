@@ -6,7 +6,6 @@ export default function robots(): MetadataRoute.Robots {
       {
         userAgent: "*",
         allow: "/",
-        disallow: ["/my/", "/login", "/register"],
       },
     ],
     sitemap: "https://beaconu.com/sitemap.xml",
