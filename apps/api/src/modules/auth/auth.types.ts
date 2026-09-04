@@ -46,3 +46,11 @@ export interface SessionData {
 
   ipAddress?: string;
 }
+
+/** What a controller extracts from `req` at login time (IP + raw user-agent
+ * string) and passes into the auth service — kept separate from the
+ * validated login body DTO so services never need `req` directly. */
+export interface SessionMeta {
+  ipAddress?: string;
+  userAgent?: string;
+}

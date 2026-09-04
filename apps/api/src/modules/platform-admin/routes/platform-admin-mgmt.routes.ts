@@ -41,4 +41,25 @@ router.delete(
   PlatformAdminMgmtController.deleteAdmin,
 );
 
+router.get(
+  "/sessions",
+  authorize("platform.admins.sessions.manage"),
+  PlatformAdminMgmtController.listAllSessions,
+);
+router.get(
+  "/:id/sessions",
+  authorize("platform.admins.sessions.manage"),
+  PlatformAdminMgmtController.listSessions,
+);
+router.delete(
+  "/:id/sessions/:sessionId",
+  authorize("platform.admins.sessions.manage"),
+  PlatformAdminMgmtController.forceLogoutSession,
+);
+router.delete(
+  "/:id/sessions",
+  authorize("platform.admins.sessions.manage"),
+  PlatformAdminMgmtController.forceLogoutAllSessions,
+);
+
 export default router;

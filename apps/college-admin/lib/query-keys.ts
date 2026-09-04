@@ -15,6 +15,9 @@ export const QUERY_KEYS = {
   permissions: ["college-permissions"] as const,
   roles: ["college-roles"] as const,
   staff: ["college-staff"] as const,
+  staffSessions: (staffId: string) =>
+    ["college-staff", staffId, "sessions"] as const,
+  allStaffSessions: ["college-staff-sessions"] as const,
   hostels: ["college-hostels"] as const,
   gallery: ["college-gallery"] as const,
   libraries: ["college-libraries"] as const,

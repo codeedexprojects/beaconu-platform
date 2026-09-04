@@ -34,6 +34,7 @@ import {
   MessageSquareQuote,
   Headset,
   Rss,
+  MonitorSmartphone,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -233,6 +234,12 @@ const navSections: NavSection[] = [
         label: "Platform Staff",
         icon: ShieldCheck,
         permission: "platform.admins.view",
+      },
+      {
+        href: "/platform-admins/sessions",
+        label: "Active Sessions",
+        icon: MonitorSmartphone,
+        permission: "platform.admins.sessions.manage",
       },
       {
         href: "/roles",

@@ -95,17 +95,85 @@ export class AuthRepository {
     return this.createSession(data);
   }
 
-  static async invalidateSession(refreshToken: string) {
+  /** Returns the id of the session that was invalidated, or null if none
+   * matched (already inactive / unknown token) — callers use the id to also
+   * mark the session revoked in Redis for immediate effect (see
+   * shared/lib/session-revocation.ts). */
+  static async invalidateSession(refreshToken: string): Promise<string | null> {
+    const session = await prisma.userSession.findUnique({
+      where: { refreshToken },
+      select: { id: true, isActive: true },
+    });
+    if (!session || !session.isActive) return null;
+
+    await prisma.userSession.update({
+      where: { id: session.id },
+      data: { isActive: false, deviceInfo: {} },
+    });
+    return session.id;
+  }
+
+  /** Returns the ids of all sessions that were invalidated — callers use
+   * these to also mark each session revoked in Redis for immediate effect. */
+  static async invalidateAllUserSessions(
+    userId: string,
+    userType: string,
+  ): Promise<string[]> {
+    const sessions = await prisma.userSession.findMany({
+      where: { userId, userType, isActive: true },
+      select: { id: true },
+    });
+    if (sessions.length === 0) return [];
+
     await prisma.userSession.updateMany({
-      where: { refreshToken, isActive: true },
+      where: { userId, userType, isActive: true },
+      data: { isActive: false, deviceInfo: {} },
+    });
+    return sessions.map((s) => s.id);
+  }
+
+  static async findActiveSessionById(sessionId: string) {
+    return prisma.userSession.findFirst({
+      where: { id: sessionId, isActive: true },
+    });
+  }
+
+  static async deactivateSessionById(sessionId: string) {
+    await prisma.userSession.update({
+      where: { id: sessionId },
       data: { isActive: false, deviceInfo: {} },
     });
   }
 
-  static async invalidateAllUserSessions(userId: string, userType: string) {
-    await prisma.userSession.updateMany({
+  static async listActiveSessionsForUsers(userIds: string[], userType: string) {
+    if (userIds.length === 0) return [];
+    return prisma.userSession.findMany({
+      where: { userId: { in: userIds }, userType, isActive: true },
+      orderBy: { lastActiveAt: "desc" },
+      select: {
+        id: true,
+        userId: true,
+        deviceInfo: true,
+        ipAddress: true,
+        lastActiveAt: true,
+        createdAt: true,
+        expiresAt: true,
+      },
+    });
+  }
+
+  static async listActiveSessionsForUser(userId: string, userType: string) {
+    return prisma.userSession.findMany({
       where: { userId, userType, isActive: true },
-      data: { isActive: false, deviceInfo: {} },
+      orderBy: { lastActiveAt: "desc" },
+      select: {
+        id: true,
+        deviceInfo: true,
+        ipAddress: true,
+        lastActiveAt: true,
+        createdAt: true,
+        expiresAt: true,
+      },
     });
   }
 
