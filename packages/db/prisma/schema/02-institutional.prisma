@@ -102,21 +102,21 @@ model College {
   createdAt          DateTime @default(now()) @map("created_at") @db.Timestamptz
   updatedAt          DateTime @updatedAt @map("updated_at") @db.Timestamptz
 
-  establishedYear  Int?     @map("established_year")
-  collegeType      String?  @map("college_type") @db.VarChar(30)
-  instituteOfNationalImportanceId String? @map("institute_of_national_importance_id")
-  genderType       String?  @map("gender_type") @db.VarChar(20)
-  avgStudentCount  Int?     @map("avg_student_count")
-  campusSizeAcres  Decimal? @map("campus_size_acres") @db.Decimal(8, 2)
-  outsideStatePct  Decimal? @map("outside_state_pct") @db.Decimal(5, 2)
-  avgRating        Decimal  @default(0) @map("avg_rating") @db.Decimal(2, 1)
-  reviewCount      Int      @default(0) @map("review_count")
-  amenities        Json     @default("[]")
-  campusFacilities Json     @default("[]") @map("campus_facilities")
-  nearbyAccess     Json     @default("{}") @map("nearby_access")
-  socialLinks      Json     @default("{}") @map("social_links")
-  campusReels      Json     @default("[]") @map("campus_reels")
-  view360Url       String?  @map("view_360_url") @db.Text
+  establishedYear                 Int?     @map("established_year")
+  collegeType                     String?  @map("college_type") @db.VarChar(30)
+  instituteOfNationalImportanceId String?  @map("institute_of_national_importance_id")
+  genderType                      String?  @map("gender_type") @db.VarChar(20)
+  avgStudentCount                 Int?     @map("avg_student_count")
+  campusSizeAcres                 Decimal? @map("campus_size_acres") @db.Decimal(8, 2)
+  outsideStatePct                 Decimal? @map("outside_state_pct") @db.Decimal(5, 2)
+  avgRating                       Decimal  @default(0) @map("avg_rating") @db.Decimal(2, 1)
+  reviewCount                     Int      @default(0) @map("review_count")
+  amenities                       Json     @default("[]")
+  campusFacilities                Json     @default("[]") @map("campus_facilities")
+  nearbyAccess                    Json     @default("{}") @map("nearby_access")
+  socialLinks                     Json     @default("{}") @map("social_links")
+  campusReels                     Json     @default("[]") @map("campus_reels")
+  view360Url                      String?  @map("view_360_url") @db.Text
 
   codeOfConduct Json @default("[]") @map("code_of_conduct")
 
@@ -127,64 +127,64 @@ model College {
   demographics            Json      @default("{}")
   demographicsRefreshedAt DateTime? @map("demographics_refreshed_at") @db.Timestamptz
 
-  university                 University                  @relation(fields: [universityId], references: [id])
+  university                    University                     @relation(fields: [universityId], references: [id])
   instituteOfNationalImportance InstituteOfNationalImportance? @relation(fields: [instituteOfNationalImportanceId], references: [id])
-  departments                Department[]
-  campuses                   Campus[]
-  courses                    Course[]
-  gallery                    CollegeGallery[]
-  reviews                    CollegeReview[]
-  collegeRoles               CollegeRole[]
-  staffMembers               StaffMember[]
-  blinkUsers                 BlinkUser[]
-  admissionCycles            AdmissionCycle[]
-  applications               Application[]
-  enrollments                Enrollment[]
-  assessmentSections         AssessmentSection[]
-  assessmentTemplates        AssessmentTemplate[]
-  assessmentSlots            AssessmentSlot[]
-  questionTypes              QuestionType[]
-  questions                  Question[]
-  offerLetters               OfferLetter[]
-  feeStructures              FeeStructure[]
-  studentFeeLedger           StudentFeeLedger[]
-  transactions               Transaction[]
-  paymentReceipts            PaymentReceipt[]
-  refunds                    Refund[]
-  scholarshipConfigs         ScholarshipConfig[]
-  collegePaymentAccounts     CollegePaymentAccount[]
-  documentTemplates          DocumentTemplate[]
-  documentRequests           DocumentRequest[]
-  issuedDocuments            IssuedDocument[]
-  documentSubmissionRequests DocumentSubmissionRequest[]
-  hostels                    Hostel[]
-  libraries                  Library[]
-  commuteRoutes              CommuteRoute[]
-  newsAlerts                 NewsAlert[]
-  articles                   Article[]
-  referralCodes              ReferralCode[]
-  serviceChargeConfigs       ServiceChargeConfig[]
-  mediaKits                  MediaKit[]
-  campusVisits               CampusVisit[]
-  campusVisitAvailabilities  CampusVisitAvailability[]
-  campusVisitSettings        CampusVisitSettings?
-  campusVisitDateOverrides   CampusVisitDateOverride[]
-  announcements              Announcement[]
-  siteAnnouncements          SiteAnnouncement[]
-  supportTickets             SupportTicket[]
-  callRequests               CallRequest[]
-  platformTickets            PlatformTicket[]
-  antiRaggingComplaints      AntiRaggingComplaint[]
-  courseSwitchRequests       CourseSwitchRequest[]
-  admissionFormConfigs       AdmissionFormConfig[]
-  documentUploadConfigs      DocumentUploadConfig[]
-  hostelEnrollments          HostelEnrollment[]
-  commuteEnrollments         CommuteEnrollment[]
-  broadcastNotifications     BroadcastNotification[]
-  institutionGroups          InstitutionGroup[]
-  institutionGroupMember     InstitutionGroupMember?
-  collegeOnboardingRequests  CollegeOnboardingRequest[]
-  collegeQuotas              CollegeQuota[]
+  departments                   Department[]
+  campuses                      Campus[]
+  courses                       Course[]
+  gallery                       CollegeGallery[]
+  reviews                       CollegeReview[]
+  collegeRoles                  CollegeRole[]
+  staffMembers                  StaffMember[]
+  blinkUsers                    BlinkUser[]
+  admissionCycles               AdmissionCycle[]
+  applications                  Application[]
+  enrollments                   Enrollment[]
+  assessmentSections            AssessmentSection[]
+  assessmentTemplates           AssessmentTemplate[]
+  assessmentSlots               AssessmentSlot[]
+  questionTypes                 QuestionType[]
+  questions                     Question[]
+  offerLetters                  OfferLetter[]
+  feeStructures                 FeeStructure[]
+  studentFeeLedger              StudentFeeLedger[]
+  transactions                  Transaction[]
+  paymentReceipts               PaymentReceipt[]
+  refunds                       Refund[]
+  scholarshipConfigs            ScholarshipConfig[]
+  collegePaymentAccounts        CollegePaymentAccount[]
+  documentTemplates             DocumentTemplate[]
+  documentRequests              DocumentRequest[]
+  issuedDocuments               IssuedDocument[]
+  documentSubmissionRequests    DocumentSubmissionRequest[]
+  hostels                       Hostel[]
+  libraries                     Library[]
+  commuteRoutes                 CommuteRoute[]
+  newsAlerts                    NewsAlert[]
+  articles                      Article[]
+  referralCodes                 ReferralCode[]
+  serviceChargeConfigs          ServiceChargeConfig[]
+  mediaKits                     MediaKit[]
+  campusVisits                  CampusVisit[]
+  campusVisitAvailabilities     CampusVisitAvailability[]
+  campusVisitSettings           CampusVisitSettings?
+  campusVisitDateOverrides      CampusVisitDateOverride[]
+  announcements                 Announcement[]
+  siteAnnouncements             SiteAnnouncement[]
+  supportTickets                SupportTicket[]
+  callRequests                  CallRequest[]
+  platformTickets               PlatformTicket[]
+  antiRaggingComplaints         AntiRaggingComplaint[]
+  courseSwitchRequests          CourseSwitchRequest[]
+  admissionFormConfigs          AdmissionFormConfig[]
+  documentUploadConfigs         DocumentUploadConfig[]
+  hostelEnrollments             HostelEnrollment[]
+  commuteEnrollments            CommuteEnrollment[]
+  broadcastNotifications        BroadcastNotification[]
+  institutionGroups             InstitutionGroup[]
+  institutionGroupMember        InstitutionGroupMember?
+  collegeOnboardingRequests     CollegeOnboardingRequest[]
+  collegeQuotas                 CollegeQuota[]
 
   collegeWishlists CollegeWishlist[]
 
@@ -272,11 +272,11 @@ model Campus {
   createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz
   updatedAt    DateTime @updatedAt @map("updated_at") @db.Timestamptz
 
-  college        College         @relation(fields: [collegeId], references: [id], onDelete: Cascade)
-  departments    Department[]
-  courses        Course[]
-  applications   Application[]
-  enrollments    Enrollment[]
+  college      College       @relation(fields: [collegeId], references: [id], onDelete: Cascade)
+  departments  Department[]
+  courses      Course[]
+  applications Application[]
+  enrollments  Enrollment[]
 
   @@index([collegeId], name: "idx_campuses_college")
   @@index([collegeId, status], name: "idx_campuses_status")
@@ -475,30 +475,30 @@ model Icon {
 }
 
 model Course {
-  id                     String   @id @default(dbgenerated("('CRS-'::text || (nextval('course_seq'::regclass))::text)"))
-  collegeId              String   @map("college_id")
-  campusId               String?  @map("campus_id")
-  disciplineId           String   @map("discipline_id")
-  studyLevelId           String   @map("study_level_id")
-  programTypeId          String   @map("program_type_id")
-  appFeeCommissionType   String?  @map("app_fee_commission_type") @db.VarChar(10)
-  appFeeCommissionValue  Decimal? @map("app_fee_commission_value") @db.Decimal(10, 2)
-  tuitionCommissionType  String?  @map("tuition_commission_type") @db.VarChar(10)
-  tuitionCommissionValue Decimal? @map("tuition_commission_value") @db.Decimal(10, 2)
+  id                       String   @id @default(dbgenerated("('CRS-'::text || (nextval('course_seq'::regclass))::text)"))
+  collegeId                String   @map("college_id")
+  campusId                 String?  @map("campus_id")
+  disciplineId             String   @map("discipline_id")
+  studyLevelId             String   @map("study_level_id")
+  programTypeId            String   @map("program_type_id")
+  appFeeCommissionType     String?  @map("app_fee_commission_type") @db.VarChar(10)
+  appFeeCommissionValue    Decimal? @map("app_fee_commission_value") @db.Decimal(10, 2)
+  tuitionCommissionType    String?  @map("tuition_commission_type") @db.VarChar(10)
+  tuitionCommissionValue   Decimal? @map("tuition_commission_value") @db.Decimal(10, 2)
   // Flat referral commission paid to the blink_user who referred an enrolled
   // student through this course — a direct amount, not derived from any fee.
   referralCommissionAmount Decimal? @map("referral_commission_amount") @db.Decimal(10, 2)
-  name                   String   @db.VarChar(255)
-  code                   String   @db.VarChar(30)
-  duration               String?  @db.VarChar(50)
-  eligibility            String?  @db.Text
-  intakeCapacity         Int?     @map("intake_capacity")
-  studyMode              String   @default("full_time") @map("study_mode") @db.VarChar(20)
-  status                 String   @default("active") @db.VarChar(20)
-  coverImageUrl          String?  @map("cover_image_url") @db.Text
-  metadata               Json     @default("{}")
-  createdAt              DateTime @default(now()) @map("created_at") @db.Timestamptz
-  updatedAt              DateTime @updatedAt @map("updated_at") @db.Timestamptz
+  name                     String   @db.VarChar(255)
+  code                     String   @db.VarChar(30)
+  duration                 String?  @db.VarChar(50)
+  eligibility              String?  @db.Text
+  intakeCapacity           Int?     @map("intake_capacity")
+  studyMode                String   @default("full_time") @map("study_mode") @db.VarChar(20)
+  status                   String   @default("active") @db.VarChar(20)
+  coverImageUrl            String?  @map("cover_image_url") @db.Text
+  metadata                 Json     @default("{}")
+  createdAt                DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt                DateTime @updatedAt @map("updated_at") @db.Timestamptz
 
   departmentId String? @map("department_id")
 

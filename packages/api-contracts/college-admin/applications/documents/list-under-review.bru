@@ -1,0 +1,35 @@
+meta {
+  name: List Documents Under Review
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/api/v1/college-admin/applications/documents/under-review?page=1&limit=20
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{staffAccessToken}}
+}
+
+params:query {
+  page: 1
+  limit: 20
+  ~search: mzamil
+}
+
+docs {
+  Paginated queue of submitted applications whose uploaded documents have
+  never been touched — every ApplicationDocument is still "pending" with no
+  verifier and no rejection history. Requires staff_member auth,
+  admissions.view.
+
+  Only applications with formStatus "submitted" and at least one uploaded
+  document are considered. `search` matches the application number or the
+  student's name.
+
+  Response shape: `data: { applications: [...], meta: { total, page, limit,
+  hasNext } } }` — meta is nested inside data, matching List Applications.
+}

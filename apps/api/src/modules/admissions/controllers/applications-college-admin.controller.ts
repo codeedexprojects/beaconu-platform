@@ -6,11 +6,17 @@ import {
   listPendingShortlistQuerySchema,
   rejectApplicationCourseSchema,
 } from "../validators/application.validator";
+import {
+  documentVerificationListQuerySchema,
+  rejectApplicationDocumentSchema,
+} from "../validators/application-document.validator";
 import { ApplicationListQuery } from "../queries/application-list.query";
 import { ApplicationDetailQuery } from "../queries/application-detail.query";
 import { PendingEnrollmentQuery } from "../queries/pending-enrollment.query";
+import { ApplicationDocumentVerificationQuery } from "../queries/application-document-verification.query";
 import { EnrollmentService } from "../services/enrollment.service";
 import { ApplicationCourseService } from "../services/application-course.service";
+import { ApplicationDocumentService } from "../services/application-document.service";
 
 export class ApplicationsCollegeAdminController {
   static async list(req: Request, res: Response): Promise<void> {
@@ -96,5 +102,71 @@ export class ApplicationsCollegeAdminController {
     res
       .status(200)
       .json(ApiResponse.success("Application course rejected", {}));
+  }
+
+  static async listDocumentsUnderReview(
+    req: Request,
+    res: Response,
+  ): Promise<void> {
+    const filters = documentVerificationListQuerySchema.parse(req.query);
+    const result = await ApplicationDocumentVerificationQuery.listUnderReview(
+      req.collegeId!,
+      filters,
+    );
+    res
+      .status(200)
+      .json(ApiResponse.success("Documents under review fetched", result));
+  }
+
+  static async listPartiallyVerifiedDocuments(
+    req: Request,
+    res: Response,
+  ): Promise<void> {
+    const filters = documentVerificationListQuerySchema.parse(req.query);
+    const result =
+      await ApplicationDocumentVerificationQuery.listPartiallyVerified(
+        req.collegeId!,
+        filters,
+      );
+    res
+      .status(200)
+      .json(
+        ApiResponse.success("Partially verified applications fetched", result),
+      );
+  }
+
+  static async getDocumentVerificationDetail(
+    req: Request,
+    res: Response,
+  ): Promise<void> {
+    const result = await ApplicationDocumentVerificationQuery.getDetail(
+      req.collegeId!,
+      req.params.applicationId as string,
+    );
+    res
+      .status(200)
+      .json(
+        ApiResponse.success("Document verification detail fetched", result),
+      );
+  }
+
+  static async verifyDocument(req: Request, res: Response): Promise<void> {
+    const result = await ApplicationDocumentService.verify(
+      req.collegeId!,
+      req.userId!,
+      req.params.documentId as string,
+    );
+    res.status(200).json(ApiResponse.success("Document verified", result));
+  }
+
+  static async rejectDocument(req: Request, res: Response): Promise<void> {
+    const body = rejectApplicationDocumentSchema.parse(req.body);
+    const result = await ApplicationDocumentService.reject(
+      req.collegeId!,
+      req.userId!,
+      req.params.documentId as string,
+      body.reason,
+    );
+    res.status(200).json(ApiResponse.success("Document rejected", result));
   }
 }

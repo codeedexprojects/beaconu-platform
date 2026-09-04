@@ -25,6 +25,31 @@ router.get(
   view,
   ApplicationsCollegeAdminController.getPendingShortlistDetail,
 );
+router.get(
+  "/documents/under-review",
+  view,
+  ApplicationsCollegeAdminController.listDocumentsUnderReview,
+);
+router.get(
+  "/documents/partially-verified",
+  view,
+  ApplicationsCollegeAdminController.listPartiallyVerifiedDocuments,
+);
+router.get(
+  "/documents/:applicationId/verification-detail",
+  view,
+  ApplicationsCollegeAdminController.getDocumentVerificationDetail,
+);
+router.patch(
+  "/documents/:documentId/verify",
+  manage,
+  ApplicationsCollegeAdminController.verifyDocument,
+);
+router.patch(
+  "/documents/:documentId/reject",
+  manage,
+  ApplicationsCollegeAdminController.rejectDocument,
+);
 router.get("/:id", view, ApplicationsCollegeAdminController.getById);
 router.post(
   "/courses/:applicationCourseId/enroll",

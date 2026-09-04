@@ -1,0 +1,29 @@
+meta {
+  name: Get Document Verification Detail
+  type: http
+  seq: 3
+}
+
+get {
+  url: {{baseUrl}}/api/v1/college-admin/applications/documents/{{applicationId}}/verification-detail
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{staffAccessToken}}
+}
+
+docs {
+  Full document-verification view for one application — student identity,
+  primary course name, and every uploaded ApplicationDocument (grouped
+  client-side by documentCategory). Each document includes
+  verificationStatus, rejectionReason, verifiedByName/verifiedAt,
+  resubmissionCount, and the full verificationHistory array (one entry per
+  past rejection: reason, rejectedBy, rejectedByName, rejectedAt).
+
+  Requires staff_member auth, admissions.view. 404 if the application
+  doesn't exist or belongs to a different college. Reachable regardless of
+  formStatus (draft or submitted) — only the verify/reject actions require
+  the application to be submitted.
+}

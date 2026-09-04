@@ -6,6 +6,7 @@ import type {
   AchievementsDetailsInput,
   AddressDetailsInput,
   ApplicationDetailDto,
+  ApplicationDocumentVerificationHistoryEntry,
   DeclarationInput,
   EntranceExamDetailsInput,
   FamilyDetailsInput,
@@ -207,7 +208,14 @@ export class ApplicationDetailQuery {
         fileName: d.fileName,
         verificationStatus: d.verificationStatus,
         rejectionReason: d.rejectionReason,
+        verifiedByName: d.verifier?.fullName ?? null,
+        verifiedAt: d.verifiedAt ? d.verifiedAt.toISOString() : null,
+        resubmissionCount: d.resubmissionCount,
+        verificationHistory: Array.isArray(d.verificationHistory)
+          ? (d.verificationHistory as unknown as ApplicationDocumentVerificationHistoryEntry[])
+          : [],
         createdAt: d.createdAt.toISOString(),
+        updatedAt: d.updatedAt.toISOString(),
       })),
       payments: payments.map((p) => ({
         id: p.id,

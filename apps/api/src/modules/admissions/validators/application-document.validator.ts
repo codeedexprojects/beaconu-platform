@@ -21,3 +21,20 @@ export type RegisterApplicationDocumentInput = z.infer<
 export type RegisterApplicationDocumentsInput = z.infer<
   typeof registerApplicationDocumentsSchema
 >;
+
+export const rejectApplicationDocumentSchema = z.object({
+  reason: z.string().trim().min(1, "Rejection reason is required"),
+});
+
+export const documentVerificationListQuerySchema = z.object({
+  page: z.coerce.number().int().min(1).default(1),
+  limit: z.coerce.number().int().min(1).max(100).default(20),
+  search: z.string().trim().optional(),
+});
+
+export type RejectApplicationDocumentInput = z.infer<
+  typeof rejectApplicationDocumentSchema
+>;
+export type DocumentVerificationListQuery = z.infer<
+  typeof documentVerificationListQuerySchema
+>;

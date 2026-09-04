@@ -1,0 +1,51 @@
+meta {
+  name: Reject Application Document
+  type: http
+  seq: 5
+}
+
+patch {
+  url: {{baseUrl}}/api/v1/college-admin/applications/documents/{{applicationDocumentId}}/reject
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{staffAccessToken}}
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "reason": "The uploaded document is blurry and the edges are cut off. Please re-upload a clear, full scan."
+  }
+}
+
+script:post-response {
+  if (res.status === 200) {
+    const data = res.getBody();
+    if (data.data && data.data.id) {
+      bru.setEnvVar("applicationDocumentId", data.data.id);
+    }
+  }
+}
+
+docs {
+  Rejects one uploaded ApplicationDocument — `reason` is required. Appends
+  {reason, rejectedBy, rejectedByName, rejectedAt} to the document's
+  verificationHistory array (permanent audit trail — never cleared, even
+  once the student resubmits and it's rejected again), sets
+  verificationStatus to "rejected", rejectionReason to the given reason.
+  Notifies the student via push (best-effort).
+
+  Once rejected, the student can resubmit this exact document type via the
+  normal student-side upload endpoint even though the application is
+  already submitted — see Register Application Documents' docs.
+
+  Requires staff_member auth, admissions.manage. 404 if the document
+  doesn't exist or belongs to a different college's application. 409
+  ConflictError if the parent application hasn't been submitted yet.
+}

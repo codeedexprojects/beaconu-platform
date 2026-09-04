@@ -1,22 +1,22 @@
 model AdmissionCycle {
-  id                   String    @id @default(dbgenerated("('ACV-'::text || (nextval('admission_cycle_seq'::regclass))::text)"))
-  collegeId            String    @map("college_id")
-  applicationType      String    @map("application_type") @db.VarChar(50)
-  name                 String    @db.VarChar(255)
-  slug                 String    @db.VarChar(100)
-  programLevel         String    @map("program_level") @db.VarChar(30)
-  admissionYear        String    @map("admission_year") @db.VarChar(10)
-  startsOn             DateTime  @map("starts_on") @db.Date
-  endsOn               DateTime? @map("ends_on") @db.Date
-  status               String    @default("open") @db.VarChar(20)
-  settings             Json      @default("{}")
-  assessmentRequired   Boolean   @default(false) @map("assessment_required")
-  assessmentTemplateId String?   @map("assessment_template_id")
-  interviewRequired    Boolean   @default(true) @map("interview_required")
-  tokenOnlinePaymentEnabled  Boolean @default(true) @map("token_online_payment_enabled")
-  tokenOfflinePaymentEnabled Boolean @default(true) @map("token_offline_payment_enabled")
-  createdAt            DateTime  @default(now()) @map("created_at") @db.Timestamptz
-  updatedAt            DateTime  @updatedAt @map("updated_at") @db.Timestamptz
+  id                         String    @id @default(dbgenerated("('ACV-'::text || (nextval('admission_cycle_seq'::regclass))::text)"))
+  collegeId                  String    @map("college_id")
+  applicationType            String    @map("application_type") @db.VarChar(50)
+  name                       String    @db.VarChar(255)
+  slug                       String    @db.VarChar(100)
+  programLevel               String    @map("program_level") @db.VarChar(30)
+  admissionYear              String    @map("admission_year") @db.VarChar(10)
+  startsOn                   DateTime  @map("starts_on") @db.Date
+  endsOn                     DateTime? @map("ends_on") @db.Date
+  status                     String    @default("open") @db.VarChar(20)
+  settings                   Json      @default("{}")
+  assessmentRequired         Boolean   @default(false) @map("assessment_required")
+  assessmentTemplateId       String?   @map("assessment_template_id")
+  interviewRequired          Boolean   @default(true) @map("interview_required")
+  tokenOnlinePaymentEnabled  Boolean   @default(true) @map("token_online_payment_enabled")
+  tokenOfflinePaymentEnabled Boolean   @default(true) @map("token_offline_payment_enabled")
+  createdAt                  DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt                  DateTime  @updatedAt @map("updated_at") @db.Timestamptz
 
   college               College                @relation(fields: [collegeId], references: [id])
   assessmentTemplate    AssessmentTemplate?    @relation(fields: [assessmentTemplateId], references: [id])
@@ -167,19 +167,21 @@ model ApplicationCourse {
 }
 
 model ApplicationDocument {
-  id                 String    @id @default(dbgenerated("('APD-'::text || (nextval('application_document_seq'::regclass))::text)"))
-  applicationId      String    @map("application_id")
-  documentType       String    @map("document_type") @db.VarChar(50)
-  documentCategory   String    @map("document_category") @db.VarChar(30)
-  fileUrl            String    @map("file_url") @db.Text
-  fileName           String?   @map("file_name") @db.VarChar(255)
-  fileSizeBytes      Int?      @map("file_size_bytes")
-  verificationStatus String    @default("pending") @map("verification_status") @db.VarChar(20)
-  rejectionReason    String?   @map("rejection_reason") @db.Text
-  verifiedBy         String?   @map("verified_by")
-  verifiedAt         DateTime? @map("verified_at") @db.Timestamptz
-  createdAt          DateTime  @default(now()) @map("created_at") @db.Timestamptz
-  updatedAt          DateTime  @updatedAt @map("updated_at") @db.Timestamptz
+  id                  String    @id @default(dbgenerated("('APD-'::text || (nextval('application_document_seq'::regclass))::text)"))
+  applicationId       String    @map("application_id")
+  documentType        String    @map("document_type") @db.VarChar(50)
+  documentCategory    String    @map("document_category") @db.VarChar(30)
+  fileUrl             String    @map("file_url") @db.Text
+  fileName            String?   @map("file_name") @db.VarChar(255)
+  fileSizeBytes       Int?      @map("file_size_bytes")
+  verificationStatus  String    @default("pending") @map("verification_status") @db.VarChar(20)
+  rejectionReason     String?   @map("rejection_reason") @db.Text
+  verifiedBy          String?   @map("verified_by")
+  verifiedAt          DateTime? @map("verified_at") @db.Timestamptz
+  verificationHistory Json      @default("[]") @map("verification_history")
+  resubmissionCount   Int       @default(0) @map("resubmission_count")
+  createdAt           DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt           DateTime  @updatedAt @map("updated_at") @db.Timestamptz
 
   application Application  @relation(fields: [applicationId], references: [id], onDelete: Cascade)
   verifier    StaffMember? @relation("VerifiedByStaff", fields: [verifiedBy], references: [id])
@@ -225,39 +227,39 @@ model SeatCancellation {
   // Final Clearance). All nullable/default so pre-existing rows (created before
   // this flow existed) stay exactly as they were — this only applies to new
   // requests, which start at currentPhase 1 and advance through these fields.
-  effectiveDate       DateTime? @map("effective_date") @db.Date
-  lastSemester        String?   @map("last_semester") @db.VarChar(50)
-  currentPhase        Int       @default(1) @map("current_phase")
+  effectiveDate DateTime? @map("effective_date") @db.Date
+  lastSemester  String?   @map("last_semester") @db.VarChar(50)
+  currentPhase  Int       @default(1) @map("current_phase")
 
-  counselorId             String?   @map("counselor_id")
-  scheduledAt             DateTime? @map("scheduled_at") @db.Timestamptz
-  meetingUrl              String?   @map("meeting_url") @db.Text
-  meetingId               String?   @map("meeting_id") @db.VarChar(100)
-  googleEventId           String?   @map("google_event_id") @db.VarChar(255)
-  counselingCompletedAt   DateTime? @map("counseling_completed_at") @db.Timestamptz
-  counselingNotes         String?   @map("counseling_notes") @db.Text
-  counselingOutcome       String?   @map("counseling_outcome") @db.VarChar(20)
-  suggestedCaseType       String?   @map("suggested_case_type") @db.VarChar(1)
+  counselorId           String?   @map("counselor_id")
+  scheduledAt           DateTime? @map("scheduled_at") @db.Timestamptz
+  meetingUrl            String?   @map("meeting_url") @db.Text
+  meetingId             String?   @map("meeting_id") @db.VarChar(100)
+  googleEventId         String?   @map("google_event_id") @db.VarChar(255)
+  counselingCompletedAt DateTime? @map("counseling_completed_at") @db.Timestamptz
+  counselingNotes       String?   @map("counseling_notes") @db.Text
+  counselingOutcome     String?   @map("counseling_outcome") @db.VarChar(20)
+  suggestedCaseType     String?   @map("suggested_case_type") @db.VarChar(1)
 
-  caseType                  String?   @map("case_type") @db.VarChar(1)
-  refundCalculationMethod   String?   @map("refund_calculation_method") @db.VarChar(20)
-  refundCalculationValue    Decimal?  @map("refund_calculation_value") @db.Decimal(10, 2)
-  penaltyAmount              Decimal?  @map("penalty_amount") @db.Decimal(10, 2)
-  penaltyPaidAt               DateTime? @map("penalty_paid_at") @db.Timestamptz
-  settledAt                   DateTime? @map("settled_at") @db.Timestamptz
+  caseType                String?   @map("case_type") @db.VarChar(1)
+  refundCalculationMethod String?   @map("refund_calculation_method") @db.VarChar(20)
+  refundCalculationValue  Decimal?  @map("refund_calculation_value") @db.Decimal(10, 2)
+  penaltyAmount           Decimal?  @map("penalty_amount") @db.Decimal(10, 2)
+  penaltyPaidAt           DateTime? @map("penalty_paid_at") @db.Timestamptz
+  settledAt               DateTime? @map("settled_at") @db.Timestamptz
 
   // Manual refund bookkeeping (no payment-gateway call) — staff types in
   // whatever reference/method they used when they transferred the refund.
-  refundTransactionRef  String?   @map("refund_transaction_ref") @db.VarChar(100)
-  refundPaymentMethod   String?   @map("refund_payment_method") @db.VarChar(100)
-  refundProcessedAt     DateTime? @map("refund_processed_at") @db.Timestamptz
+  refundTransactionRef String?   @map("refund_transaction_ref") @db.VarChar(100)
+  refundPaymentMethod  String?   @map("refund_payment_method") @db.VarChar(100)
+  refundProcessedAt    DateTime? @map("refund_processed_at") @db.Timestamptz
 
   documentsHandedOverAt DateTime? @map("documents_handed_over_at") @db.Timestamptz
 
-  applicationCourse ApplicationCourse         @relation(fields: [applicationCourseId], references: [id])
-  student           Student                   @relation(fields: [studentId], references: [id])
-  processor         StaffMember?              @relation(fields: [processedBy], references: [id])
-  counselor         StaffMember?              @relation("SeatCancellationCounselor", fields: [counselorId], references: [id])
+  applicationCourse ApplicationCourse          @relation(fields: [applicationCourseId], references: [id])
+  student           Student                    @relation(fields: [studentId], references: [id])
+  processor         StaffMember?               @relation(fields: [processedBy], references: [id])
+  counselor         StaffMember?               @relation("SeatCancellationCounselor", fields: [counselorId], references: [id])
   phaseLogs         SeatCancellationPhaseLog[]
 
   @@index([applicationCourseId], name: "idx_cancellations_app_course")

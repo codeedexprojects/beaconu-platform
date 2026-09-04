@@ -223,14 +223,14 @@ model CampusVisitSettings {
 /// normal open/closed status (holiday, leave day, one-off closure).
 /// Distinct from CampusVisitAvailability's recurring weekly pattern.
 model CampusVisitDateOverride {
-  id        String    @id @default(dbgenerated("('CVH-'::text || (nextval('campus_visit_date_override_seq'::regclass))::text)"))
-  collegeId String    @map("college_id")
-  date      DateTime  @db.Date
-  reason    String?   @db.Text
-  isActive  Boolean   @default(true) @map("is_active")
-  createdBy String?   @map("created_by")
-  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz
-  updatedAt DateTime  @updatedAt @map("updated_at") @db.Timestamptz
+  id        String   @id @default(dbgenerated("('CVH-'::text || (nextval('campus_visit_date_override_seq'::regclass))::text)"))
+  collegeId String   @map("college_id")
+  date      DateTime @db.Date
+  reason    String?  @db.Text
+  isActive  Boolean  @default(true) @map("is_active")
+  createdBy String?  @map("created_by")
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz
 
   college College      @relation(fields: [collegeId], references: [id], onDelete: Cascade)
   creator StaffMember? @relation(fields: [createdBy], references: [id])
