@@ -109,6 +109,7 @@ export async function startApplication(
   const referralCode = getReferralCodeCookie();
   return api.post(`/api/v1/student/application-forms/${cycleId}/application`, {
     ...input,
+    source: "web",
     ...(referralCode ? { referral_code: referralCode } : {}),
   });
 }

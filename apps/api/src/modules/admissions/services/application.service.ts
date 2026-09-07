@@ -521,6 +521,7 @@ export class ApplicationService {
       stateOfDomicile: body.state_of_domicile ?? null,
       passportCountry: body.passport_country ?? null,
       passportNumber: body.passport_number ?? null,
+      source: body.source ?? "mobile",
     });
 
     const applicationNumber = buildApplicationNumber(

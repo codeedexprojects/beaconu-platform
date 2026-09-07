@@ -9,6 +9,7 @@ const APPLICATION_LIST_SELECT = {
   formStatus: true,
   feePaymentStatus: true,
   totalApplicationFee: true,
+  source: true,
   profilePhotoUrl: true,
   submittedAt: true,
   createdAt: true,
@@ -49,6 +50,7 @@ function mapRow(row: ApplicationListRow): ApplicationListItem {
     formStatus: row.formStatus,
     feePaymentStatus: row.feePaymentStatus,
     totalApplicationFee: row.totalApplicationFee.toString(),
+    source: row.source,
     courses: row.applicationCourses.map((ac) => ({
       id: ac.id,
       courseId: ac.courseId,
@@ -76,6 +78,7 @@ export class ApplicationListQuery {
       ...(filters.fee_payment_status && {
         feePaymentStatus: filters.fee_payment_status,
       }),
+      ...(filters.source && { source: filters.source }),
       ...(filters.course_id && {
         applicationCourses: {
           some: {
