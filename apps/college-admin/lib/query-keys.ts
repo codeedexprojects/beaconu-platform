@@ -32,6 +32,14 @@ export const QUERY_KEYS = {
     filters ? ["college-applications", filters] : ["college-applications"],
   application: (id: string) => ["college-applications", id] as const,
   sidebarHints: ["sidebar-hints"] as const,
+  reportEnrollmentOverview: (admissionCycleId?: string) =>
+    ["reports", "enrollment-overview", admissionCycleId ?? "all"] as const,
+  reportFunnel: (admissionCycleId?: string) =>
+    ["reports", "funnel", admissionCycleId ?? "all"] as const,
+  reportDemographics: (admissionCycleId?: string) =>
+    ["reports", "demographics", admissionCycleId ?? "all"] as const,
+  reportGeography: (admissionCycleId?: string) =>
+    ["reports", "geography", admissionCycleId ?? "all"] as const,
   pendingEnrollments: (filters?: object) =>
     filters ? ["pending-enrollments", filters] : ["pending-enrollments"],
   pendingShortlist: (search?: string) =>

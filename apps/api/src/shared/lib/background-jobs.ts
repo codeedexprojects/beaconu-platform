@@ -23,6 +23,10 @@ import {
   startInvoiceGenerationWorker,
   stopInvoiceGenerationWorker,
 } from "@/modules/payments/jobs/invoice-generation.job";
+import {
+  startMaterializedViewRefreshJob,
+  stopMaterializedViewRefreshJob,
+} from "@/modules/dashboard/jobs/materialized-view-refresh.job";
 
 const JOBS = [
   {
@@ -54,6 +58,11 @@ const JOBS = [
     name: "Invoice generation",
     start: startInvoiceGenerationWorker,
     stop: stopInvoiceGenerationWorker,
+  },
+  {
+    name: "Materialized view refresh",
+    start: startMaterializedViewRefreshJob,
+    stop: stopMaterializedViewRefreshJob,
   },
 ];
 
