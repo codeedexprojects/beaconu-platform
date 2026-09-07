@@ -162,6 +162,11 @@ const COLLEGE_PERMISSIONS = [
     code: "ambassadors.manage",
     description: "Manage campus ambassador registrations",
   },
+  {
+    code: "reports.view",
+    description:
+      "View the Reports & Demographics dashboard (enrollment overview, admissions funnel, age/gender and geographic insights)",
+  },
 ];
 
 export class CollegeRolesController {

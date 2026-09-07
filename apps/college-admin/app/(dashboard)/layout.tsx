@@ -40,6 +40,7 @@ import {
   Headset,
   MonitorSmartphone,
   Phone,
+  BarChart3,
 } from "lucide-react";
 import { useAuthStore } from "@/store";
 import {
@@ -244,6 +245,7 @@ export default function DashboardLayout({
   };
 
   const getRequiredPermissionForPath = (path: string): string | null => {
+    if (path.includes("/reports")) return "reports.view";
     if (path.includes("/setup/profile")) return "profile.view";
     if (path.includes("/setup/campuses")) return "campuses.view";
     if (path.includes("/setup/academics")) return "academics.view";
@@ -338,6 +340,12 @@ export default function DashboardLayout({
                     path: "/",
                     icon: LayoutDashboard,
                     permission: undefined,
+                  },
+                  {
+                    name: "Reports & Demographics",
+                    path: "/reports",
+                    icon: BarChart3,
+                    permission: "reports.view",
                   },
                   {
                     name: "Overview Profile",
