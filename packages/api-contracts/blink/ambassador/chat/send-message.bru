@@ -1,0 +1,37 @@
+meta {
+  name: Send Message (Ambassador)
+  type: http
+  seq: 3
+}
+
+post {
+  url: {{baseUrl}}/api/v1/blink/ambassador/chat/conversations/{{chatConversationId}}/messages
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  Authorization: Bearer {{accessToken}}
+}
+
+body:json {
+  {
+    "message": "Sure, happy to help — the hostel has 3 room types available."
+  }
+}
+
+script:post-response {
+  if (res.status === 201) {
+    const data = res.getBody();
+    if (data.data && data.data.id) {
+      bru.setEnvVar("chatMessageId", data.data.id);
+    }
+  }
+}
+
+docs {
+  Same shape/behavior as the student-side Send Message — persists, emits a
+  live `chat:message` event to the student if connected, and sends a
+  best-effort push regardless.
+}

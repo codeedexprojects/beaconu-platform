@@ -50,12 +50,15 @@ export interface Course {
   name: string;
   code: string;
   studyMode: string;
+  duration?: string | null;
   coverImageUrl?: string | null;
   referralCommissionAmount?: number | null;
   campus?: { id: string; name: string } | null;
+  department?: { id: string; name: string } | null;
   studyLevel?: { id: string; name: string } | null;
   discipline?: { id: string; name: string } | null;
   programType?: { id: string; name: string } | null;
+  setupCompletionPercent?: number;
 }
 
 export interface UpdateCollegeProfileInput {

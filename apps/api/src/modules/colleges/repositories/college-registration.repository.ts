@@ -80,6 +80,8 @@ export class CollegeRegistrationRepository {
     studyLevel: { select: { id: true, name: true } },
     programType: { select: { id: true, name: true } },
     campus: { select: { id: true, name: true } },
+    department: { select: { id: true, name: true } },
+    _count: { select: { quotas: true, feeStructures: true } },
   };
 
   private static readonly COURSE_RELATIONS_INCLUDE_NO_CAMPUS = {

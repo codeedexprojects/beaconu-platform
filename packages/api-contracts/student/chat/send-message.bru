@@ -1,0 +1,44 @@
+meta {
+  name: Send Message
+  type: http
+  seq: 5
+}
+
+post {
+  url: {{baseUrl}}/api/v1/student/chat/conversations/{{chatConversationId}}/messages
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  Authorization: Bearer {{studentAccessToken}}
+}
+
+body:json {
+  {
+    "message": "Hi! I wanted to ask about the hostel facilities."
+  }
+}
+
+script:post-response {
+  if (res.status === 201) {
+    const data = res.getBody();
+    if (data.data && data.data.id) {
+      bru.setEnvVar("chatMessageId", data.data.id);
+    }
+  }
+}
+
+docs {
+  At least one of `message` or `attachments` is required. `attachments` is
+  an array of {url, file_name?, mime_type?} for files already uploaded via
+  the existing generic student upload flow (presign -> PUT -> verify) —
+  this endpoint doesn't accept raw file bytes.
+
+  On success: persists the message, bumps the conversation's
+  lastMessageText/lastMessageAt and the recipient's unread counter, emits a
+  live `chat:message` Socket.IO event to the ambassador if connected (see
+  docs/chat-websocket-contract.md), and sends a best-effort push
+  notification regardless of live-socket delivery.
+}

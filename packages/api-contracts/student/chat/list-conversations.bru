@@ -1,0 +1,28 @@
+meta {
+  name: List My Conversations
+  type: http
+  seq: 3
+}
+
+get {
+  url: {{baseUrl}}/api/v1/student/chat/conversations?page=1&limit=20
+  body: none
+  auth: none
+}
+
+headers {
+  Authorization: Bearer {{studentAccessToken}}
+}
+
+params:query {
+  page: 1
+  limit: 20
+}
+
+docs {
+  Every conversation this student is part of, newest-last-message first.
+  Each row: id, otherParticipant {id, fullName, avatarUrl} (the
+  ambassador), lastMessageText, lastMessageAt, unreadCount, status.
+
+  Response shape: `data: [...]`, `meta: { total, page, limit, hasNext }`.
+}

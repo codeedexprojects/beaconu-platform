@@ -35,6 +35,7 @@ import studentSeatCancellationRoutes from "@/modules/admissions/routes/seat-canc
 import studentCourseSwitchRoutes from "@/modules/admissions/routes/course-switch-requests-student.routes";
 import studentGroupFinderRoutes from "@/modules/group-finder/routes/student.routes";
 import studentCollegeComparisonRoutes from "@/modules/college-comparison/routes/student.routes";
+import studentChatRoutes from "@/modules/chat/routes/student.routes";
 
 const router: Router = Router();
 
@@ -79,5 +80,6 @@ router.use("/seat-cancellations", studentSeatCancellationRoutes);
 router.use("/course-switch-requests", studentCourseSwitchRoutes);
 router.use("/group-finder", studentGroupFinderRoutes);
 router.use("/compare", studentCollegeComparisonRoutes);
+router.use("/chat", studentChatRoutes);
 
 export default router;
