@@ -1,0 +1,38 @@
+meta {
+  name: List Ambassadors To Chat With
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/api/v1/student/chat/ambassadors?college_id={{collegeId}}
+  body: none
+  auth: none
+}
+
+headers {
+  Authorization: Bearer {{studentAccessToken}}
+}
+
+params:query {
+  college_id: {{collegeId}}
+}
+
+script:post-response {
+  if (res.status === 200) {
+    const data = res.getBody();
+    if (data.data && data.data[0] && data.data[0].id) {
+      bru.setEnvVar("ambassadorId", data.data[0].id);
+    }
+  }
+}
+
+docs {
+  Lists active campus ambassadors at a college, for a student to pick who
+  to start a conversation with. No enrollment or application prerequisite —
+  any authenticated student can list ambassadors at any college.
+
+  Response fields per ambassador: id, fullName, phoneNumber, avatarUrl,
+  campusCode (mirrors CampusVisitAmbassadorContact's shape — no email,
+  no ambassadorType).
+}

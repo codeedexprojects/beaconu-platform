@@ -12,6 +12,59 @@ import {
 } from "../validators/college-registration.validator";
 import { InstitutionGroupService } from "./institution-group.service";
 import { InstitutionDepartmentsQuery } from "../queries/institution-departments.query";
+import { COURSE_SETUP_TAB_IDS } from "../validators/course-tabs.validator";
+
+// The 19 tabs shown on the college-admin course-setup sidebar
+// (apps/college-admin/components/academics/constants.ts's COURSE_TABS):
+// 1 always-complete ("basic", the course itself), 13 tracked live in
+// Course.metadata.tabs by course-tabs.service.ts on every save
+// (COURSE_SETUP_TAB_IDS), 2 backed by their own relational tables
+// (course_quotas, fees), and 3 backed by dedicated Course columns that
+// aren't part of the metadata.tabs tracking array.
+const TOTAL_COURSE_SETUP_TABS = 1 + COURSE_SETUP_TAB_IDS.length + 2 + 3;
+
+function isNonEmptyJsonArray(value: unknown): boolean {
+  return Array.isArray(value) && value.length > 0;
+}
+
+function isNonEmptyJsonObject(value: unknown): boolean {
+  return (
+    !!value &&
+    typeof value === "object" &&
+    !Array.isArray(value) &&
+    Object.keys(value as Record<string, unknown>).length > 0
+  );
+}
+
+function computeCourseSetupCompletion(course: {
+  metadata: unknown;
+  eligibilityCriteria: unknown;
+  accreditations: unknown;
+  entranceExamEligibility: unknown;
+  _count?: { quotas: number; feeStructures: number };
+}): number {
+  const metadata =
+    course.metadata && typeof course.metadata === "object"
+      ? (course.metadata as Record<string, unknown>)
+      : {};
+  const savedTabs = Array.isArray(metadata.tabs)
+    ? metadata.tabs.filter(
+        (tab): tab is string =>
+          typeof tab === "string" &&
+          (COURSE_SETUP_TAB_IDS as readonly string[]).includes(tab),
+      )
+    : [];
+
+  let complete = 1; // "basic" — the course exists, so this is always done
+  complete += new Set(savedTabs).size;
+  complete += (course._count?.quotas ?? 0) > 0 ? 1 : 0;
+  complete += (course._count?.feeStructures ?? 0) > 0 ? 1 : 0;
+  complete += isNonEmptyJsonObject(course.eligibilityCriteria) ? 1 : 0;
+  complete += isNonEmptyJsonArray(course.accreditations) ? 1 : 0;
+  complete += isNonEmptyJsonArray(course.entranceExamEligibility) ? 1 : 0;
+
+  return Math.round((complete / TOTAL_COURSE_SETUP_TABS) * 100);
+}
 
 export class CollegeRegistrationService {
   private static readonly DEFAULT_HAPPENINGS_LIMIT = 10;
@@ -845,7 +898,11 @@ export class CollegeRegistrationService {
   // ── Courses ────────────────────────────────────────────────────────────────
 
   static async listCourses(collegeId: string) {
-    return CollegeRegistrationRepository.getCourses(collegeId);
+    const courses = await CollegeRegistrationRepository.getCourses(collegeId);
+    return courses.map((course) => ({
+      ...course,
+      setupCompletionPercent: computeCourseSetupCompletion(course),
+    }));
   }
 
   static async listCoursesMinimal(collegeId: string) {

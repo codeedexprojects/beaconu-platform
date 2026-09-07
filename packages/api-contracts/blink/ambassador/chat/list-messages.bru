@@ -1,0 +1,25 @@
+meta {
+  name: List Messages (Ambassador)
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{baseUrl}}/api/v1/blink/ambassador/chat/conversations/{{chatConversationId}}/messages?page=1&limit=20
+  body: none
+  auth: none
+}
+
+headers {
+  Authorization: Bearer {{accessToken}}
+}
+
+params:query {
+  page: 1
+  limit: 20
+}
+
+docs {
+  Same shape as the student-side equivalent. 404 if this ambassador isn't
+  a participant of the conversation.
+}

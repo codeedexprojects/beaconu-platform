@@ -1,0 +1,43 @@
+meta {
+  name: Start Or Get Conversation
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{baseUrl}}/api/v1/student/chat/conversations
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  Authorization: Bearer {{studentAccessToken}}
+}
+
+body:json {
+  {
+    "ambassador_id": "{{ambassadorId}}"
+  }
+}
+
+script:post-response {
+  if (res.status === 201) {
+    const data = res.getBody();
+    if (data.data && data.data.id) {
+      bru.setEnvVar("chatConversationId", data.data.id);
+    }
+  }
+}
+
+docs {
+  Find-or-create — idempotent. Calling this again for the same ambassador
+  always returns the exact same conversation (student is always
+  participant1, ambassador always participant2 — never swapped), never a
+  duplicate row.
+
+  404 if the ambassador doesn't exist, isn't role campus_ambassador, or
+  isn't active. No college-membership check on the student — any student,
+  enrolled or not, can start a conversation with any active ambassador at
+  any college.
+}

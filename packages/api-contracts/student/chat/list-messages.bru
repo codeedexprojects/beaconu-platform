@@ -1,0 +1,27 @@
+meta {
+  name: List Messages
+  type: http
+  seq: 4
+}
+
+get {
+  url: {{baseUrl}}/api/v1/student/chat/conversations/{{chatConversationId}}/messages?page=1&limit=20
+  body: none
+  auth: none
+}
+
+headers {
+  Authorization: Bearer {{studentAccessToken}}
+}
+
+params:query {
+  page: 1
+  limit: 20
+}
+
+docs {
+  Newest-first paginated message history for one conversation. 404 if this
+  conversation doesn't exist or the caller isn't one of its two
+  participants (never a 403 — same "don't reveal existence" convention
+  used everywhere else in this codebase for cross-user access attempts).
+}

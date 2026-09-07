@@ -1,0 +1,21 @@
+meta {
+  name: Mark Conversation Read
+  type: http
+  seq: 6
+}
+
+patch {
+  url: {{baseUrl}}/api/v1/student/chat/conversations/{{chatConversationId}}/read
+  body: none
+  auth: none
+}
+
+headers {
+  Authorization: Bearer {{studentAccessToken}}
+}
+
+docs {
+  Resets this student's unread counter to 0 and marks every message sent by
+  the ambassador in this conversation as read. Doesn't touch the student's
+  own sent messages.
+}

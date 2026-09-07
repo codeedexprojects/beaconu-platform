@@ -1016,4 +1016,37 @@ export class BlinkService {
       );
     }
   }
+
+  /** Chat has no college-membership requirement (any student, enrolled or
+   * not, can message any active ambassador at any college) — this only
+   * checks the account itself is a real, active campus ambassador, unlike
+   * `assertAmbassadorInCollege` above which also enforces a college match. */
+  static async assertActiveAmbassador(ambassadorId: string) {
+    const ambassador = await BlinkRepository.findById(ambassadorId);
+    if (
+      !ambassador ||
+      ambassador.blinkRole.slug !== BLINK_ROLES.CAMPUS_AMBASSADOR ||
+      ambassador.status !== ACCOUNT_STATUS.ACTIVE
+    ) {
+      throw new NotFoundError("Selected ambassador not found");
+    }
+  }
+
+  /** Student-facing "pick an ambassador to chat with" list — active
+   * ambassadors only, display fields only (mirrors
+   * CampusVisitAmbassadorContact's shape, not the fuller staff-facing DTO
+   * from listCampusAmbassadors). */
+  static async listActiveAmbassadorsForCollege(collegeId: string) {
+    const ambassadors =
+      await BlinkRepository.findAmbassadorsByCollege(collegeId);
+    return ambassadors
+      .filter((a) => a.status === ACCOUNT_STATUS.ACTIVE)
+      .map((a) => ({
+        id: a.id,
+        fullName: a.fullName,
+        phoneNumber: a.phoneNumber,
+        avatarUrl: a.avatarUrl,
+        campusCode: a.campusCode,
+      }));
+  }
 }

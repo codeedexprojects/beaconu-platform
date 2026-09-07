@@ -1,0 +1,20 @@
+meta {
+  name: Mark Conversation Read (Ambassador)
+  type: http
+  seq: 4
+}
+
+patch {
+  url: {{baseUrl}}/api/v1/blink/ambassador/chat/conversations/{{chatConversationId}}/read
+  body: none
+  auth: none
+}
+
+headers {
+  Authorization: Bearer {{accessToken}}
+}
+
+docs {
+  Resets this ambassador's unread counter to 0 and marks every message
+  sent by the student in this conversation as read.
+}

@@ -5,3 +5,4 @@ export { ForbiddenError } from "./forbidden";
 export { UnauthorizedError } from "./unauthorized";
 export { ValidationError } from "./validation";
 export { BadRequestError } from "./bad-request";
+export { TooManyRequestsError } from "./too-many-requests";
