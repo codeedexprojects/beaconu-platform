@@ -8,6 +8,7 @@ export const startApplicationSchema = z.object({
   passport_country: z.string().trim().max(100).optional().nullable(),
   passport_number: z.string().trim().max(50).optional().nullable(),
   referral_code: z.string().trim().max(30).optional().nullable(),
+  source: z.enum(["web", "mobile"]).optional().default("mobile"),
 });
 
 export const applicationCycleParamSchema = z.object({
@@ -44,6 +45,7 @@ export const listApplicationsQuerySchema = z.object({
   form_status: z.string().trim().min(1).optional(),
   fee_payment_status: z.string().trim().min(1).optional(),
   course_id: z.string().trim().min(1).optional(),
+  source: z.enum(["web", "mobile"]).optional(),
   search: z.string().trim().min(1).optional(),
   page: z.coerce.number().int().positive().default(1),
   limit: z.coerce.number().int().positive().max(100).default(20),

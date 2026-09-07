@@ -186,6 +186,7 @@ export interface StartApplicationInput {
   passport_country?: string | null;
   passport_number?: string | null;
   referral_code?: string | null;
+  source?: "web" | "mobile";
 }
 
 export interface ApplicationCourseQuotaOption {
@@ -697,6 +698,7 @@ export interface ApplicationListItem {
   formStatus: string;
   feePaymentStatus: string;
   totalApplicationFee: string;
+  source: string;
   courses: ApplicationListCourseItem[];
   submittedAt: string | null;
   createdAt: string;
@@ -707,6 +709,7 @@ export interface ApplicationListQuery {
   form_status?: string;
   fee_payment_status?: string;
   course_id?: string;
+  source?: string;
   search?: string;
   page?: number;
   limit?: number;
@@ -898,6 +901,7 @@ export interface ApplicationDetailDto {
   formStatus: string;
   feePaymentStatus: string;
   totalApplicationFee: string;
+  source: string;
   nationality: string | null;
   stateOfDomicile: string | null;
   passportCountry: string | null;

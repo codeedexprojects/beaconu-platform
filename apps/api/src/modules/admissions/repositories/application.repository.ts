@@ -237,6 +237,7 @@ export class ApplicationRepository {
     stateOfDomicile: string | null;
     passportCountry: string | null;
     passportNumber: string | null;
+    source: "web" | "mobile";
   }) {
     const placeholder = randomUUID().replace(/-/g, "").slice(0, 30);
     return prisma.application.create({
