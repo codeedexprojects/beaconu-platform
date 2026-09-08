@@ -485,6 +485,7 @@ export class BlinkRepository {
         status: "active",
       },
       select: {
+        id: true,
         fullName: true,
         avatarUrl: true,
         profileMetadata: true,
