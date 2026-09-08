@@ -103,6 +103,11 @@ export interface BlinkWalletTransactionItem {
   description: string | null;
   withdrawalStatus: string | null;
   balanceAfter: number;
+  /** Which associate_employee earned this credit — for an admin's pooled
+   * wallet this may differ from the wallet owner; for a self-earned row
+   * (e.g. ambassador, or a debit/withdrawal) it's the wallet owner. */
+  earnedByEmployeeId: string;
+  earnedByEmployeeName: string;
   createdAt: string;
 }
 

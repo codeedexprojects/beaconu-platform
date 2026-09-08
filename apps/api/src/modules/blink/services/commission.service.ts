@@ -44,8 +44,15 @@ export class BlinkCommissionService {
         status: "credited",
       });
 
+      // Associate employees have no wallet of their own — their earned
+      // commission pools into their associate_admin's wallet instead.
+      // Ambassadors and admins (no parent) keep crediting themselves.
+      const walletOwnerBlinkUserId =
+        referral.blinkUser.associateParentId ?? referral.blinkUserId;
+
       await BlinkRepository.creditWallet(
         tx,
+        walletOwnerBlinkUserId,
         referral.blinkUserId,
         commission.id,
         netPayout,
@@ -55,6 +62,7 @@ export class BlinkCommissionService {
         {
           referralId: referral.id,
           blinkUserId: referral.blinkUserId,
+          walletOwnerBlinkUserId,
           commissionId: commission.id,
           netPayout,
         },

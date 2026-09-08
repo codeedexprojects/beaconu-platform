@@ -108,6 +108,7 @@ export const referralListQuerySchema = z.object({
     .enum(["registered", "rejected", "confirmed", "dropped_out", "enrolled"])
     .optional(),
   search: z.string().trim().optional(),
+  employee_id: z.string().trim().min(1).optional(),
   page: z.coerce.number().int().min(1).default(1),
   limit: z.coerce.number().int().min(1).max(100).default(20),
 });
