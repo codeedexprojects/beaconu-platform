@@ -28,6 +28,9 @@ docs {
   Returns the authenticated associate admin's wallet: balance, totalEarned, totalWithdrawn, and bank details.
   Requires: associate admin access token (blink_associate userType).
 
+  This wallet is pooled across the admin and all of their associate_employees — an employee
+  has no wallet of their own; any commission they earn is credited here instead.
+
   If no wallet exists yet (no commissions credited), returns zeroed balances with bankDetails: null.
 
   Table: blink_wallets

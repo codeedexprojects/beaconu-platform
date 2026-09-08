@@ -150,13 +150,24 @@ export class BlinkQuery {
 
   static async listReferralsByAdmin(
     adminId: string,
-    filters: { status?: string; search?: string; page: number; limit: number },
+    filters: {
+      status?: string;
+      search?: string;
+      employeeId?: string;
+      page: number;
+      limit: number;
+    },
   ): Promise<{ referrals: ReferralListItem[]; meta: PaginationMeta }> {
-    const { status, search, page, limit } = filters;
+    const { status, search, employeeId, page, limit } = filters;
     const skip = (page - 1) * limit;
 
+    // employeeId narrows to one employee's referrals — still scoped to this
+    // admin's own team via associateParentId, so an admin can never pass
+    // another admin's employee id to see referrals that aren't theirs.
     const where = {
-      blinkUser: { associateParentId: adminId },
+      blinkUser: employeeId
+        ? { id: employeeId, associateParentId: adminId }
+        : { associateParentId: adminId },
       ...(status ? { status } : {}),
       ...(search
         ? {

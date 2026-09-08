@@ -246,13 +246,24 @@ export class BlinkRepository {
     return prisma.blinkWallet.findUnique({ where: { blinkUserId } });
   }
 
+  /**
+   * Scoped by walletId, not blinkUserId — a wallet's transaction rows can
+   * be tagged with a different blinkUserId than the wallet owner (an
+   * associate_employee's earned commission credits their admin's wallet
+   * but the row still records which employee earned it), so filtering by
+   * blinkUserId directly would miss employee-earned rows on the admin's
+   * own wallet.
+   */
   static async getWalletTransactions(
-    blinkUserId: string,
+    walletOwnerBlinkUserId: string,
     skip: number,
     take: number,
     type?: "credit" | "debit",
   ) {
-    const where = { blinkUserId, ...(type ? { type } : {}) };
+    const where = {
+      wallet: { blinkUserId: walletOwnerBlinkUserId },
+      ...(type ? { type } : {}),
+    };
     const [total, transactions] = await Promise.all([
       prisma.blinkWalletTransaction.count({ where }),
       prisma.blinkWalletTransaction.findMany({
@@ -268,6 +279,7 @@ export class BlinkRepository {
           withdrawalStatus: true,
           balanceAfter: true,
           createdAt: true,
+          blinkUser: { select: { id: true, fullName: true } },
         },
       }),
     ]);
@@ -500,7 +512,12 @@ export class BlinkRepository {
     tx: Prisma.TransactionClient,
     applicationCourseId: string,
   ) {
-    return tx.referral.findUnique({ where: { applicationCourseId } });
+    return tx.referral.findUnique({
+      where: { applicationCourseId },
+      include: {
+        blinkUser: { select: { id: true, associateParentId: true } },
+      },
+    });
   }
 
   static async updateReferralStatus(
@@ -529,15 +546,28 @@ export class BlinkRepository {
     return tx.commission.create({ data: { ...data, serviceChargeId: null } });
   }
 
+  /**
+   * Credits the wallet belonging to `walletOwnerBlinkUserId` — for an
+   * associate_employee's referral this is their associateParentId (the
+   * admin), never the employee's own id, since employees don't have a
+   * wallet. `earnedByBlinkUserId` tags the transaction row with who
+   * actually earned it, so the admin's pooled transaction history stays
+   * attributable per-employee.
+   */
   static async creditWallet(
     tx: Prisma.TransactionClient,
-    blinkUserId: string,
+    walletOwnerBlinkUserId: string,
+    earnedByBlinkUserId: string,
     commissionId: string,
     amount: number,
   ) {
     const wallet = await tx.blinkWallet.upsert({
-      where: { blinkUserId },
-      create: { blinkUserId, balance: amount, totalEarned: amount },
+      where: { blinkUserId: walletOwnerBlinkUserId },
+      create: {
+        blinkUserId: walletOwnerBlinkUserId,
+        balance: amount,
+        totalEarned: amount,
+      },
       update: {
         balance: { increment: amount },
         totalEarned: { increment: amount },
@@ -546,7 +576,7 @@ export class BlinkRepository {
     return tx.blinkWalletTransaction.create({
       data: {
         walletId: wallet.id,
-        blinkUserId,
+        blinkUserId: earnedByBlinkUserId,
         type: "credit",
         amount,
         description: "Commission for enrollment",
