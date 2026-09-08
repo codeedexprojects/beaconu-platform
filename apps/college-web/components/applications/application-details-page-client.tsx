@@ -27,5 +27,10 @@ export function ApplicationDetailsPageClient({
     );
   }
 
-  return <ApplicationDetailsSections applicationId={applicationId} />;
+  return (
+    <ApplicationDetailsSections
+      applicationId={applicationId}
+      subdomain={subdomain}
+    />
+  );
 }

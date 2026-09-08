@@ -22,6 +22,7 @@ import { DeclarationForm } from "@/components/applications/declaration-form";
 
 interface ApplicationDetailsSectionsProps {
   applicationId: string;
+  subdomain: string;
 }
 
 const steps = [
@@ -129,6 +130,7 @@ function AcademicRecordsStep({
 
 export function ApplicationDetailsSections({
   applicationId,
+  subdomain,
 }: ApplicationDetailsSectionsProps) {
   const [currentStep, setCurrentStep] = useState(1);
   const activeKey: StepKey = steps[currentStep - 1]!.key;
@@ -215,7 +217,7 @@ export function ApplicationDetailsSections({
         />
       ) : null}
       {activeKey === "declaration" ? (
-        <DeclarationForm applicationId={applicationId} />
+        <DeclarationForm applicationId={applicationId} subdomain={subdomain} />
       ) : null}
     </div>
   );

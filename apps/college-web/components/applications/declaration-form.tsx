@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import { useForm, useWatch } from "react-hook-form";
 import { z } from "zod";
 import { toast } from "sonner";
@@ -29,9 +30,14 @@ type DeclarationFormInput = z.infer<typeof declarationSchema>;
 
 interface DeclarationFormProps {
   applicationId: string;
+  subdomain: string;
 }
 
-export function DeclarationForm({ applicationId }: DeclarationFormProps) {
+export function DeclarationForm({
+  applicationId,
+  subdomain,
+}: DeclarationFormProps) {
+  const router = useRouter();
   const { data: existing, isLoading } = useFormDetails(
     applicationId,
     "declaration",
@@ -89,6 +95,7 @@ export function DeclarationForm({ applicationId }: DeclarationFormProps) {
     save(data, {
       onSuccess: () => {
         toast.success("Declaration saved");
+        router.push(`/college/${subdomain}/applications/${applicationId}`);
       },
     });
   }
