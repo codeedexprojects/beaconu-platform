@@ -986,6 +986,7 @@ export class BlinkService {
           ? (a.profileMetadata as Record<string, unknown>)
           : {};
       return {
+        id: a.id,
         name: a.fullName,
         image: a.avatarUrl ?? "",
         state: typeof meta.state === "string" ? meta.state : "",
