@@ -1,0 +1,27 @@
+meta {
+  name: Resolve Invite Code
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/api/v1/public/invite/{{studentReferralCode}}
+  body: none
+  auth: none
+}
+
+docs {
+  Validates a Student Hub app-invite code. No authentication — the app calls
+  this on first open, before the invitee has an account, to confirm a code
+  recovered from a deep link (or typed by hand) is real.
+
+  Also increments total_clicks on the code.
+
+  404 if the code doesn't exist or is inactive.
+
+  NOTE the path is /public/invite/:code, NOT /public/referrals/:code — the
+  latter is the Blink referral resolver's bare :code catch-all and would
+  shadow this if reused.
+
+  Table: student_referral_codes
+}

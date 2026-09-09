@@ -161,11 +161,15 @@ export const registerStudentSchema = z.object({
   phone_country_code: z.string().trim().default("+91"),
   registration_token: z.string().min(1),
   fcm_token: z.string().trim().optional(),
+  referral_code: z.string().trim().max(30).optional(),
 });
 
 export const firebaseStudentLoginSchema = z.object({
   id_token: z.string().min(1, "Firebase ID token is required"),
   fcm_token: z.string().trim().optional(),
+  // Google sign-in doubles as registration, so the invite code arrives here
+  // too. It is only honoured when this call actually creates the account.
+  referral_code: z.string().trim().max(30).optional(),
 });
 
 export type SendStudentOtpInput = z.infer<typeof sendStudentOtpSchema>;

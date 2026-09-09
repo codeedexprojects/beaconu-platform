@@ -9,6 +9,8 @@ export class PlatformConfigService {
       counsellorMinWithdrawalAmount: Number(
         config.counsellorMinWithdrawalAmount,
       ),
+      studentReferralPercentage: Number(config.studentReferralPercentage),
+      studentMinWithdrawalAmount: Number(config.studentMinWithdrawalAmount),
       updatedByAdminId: config.updatedByAdminId,
       updatedAt: config.updatedAt.toISOString(),
     };
@@ -21,6 +23,8 @@ export class PlatformConfigService {
       counsellorMinWithdrawalAmount: Number(
         updated.counsellorMinWithdrawalAmount,
       ),
+      studentReferralPercentage: Number(updated.studentReferralPercentage),
+      studentMinWithdrawalAmount: Number(updated.studentMinWithdrawalAmount),
       updatedByAdminId: updated.updatedByAdminId,
       updatedAt: updated.updatedAt.toISOString(),
     };

@@ -11,6 +11,15 @@ export const updatePlatformConfigSchema = z
       .number()
       .positive("counsellorMinWithdrawalAmount must be greater than zero")
       .optional(),
+    studentReferralPercentage: z
+      .number()
+      .min(0, "studentReferralPercentage must be ≥ 0")
+      .max(100, "studentReferralPercentage must be ≤ 100")
+      .optional(),
+    studentMinWithdrawalAmount: z
+      .number()
+      .positive("studentMinWithdrawalAmount must be greater than zero")
+      .optional(),
   })
   .refine((d) => Object.values(d).some((v) => v !== undefined), {
     message: "At least one field must be provided",

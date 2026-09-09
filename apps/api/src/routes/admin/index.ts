@@ -30,6 +30,7 @@ import notificationsRoutes from "@/modules/notifications/routes/platform-admin.r
 import platformAdminUploadRoutes from "@/modules/upload/routes/platform-admin.routes";
 import eventAdminRoutes from "@/modules/events/routes/platform-admin.routes";
 import platformConfigRoutes from "@/modules/platform-config/routes/platform-admin.routes";
+import studentRedemptionRoutes from "@/modules/engagement/routes/platform-admin.routes";
 
 const router: Router = Router();
 
@@ -67,5 +68,6 @@ router.use("/notifications", notificationsRoutes);
 router.use("/uploads", platformAdminUploadRoutes);
 router.use("/events", eventAdminRoutes);
 router.use("/config", platformConfigRoutes);
+router.use("/student-redemptions", studentRedemptionRoutes);
 
 export default router;

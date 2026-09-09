@@ -13,10 +13,13 @@ import mediumsPublicRoutes from "@/modules/mediums/routes/public.routes";
 import coursesPublicRoutes from "@/modules/courses/routes/public.routes";
 import blinkReferralPublicRoutes from "@/modules/blink/routes/public.routes";
 import blogsPublicRoutes from "@/modules/content/routes/public.routes";
+import invitePublicRoutes from "@/modules/engagement/routes/public.routes";
 
 const router: Router = Router();
 
 router.use("/referrals", blinkReferralPublicRoutes);
+// Student Hub app-invite codes — separate from Blink's /referrals above.
+router.use("/invite", invitePublicRoutes);
 router.use("/universities", publicUniversityRoutes);
 router.use("/college-onboarding", collegeOnboardingRoutes);
 router.use("/counsellor-requests", counsellorRequestPublicRoutes);

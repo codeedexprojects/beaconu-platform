@@ -1,0 +1,41 @@
+meta {
+  name: Get My Referral Code
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/api/v1/student/referrals/code
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{studentAccessToken}}
+}
+
+script:post-response {
+  if (res.status === 200) {
+    const data = res.getBody();
+    if (data.data && data.data.code) {
+      bru.setEnvVar("studentReferralCode", data.data.code);
+    }
+  }
+}
+
+docs {
+  Returns the authenticated student's app-invite referral code, creating it on
+  first call. Response: code, shareUrl, totalSignups.
+
+  Requires an ACTIVE enrollment — a student who has not enrolled anywhere gets
+  403 "Referral codes are available once you're enrolled in a college".
+
+  shareUrl is the deep link the app shares (APP_SHARE_URL/WEB_URL + /r/<code>).
+  One code per student, reused forever; calling repeatedly returns the same one.
+
+  This is the Student Hub scheme, NOT Blink. Blink codes live in referral_codes
+  and are college/course-scoped; these are platform-wide and pay a percentage
+  of the enrolled course's referral_commission_amount.
+
+  Table: student_referral_codes
+}
