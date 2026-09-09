@@ -98,6 +98,12 @@ export const QUERY_KEYS = {
       : (["withdrawal-requests"] as const),
   refundRequests: (params?: object) =>
     params ? ["refund-requests", params] : (["refund-requests"] as const),
+  studentRedemptions: (params?: object) =>
+    params
+      ? ["student-redemptions", params]
+      : (["student-redemptions"] as const),
+  studentRedemptionPayout: (id: string) =>
+    ["student-redemptions", id, "payout"] as const,
   students: (params?: object) =>
     params ? ["students", params] : (["students"] as const),
   student: (id: string) => ["students", id] as const,

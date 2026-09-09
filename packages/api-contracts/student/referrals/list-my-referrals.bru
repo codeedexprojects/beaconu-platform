@@ -1,0 +1,32 @@
+meta {
+  name: List My Referrals
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{baseUrl}}/api/v1/student/referrals
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{studentAccessToken}}
+}
+
+docs {
+  Everyone the authenticated student has invited, newest first.
+
+  Each item: id, status, invitedAt, paidAt, earnedAmount, and the referred
+  student (id, fullName, avatarUrl).
+
+  status flow:
+    signed_up — invitee created an account with this code
+    enrolled  — invitee enrolled, but nothing was payable (course had no
+                referral_commission_amount, or studentReferralPercentage is 0)
+    paid      — credited to the referrer's BeaconU Card
+
+  earnedAmount is null until status is paid.
+
+  Table: student_referrals
+}

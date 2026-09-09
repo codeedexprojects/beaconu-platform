@@ -3,6 +3,7 @@ import { ConflictError, NotFoundError } from "@/shared/errors";
 import { logger } from "@/shared/lib/logger";
 import { PushService } from "@/modules/notifications/services/push.service";
 import { BeaconuCardService } from "@/modules/engagement/services/beaconu-card.service";
+import { StudentReferralService } from "@/modules/engagement/services/student-referral.service";
 import { BlinkCommissionService } from "@/modules/blink/services/commission.service";
 import { ApplicationCourseRepository } from "../repositories/application-course.repository";
 import { EnrollmentRepository } from "../repositories/enrollment.repository";
@@ -180,6 +181,16 @@ export class EnrollmentService {
       await BlinkCommissionService.creditCommissionForEnrollment(
         tx,
         applicationCourseId,
+        course.course.referralCommissionAmount,
+      );
+
+      // Student Hub app-invite referral — a separate scheme from Blink above,
+      // with its own tables and payout rule. Both can fire for one enrollment:
+      // Blink pays the agency that sourced the student, this pays the student
+      // who invited them to the app. Never throws.
+      await StudentReferralService.creditReferralForEnrollment(
+        tx,
+        course.application.studentId,
         course.course.referralCommissionAmount,
       );
 

@@ -115,10 +115,12 @@ export class StudentAuthController {
   }
 
   static async firebaseLogin(req: Request, res: Response) {
-    const { id_token, fcm_token } = firebaseStudentLoginSchema.parse(req.body);
+    const { id_token, fcm_token, referral_code } =
+      firebaseStudentLoginSchema.parse(req.body);
     const result = await AuthService.loginWithFirebaseGoogle(
       id_token,
       fcm_token,
+      referral_code,
     );
     res.cookie(
       "refreshToken",

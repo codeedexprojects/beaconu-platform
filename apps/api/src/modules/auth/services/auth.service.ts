@@ -17,6 +17,7 @@ import {
 import { JwtUtils } from "../auth.jwt";
 import { AuthRepository } from "../repositories/auth.repository";
 import { CounsellorRequestRepository } from "@/modules/counselling/repositories/counsellor-request.repository";
+import { StudentReferralService } from "@/modules/engagement/services/student-referral.service";
 import { UserType, TokenResponse, SessionMeta } from "../auth.types";
 import {
   LoginInput,
@@ -683,6 +684,15 @@ export class AuthService {
       isPhoneVerified: true,
     });
 
+    // This endpoint only ever creates an account (a duplicate phone throws
+    // above), so no new-account guard is needed here — unlike the Google path.
+    if (data.referral_code) {
+      await StudentReferralService.attachReferralOnSignup(
+        student.id,
+        data.referral_code,
+      );
+    }
+
     const session = await AuthRepository.createSession({
       userId: student.id,
       userType: USER_TYPES.STUDENT,
@@ -713,7 +723,11 @@ export class AuthService {
     };
   }
 
-  static async loginWithFirebaseGoogle(idToken: string, fcmToken?: string) {
+  static async loginWithFirebaseGoogle(
+    idToken: string,
+    fcmToken?: string,
+    referralCode?: string,
+  ) {
     if (!firebaseAuth) {
       throw new UnauthorizedError("Google authentication is not configured");
     }
@@ -733,15 +747,27 @@ export class AuthService {
       throw new ForbiddenError("Google account email is not verified");
     }
 
-    const student = await AuthRepository.upsertStudentFromGoogle({
-      googleId: decoded.uid,
-      email: decoded.email!,
-      fullName: decoded.name ?? decoded.email!,
-      avatarUrl: decoded.picture ?? null,
-    });
+    const { student, isNewAccount } =
+      await AuthRepository.upsertStudentFromGoogle({
+        googleId: decoded.uid,
+        email: decoded.email!,
+        fullName: decoded.name ?? decoded.email!,
+        avatarUrl: decoded.picture ?? null,
+      });
 
     if (student.status !== ACCOUNT_STATUS.ACTIVE) {
       throw new ForbiddenError(`Account is ${student.status}`);
+    }
+
+    // Google sign-in is also the registration path, so this endpoint runs on
+    // every login. Only attribute a referral when the account was created
+    // right now — otherwise an existing student could log in later with a
+    // friend's code and claim a reward.
+    if (isNewAccount && referralCode) {
+      await StudentReferralService.attachReferralOnSignup(
+        student.id,
+        referralCode,
+      );
     }
 
     const session = await AuthRepository.createSession({

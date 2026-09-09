@@ -1,0 +1,27 @@
+meta {
+  name: Get Referral Summary
+  type: http
+  seq: 3
+}
+
+get {
+  url: {{baseUrl}}/api/v1/student/referrals/summary
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{studentAccessToken}}
+}
+
+docs {
+  Headline counters for the referral screen:
+    totalInvites, signedUp, enrolled, paid — referral counts by status
+    totalEarned  — sum of all payout amounts ever credited
+    cardBalance  — current spendable BeaconU Card balance
+
+  totalEarned and cardBalance differ once withdrawals exist: totalEarned is
+  lifetime referral income, cardBalance is what is left.
+
+  Tables: student_referrals, beaconu_cards
+}

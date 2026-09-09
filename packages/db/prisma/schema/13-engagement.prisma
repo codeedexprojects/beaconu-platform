@@ -178,22 +178,28 @@ model StudentBankAccount {
 }
 
 model StudentWalletTransaction {
-  id               String   @id @default(dbgenerated("('SWT-'::text || (nextval('student_wallet_transaction_seq'::regclass))::text)"))
-  cardId           String   @map("card_id")
-  studentId        String   @map("student_id")
-  type             String   @db.VarChar(20)
-  amount           Decimal  @db.Decimal(10, 2)
-  description      String?  @db.VarChar(255)
-  referralId       String?  @map("referral_id")
-  bankAccountId    String?  @map("bank_account_id")
-  withdrawalStatus String?  @map("withdrawal_status") @db.VarChar(20)
-  balanceAfter     Decimal  @map("balance_after") @db.Decimal(12, 2)
-  createdAt        DateTime @default(now()) @map("created_at") @db.Timestamptz
+  id                String    @id @default(dbgenerated("('SWT-'::text || (nextval('student_wallet_transaction_seq'::regclass))::text)"))
+  cardId            String    @map("card_id")
+  studentId         String    @map("student_id")
+  type              String    @db.VarChar(20)
+  amount            Decimal   @db.Decimal(10, 2)
+  description       String?   @db.VarChar(255)
+  referralId        String?   @map("referral_id")
+  studentReferralId String?   @map("student_referral_id")
+  bankAccountId     String?   @map("bank_account_id")
+  payoutDetails     Json?     @map("payout_details")
+  withdrawalStatus  String?   @map("withdrawal_status") @db.VarChar(20)
+  reviewedBy        String?   @map("reviewed_by")
+  reviewRemarks     String?   @map("review_remarks") @db.VarChar(500)
+  reviewedAt        DateTime? @map("reviewed_at") @db.Timestamptz
+  balanceAfter      Decimal   @map("balance_after") @db.Decimal(12, 2)
+  createdAt         DateTime  @default(now()) @map("created_at") @db.Timestamptz
 
-  card        BeaconuCard         @relation(fields: [cardId], references: [id])
-  student     Student             @relation(fields: [studentId], references: [id])
-  referral    Referral?           @relation(fields: [referralId], references: [id])
-  bankAccount StudentBankAccount? @relation(fields: [bankAccountId], references: [id])
+  card            BeaconuCard         @relation(fields: [cardId], references: [id])
+  student         Student             @relation(fields: [studentId], references: [id])
+  referral        Referral?           @relation(fields: [referralId], references: [id])
+  studentReferral StudentReferral?    @relation(fields: [studentReferralId], references: [id])
+  bankAccount     StudentBankAccount? @relation(fields: [bankAccountId], references: [id])
 
   @@index([cardId], name: "idx_swtxn_card")
   @@index([studentId], name: "idx_swtxn_student")
@@ -233,4 +239,48 @@ model AntiRaggingComplaint {
   @@index([status], name: "idx_arc_status")
   @@index([complaintNumber], name: "idx_arc_number")
   @@map("anti_ragging_complaints")
+}
+
+model StudentReferralCode {
+  id           String   @id @default(dbgenerated("('SRC-'::text || (nextval('student_referral_code_seq'::regclass))::text)"))
+  studentId    String   @unique @map("student_id")
+  code         String   @unique @db.VarChar(30)
+  shareUrl     String?  @map("share_url") @db.Text
+  totalClicks  Int      @default(0) @map("total_clicks")
+  totalSignups Int      @default(0) @map("total_signups")
+  isActive     Boolean  @default(true) @map("is_active")
+  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt    DateTime @updatedAt @map("updated_at") @db.Timestamptz
+
+  student   Student           @relation("StudentReferralCode", fields: [studentId], references: [id])
+  referrals StudentReferral[]
+
+  @@index([code], name: "idx_srefcode_code")
+  @@map("student_referral_codes")
+}
+
+model StudentReferral {
+  id                String    @id @default(dbgenerated("('SRF-'::text || (nextval('student_referral_seq'::regclass))::text)"))
+  referralCodeId    String    @map("referral_code_id")
+  referrerStudentId String    @map("referrer_student_id")
+  referredStudentId String    @unique @map("referred_student_id")
+  // signed_up | enrolled | paid | void
+  status            String    @default("signed_up") @db.VarChar(30)
+  statusHistory     Json      @default("[]") @map("status_history")
+  payoutBaseAmount  Decimal?  @map("payout_base_amount") @db.Decimal(10, 2)
+  payoutPercentage  Decimal?  @map("payout_percentage") @db.Decimal(5, 2)
+  payoutAmount      Decimal?  @map("payout_amount") @db.Decimal(10, 2)
+  paidAt            DateTime? @map("paid_at") @db.Timestamptz
+  createdAt         DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt         DateTime  @updatedAt @map("updated_at") @db.Timestamptz
+
+  referralCode    StudentReferralCode        @relation(fields: [referralCodeId], references: [id])
+  referrerStudent Student                    @relation("StudentReferralsMade", fields: [referrerStudentId], references: [id])
+  referredStudent Student                    @relation("StudentReferralReceived", fields: [referredStudentId], references: [id])
+  walletTxns      StudentWalletTransaction[]
+
+  @@index([referrerStudentId], name: "idx_sref_referrer")
+  @@index([status], name: "idx_sref_status")
+  @@index([referralCodeId], name: "idx_sref_code")
+  @@map("student_referrals")
 }

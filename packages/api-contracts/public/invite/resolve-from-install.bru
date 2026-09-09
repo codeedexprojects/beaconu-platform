@@ -1,0 +1,45 @@
+meta {
+  name: Resolve From Install
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{baseUrl}}/api/v1/public/invite/resolve
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "referrer": "utm_source=beaconu&utm_medium=invite&ref={{studentReferralCode}}"
+  }
+}
+
+docs {
+  Deferred deep link resolution. The app calls this on first open with whatever
+  it recovered after installation:
+
+    referrer — raw Play Install Referrer string (Android). Parsed server-side
+               so the link format can change without an app release. The code
+               is read from the `ref` (or `referral_code`) param.
+    code     — the code directly: a Universal/App Link opened the installed
+               app, or the user typed it in manually (the iOS path, since iOS
+               has no Install Referrer equivalent).
+
+  Send at least one of the two; sending both prefers `code`.
+
+  ALWAYS returns 200, never 404 — an organic install legitimately has no
+  referral and must not look like an error. Response is
+  { valid: true, code: "..." } or { valid: false, code: null }.
+
+  Contrast with GET /public/invite/:code, which DOES 404 on an unknown code:
+  that one answers "is this specific code real?", this one answers "did this
+  install come from an invite, and if so which?".
+
+  Table: student_referral_codes
+}

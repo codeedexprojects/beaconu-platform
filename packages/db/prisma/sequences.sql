@@ -136,6 +136,8 @@ CREATE SEQUENCE IF NOT EXISTS "student_answer_seq";
 CREATE SEQUENCE IF NOT EXISTS "student_bank_account_seq";
 CREATE SEQUENCE IF NOT EXISTS "student_fee_ledger_seq";
 CREATE SEQUENCE IF NOT EXISTS "student_lead_seq";
+CREATE SEQUENCE IF NOT EXISTS "student_referral_code_seq";
+CREATE SEQUENCE IF NOT EXISTS "student_referral_seq";
 CREATE SEQUENCE IF NOT EXISTS "student_wallet_transaction_seq";
 CREATE SEQUENCE IF NOT EXISTS "study_level_seq";
 CREATE SEQUENCE IF NOT EXISTS "support_ticket_seq";

@@ -401,23 +401,27 @@ export class AuthRepository {
       where: { googleId: data.googleId },
     });
     if (byGoogle) {
-      return prisma.student.update({
+      const student = await prisma.student.update({
         where: { id: byGoogle.id },
         data: updateFields,
       });
+      return { student, isNewAccount: false };
     }
 
     const byEmail = await prisma.student.findUnique({
       where: { email: data.email },
     });
     if (byEmail) {
-      return prisma.student.update({
+      // An existing OTP-registered account linking Google for the first time.
+      // Still not a new account — it must not be eligible for a referral.
+      const student = await prisma.student.update({
         where: { id: byEmail.id },
         data: { googleId: data.googleId, ...updateFields },
       });
+      return { student, isNewAccount: false };
     }
 
-    return prisma.student.create({
+    const student = await prisma.student.create({
       data: {
         googleId: data.googleId,
         email: data.email,
@@ -428,6 +432,7 @@ export class AuthRepository {
         status: "active",
       },
     });
+    return { student, isNewAccount: true };
   }
 
   static async findBlogAuthorByEmail(email: string) {

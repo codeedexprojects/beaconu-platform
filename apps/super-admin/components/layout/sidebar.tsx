@@ -107,6 +107,12 @@ const navSections: NavSection[] = [
         permission: "students.view",
       },
       {
+        href: "/students/redemptions",
+        label: "Card Redemptions",
+        icon: Wallet,
+        permission: "students.view",
+      },
+      {
         href: "/student-leads",
         label: "Student Leads",
         icon: Target,
