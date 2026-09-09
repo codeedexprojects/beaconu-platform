@@ -8,7 +8,6 @@ export const loginSchema = z.object({
     .enum(["associate_admin", "associate_employee", "campus_ambassador"])
     .optional(),
   agency_reg_number: z.string().trim().optional(),
-  campus_code: z.string().trim().optional(),
   fcm_token: z.string().trim().optional(),
 });
 

@@ -199,21 +199,6 @@ export const serviceChargeQuerySchema = z.object({
   isActive: z.coerce.boolean().optional(),
 });
 
-export const updateServiceChargeSchema = z
-  .object({
-    grossAmount: z.number().positive("grossAmount must be positive").optional(),
-    gstPercentage: z
-      .number()
-      .min(0, "gstPercentage must be ≥ 0")
-      .max(100, "gstPercentage must be ≤ 100")
-      .optional(),
-    termsAndConditions: z.string().optional(),
-    isActive: z.boolean().optional(),
-  })
-  .refine((d) => Object.values(d).some((v) => v !== undefined), {
-    message: "At least one field must be provided",
-  });
-
 export type ServiceChargeQuery = z.infer<typeof serviceChargeQuerySchema>;
 
 export const collegeListQuerySchema = z.object({
@@ -239,9 +224,6 @@ export const streamListQuerySchema = z.object({
 });
 
 export type StreamListQuery = z.infer<typeof streamListQuerySchema>;
-export type UpdateServiceChargeInput = z.infer<
-  typeof updateServiceChargeSchema
->;
 
 export interface BlinkUserCreateData {
   fullName: string;

@@ -20,7 +20,6 @@ import {
   AmbassadorProfileUpdateInput,
   BankDetailsInput,
   WithdrawalInput,
-  UpdateServiceChargeInput,
   CreateReferralCodeInput,
   ListWithdrawalRequestsQueryInput,
   UpdateWithdrawalStatusInput,
@@ -798,51 +797,6 @@ export class BlinkService {
         "Failed to attach referral to application — continuing without it",
       );
     }
-  }
-
-  static async updateServiceCharge(id: string, data: UpdateServiceChargeInput) {
-    const existing = await BlinkRepository.findServiceChargeById(id);
-    if (!existing) throw new NotFoundError("Service charge config not found");
-
-    const grossAmount =
-      data.grossAmount !== undefined
-        ? data.grossAmount
-        : Number(existing.grossAmount);
-    const gstPercentage =
-      data.gstPercentage !== undefined
-        ? data.gstPercentage
-        : Number(existing.gstPercentage);
-    const amountsChanged =
-      data.grossAmount !== undefined || data.gstPercentage !== undefined;
-    const gstAmount = (grossAmount * gstPercentage) / 100;
-    const netPayout = grossAmount - gstAmount;
-
-    const updated = await BlinkRepository.updateServiceCharge(id, {
-      ...(data.grossAmount !== undefined ? { grossAmount } : {}),
-      ...(data.gstPercentage !== undefined ? { gstPercentage } : {}),
-      ...(amountsChanged ? { gstAmount, netPayout } : {}),
-      ...(data.termsAndConditions !== undefined
-        ? { termsAndConditions: data.termsAndConditions }
-        : {}),
-      ...(data.isActive !== undefined ? { isActive: data.isActive } : {}),
-    });
-
-    return {
-      id: updated.id,
-      college: { id: updated.college.id, name: updated.college.name },
-      course: updated.course
-        ? { id: updated.course.id, name: updated.course.name }
-        : null,
-      academicYear: updated.academicYear,
-      studentCategory: updated.studentCategory,
-      grossAmount: Number(updated.grossAmount),
-      gstPercentage: Number(updated.gstPercentage),
-      gstAmount: Number(updated.gstAmount),
-      netPayout: Number(updated.netPayout),
-      termsAndConditions: updated.termsAndConditions ?? null,
-      isActive: updated.isActive,
-      updatedAt: updated.updatedAt.toISOString(),
-    };
   }
 
   static async updateBlinkUserStatus(id: string, status: AccountStatus) {

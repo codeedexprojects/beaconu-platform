@@ -10,7 +10,6 @@ import {
   withdrawalSchema,
   walletTransactionQuerySchema,
   serviceChargeQuerySchema,
-  updateServiceChargeSchema,
   employeeRankingQuerySchema,
   employeeListQuerySchema,
   dashboardSummaryQuerySchema,
@@ -119,20 +118,14 @@ router.post(
   AssociateAdminController.requestWithdrawal,
 );
 
+// Read-only: service charge configs are platform-owned commercial terms.
+// Associates must never be able to edit their own payout rate.
 router.get(
   "/service-charges",
   authenticate,
   authorizeUserType("blink_associate"),
   validate(serviceChargeQuerySchema, "query"),
   AssociateAdminController.listServiceCharges,
-);
-
-router.patch(
-  "/service-charges/:id",
-  authenticate,
-  authorizeUserType("blink_associate"),
-  validate(updateServiceChargeSchema),
-  AssociateAdminController.updateServiceCharge,
 );
 
 export default router;

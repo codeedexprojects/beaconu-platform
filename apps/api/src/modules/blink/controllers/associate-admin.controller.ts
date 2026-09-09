@@ -208,14 +208,6 @@ export class AssociateAdminController {
       );
   }
 
-  static async updateServiceCharge(req: Request, res: Response) {
-    const id = req.params["id"] as string;
-    const result = await BlinkService.updateServiceCharge(id, req.body);
-    return res
-      .status(200)
-      .json(ApiResponse.success("Service charge updated successfully", result));
-  }
-
   static async approveEmployeeStatus(req: Request, res: Response) {
     const id = req.params.id as string;
     const status = req.body.status;
