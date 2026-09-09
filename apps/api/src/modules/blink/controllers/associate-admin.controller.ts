@@ -9,7 +9,6 @@ import type {
   EmployeeRankingQuery,
   EmployeeListQuery,
   DashboardSummaryQuery,
-  CreateReferralCodeInput,
 } from "../validators/blink.validator";
 
 export class AssociateAdminController {
@@ -120,11 +119,12 @@ export class AssociateAdminController {
   }
 
   static async listReferrals(req: Request, res: Response) {
-    const { status, search, page, limit } =
+    const { status, search, employee_id, page, limit } =
       req.query as unknown as ReferralListQuery;
     const result = await BlinkQuery.listReferralsByAdmin(req.userId!, {
       status,
       search,
+      employeeId: employee_id,
       page,
       limit,
     });
@@ -206,29 +206,6 @@ export class AssociateAdminController {
       .json(
         ApiResponse.success("Service charges fetched successfully", result),
       );
-  }
-
-  static async createReferralCode(req: Request, res: Response) {
-    const data = req.body as CreateReferralCodeInput;
-    const result = await BlinkService.generateReferralCode(req.userId!, data);
-    return res
-      .status(201)
-      .json(ApiResponse.success("Referral code ready", result));
-  }
-
-  static async listReferralCodes(req: Request, res: Response) {
-    const result = await BlinkService.listOwnReferralCodes(req.userId!);
-    return res
-      .status(200)
-      .json(ApiResponse.success("Referral codes fetched successfully", result));
-  }
-
-  static async deactivateReferralCode(req: Request, res: Response) {
-    const id = req.params["id"] as string;
-    const result = await BlinkService.deactivateReferralCode(req.userId!, id);
-    return res
-      .status(200)
-      .json(ApiResponse.success("Referral code deactivated", result));
   }
 
   static async approveEmployeeStatus(req: Request, res: Response) {

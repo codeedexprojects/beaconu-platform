@@ -526,6 +526,8 @@ export class BlinkService {
         description: t.description ?? null,
         withdrawalStatus: t.withdrawalStatus ?? null,
         balanceAfter: Number(t.balanceAfter),
+        earnedByEmployeeId: t.blinkUser.id,
+        earnedByEmployeeName: t.blinkUser.fullName,
         createdAt: t.createdAt.toISOString(),
       })),
       meta: { total, page, limit, hasNext: skip + limit < total },

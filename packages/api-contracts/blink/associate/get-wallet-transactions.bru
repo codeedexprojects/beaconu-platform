@@ -34,7 +34,12 @@ docs {
   Returns paginated wallet transaction history for the authenticated associate admin.
   Requires: associate admin access token (blink_associate userType).
 
-  Each item includes: type (credit/debit), amount, description, withdrawalStatus, balanceAfter, createdAt.
+  Each item includes: type (credit/debit), amount, description, withdrawalStatus, balanceAfter,
+  earnedByEmployeeId, earnedByEmployeeName, createdAt.
+
+  This wallet is pooled — an associate_employee has no wallet of their own, so any commission
+  they earn is credited here instead. earnedByEmployeeId/earnedByEmployeeName identify which
+  employee (or the admin themself, for self-attributed rows) earned each transaction.
 
   Query params:
     type  (optional): credit | debit — filters to only that transaction type
