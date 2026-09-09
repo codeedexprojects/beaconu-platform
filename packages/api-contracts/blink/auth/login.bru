@@ -49,11 +49,17 @@ docs {
     password         — required (min 6 chars)
     blink_role       — optional enum: associate_admin | associate_employee | campus_ambassador
                        When provided, validated against the account's actual role (403 if mismatch).
-    agency_reg_number — required for associate_admin accounts
+    agency_reg_number — required for associate_admin and associate_employee accounts
+                       (matched against the employee's parent agency's reg number)
     fcm_token        — optional Firebase Cloud Messaging token for push notifications.
                        Stored in the session. Clears duplicate FCM tokens on other sessions.
-  
-  Returns an access token (15 min) and sets a refreshToken cookie (90 days).
+
+  Campus ambassadors authenticate with email + password only — no extra factor.
+  The former campus_code check was removed: the code is published unauthenticated by
+  GET /api/v1/public/colleges/:collegeId/ambassadors and is sequential (CA-<n>),
+  so it was never a secret. Sending campus_code is harmless (Zod strips unknown keys).
+
+  Returns an access token (90 days) and sets a refreshToken cookie (90 days).
   The JWT userType field distinguishes the role: blink_associate | blink_employee | blink_ambassador.
   
   Status gate (403): only accounts with status=active can log in.

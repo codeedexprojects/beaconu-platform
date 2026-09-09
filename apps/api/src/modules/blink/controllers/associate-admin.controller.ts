@@ -208,14 +208,6 @@ export class AssociateAdminController {
       );
   }
 
-  static async updateServiceCharge(req: Request, res: Response) {
-    const id = req.params["id"] as string;
-    const result = await BlinkService.updateServiceCharge(id, req.body);
-    return res
-      .status(200)
-      .json(ApiResponse.success("Service charge updated successfully", result));
-  }
-
   static async createReferralCode(req: Request, res: Response) {
     const data = req.body as CreateReferralCodeInput;
     const result = await BlinkService.generateReferralCode(req.userId!, data);

@@ -95,11 +95,12 @@ export class AuthService {
       }
     }
 
-    if (blinkUser.blinkRole.slug === BLINK_ROLES.CAMPUS_AMBASSADOR) {
-      if (!data.campus_code || blinkUser.campusCode !== data.campus_code) {
-        throw new UnauthorizedError("Invalid campus ambassador code");
-      }
-    }
+    // Campus ambassadors log in with email + password only. There is no
+    // campus-code check: the code is listed publicly by
+    // GET /api/v1/public/colleges/:collegeId/ambassadors and is sequential
+    // (CA-<n>), so it never functioned as a secret. `campusCode` remains on
+    // the record as a human-readable identifier used by campus visits, the
+    // student chat ambassador list and admin DTOs — don't reinstate it here.
 
     if (blinkUser.status !== ACCOUNT_STATUS.ACTIVE) {
       const isEmployee =

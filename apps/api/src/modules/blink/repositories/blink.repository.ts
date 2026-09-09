@@ -192,31 +192,6 @@ export class BlinkRepository {
     });
   }
 
-  static async findServiceChargeById(id: string) {
-    return prisma.serviceChargeConfig.findUnique({ where: { id } });
-  }
-
-  static async updateServiceCharge(
-    id: string,
-    data: {
-      grossAmount?: number;
-      gstPercentage?: number;
-      gstAmount?: number;
-      netPayout?: number;
-      termsAndConditions?: string;
-      isActive?: boolean;
-    },
-  ) {
-    return prisma.serviceChargeConfig.update({
-      where: { id },
-      data,
-      include: {
-        college: { select: { id: true, name: true } },
-        course: { select: { id: true, name: true } },
-      },
-    });
-  }
-
   static async findEmployeePerformanceData(
     employeeId: string,
     adminId: string,
