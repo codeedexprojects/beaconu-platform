@@ -80,6 +80,8 @@ function getSidebarHintCount(
       return hints.breakdown.documentRequests;
     case "/payments":
       return hints.breakdown.offlinePaymentReviewQueue;
+    case "/scholarships/requests":
+      return hints.breakdown.scholarshipRequests;
     default:
       return 0;
   }
@@ -524,6 +526,10 @@ export default function DashboardLayout({
                     path: "/scholarships",
                     icon: Award,
                     permission: "staff.view",
+                    children: [
+                      { name: "Categories", path: "/scholarships" },
+                      { name: "Requests", path: "/scholarships/requests" },
+                    ],
                   },
                   {
                     name: "Student Queries",

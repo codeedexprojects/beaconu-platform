@@ -115,6 +115,10 @@ export class ScholarshipApplicationService {
     return rows.map(mapApplication);
   }
 
+  static async countPending(collegeId: string) {
+    return ScholarshipApplicationRepository.countPendingForCollege(collegeId);
+  }
+
   static async review(
     collegeId: string,
     staffId: string,
