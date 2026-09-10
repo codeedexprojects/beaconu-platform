@@ -104,6 +104,12 @@ export class ScholarshipApplicationRepository {
     });
   }
 
+  static async countPendingForCollege(collegeId: string) {
+    return prisma.scholarshipApplication.count({
+      where: { scholarshipConfig: { collegeId }, status: "pending" },
+    });
+  }
+
   static async review(
     id: string,
     data: {

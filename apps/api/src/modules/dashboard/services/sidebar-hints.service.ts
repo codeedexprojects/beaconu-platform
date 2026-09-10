@@ -7,6 +7,7 @@ import { TicketService } from "@/modules/support/services/ticket.service";
 import { DocumentSubmissionRequestService } from "@/modules/documents/services/document-submission-request.service";
 import { DocumentRequestService } from "@/modules/documents/services/document-request.service";
 import { TokenPaymentService } from "@/modules/payments/services/token-payment.service";
+import { ScholarshipApplicationService } from "@/modules/scholarships/services/scholarship-application.service";
 
 export class SidebarHintsService {
   static async getForCollege(collegeId: string) {
@@ -20,6 +21,7 @@ export class SidebarHintsService {
       documentSubmissionRequests,
       documentRequests,
       offlinePaymentReviewQueue,
+      scholarshipRequests,
     ] = await Promise.all([
       ApplicationService.countNewSubmissions(collegeId),
       EvaluationService.countPendingEvaluation(collegeId),
@@ -30,6 +32,7 @@ export class SidebarHintsService {
       DocumentSubmissionRequestService.countUnderReview(collegeId),
       DocumentRequestService.countSubmitted(collegeId),
       TokenPaymentService.countPendingOfflineReview(collegeId),
+      ScholarshipApplicationService.countPending(collegeId),
     ]);
 
     const otherRequests =
@@ -39,7 +42,8 @@ export class SidebarHintsService {
       supportTickets +
       documentSubmissionRequests +
       documentRequests +
-      offlinePaymentReviewQueue;
+      offlinePaymentReviewQueue +
+      scholarshipRequests;
 
     return {
       newApplications,
@@ -53,6 +57,7 @@ export class SidebarHintsService {
         documentSubmissionRequests,
         documentRequests,
         offlinePaymentReviewQueue,
+        scholarshipRequests,
       },
     };
   }

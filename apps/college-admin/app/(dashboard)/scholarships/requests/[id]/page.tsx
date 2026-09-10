@@ -111,7 +111,7 @@ export default function ScholarshipRequestDetailPage() {
           variant="outline"
           size="icon"
           className="rounded-full"
-          onClick={() => router.push("/scholarships")}
+          onClick={() => router.push("/scholarships/requests")}
         >
           <ArrowLeft className="h-4 w-4" />
         </Button>
