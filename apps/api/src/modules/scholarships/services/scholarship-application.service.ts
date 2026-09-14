@@ -115,6 +115,18 @@ export class ScholarshipApplicationService {
     return rows.map(mapApplication);
   }
 
+  static async getDiscountSummary(collegeId: string) {
+    const { approved, pending } =
+      await ScholarshipApplicationRepository.getDiscountTotalsForCollege(
+        collegeId,
+      );
+    return {
+      approvedDiscountAmount: Number(approved._sum.discountAmount ?? 0),
+      approvedCount: approved._count._all,
+      pendingCount: pending,
+    };
+  }
+
   static async countPending(collegeId: string) {
     return ScholarshipApplicationRepository.countPendingForCollege(collegeId);
   }

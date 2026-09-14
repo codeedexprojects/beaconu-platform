@@ -174,6 +174,7 @@ export const QUERY_KEYS = {
     filters ? ["offline-review-queue", filters] : ["offline-review-queue"],
   financeOverview: (filters?: object) =>
     filters ? ["finance-overview", filters] : ["finance-overview"],
+  financeInsights: ["finance-insights"] as const,
   financeTransactions: (filters?: object) =>
     filters ? ["finance-transactions", filters] : ["finance-transactions"],
   documentsUnderReview: (page?: number, search?: string) =>

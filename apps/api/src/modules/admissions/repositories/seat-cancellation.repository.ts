@@ -60,6 +60,36 @@ const DETAIL_SELECT = {
 } as const;
 
 export class SeatCancellationRepository {
+  static async getRefundTotalsForCollege(collegeId: string) {
+    const scope = { applicationCourse: { application: { collegeId } } };
+    const [refunded, pendingRefund, penalties] = await Promise.all([
+      prisma.seatCancellation.aggregate({
+        where: { ...scope, refundStatus: "processed" },
+        _sum: { refundAmount: true },
+        _count: { _all: true },
+      }),
+      prisma.seatCancellation.aggregate({
+        where: {
+          ...scope,
+          refundAmount: { gt: 0 },
+          status: { not: "rejected" },
+          OR: [
+            { refundStatus: null },
+            { refundStatus: { notIn: ["processed", "not_applicable"] } },
+          ],
+        },
+        _sum: { refundAmount: true },
+        _count: { _all: true },
+      }),
+      prisma.seatCancellation.aggregate({
+        where: { ...scope, penaltyPaidAt: { not: null } },
+        _sum: { penaltyAmount: true },
+        _count: { _all: true },
+      }),
+    ]);
+    return { refunded, pendingRefund, penalties };
+  }
+
   static async countPendingForCollege(collegeId: string) {
     return prisma.seatCancellation.count({
       where: {

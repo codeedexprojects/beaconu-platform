@@ -271,6 +271,19 @@ export class SeatCancellationService {
     };
   }
 
+  static async getRefundSummary(collegeId: string) {
+    const { refunded, pendingRefund, penalties } =
+      await SeatCancellationRepository.getRefundTotalsForCollege(collegeId);
+    return {
+      refundedAmount: Number(refunded._sum.refundAmount ?? 0),
+      refundedCount: refunded._count._all,
+      pendingRefundAmount: Number(pendingRefund._sum.refundAmount ?? 0),
+      pendingRefundCount: pendingRefund._count._all,
+      penaltiesCollected: Number(penalties._sum.penaltyAmount ?? 0),
+      penaltiesCount: penalties._count._all,
+    };
+  }
+
   static async countPending(collegeId: string) {
     return SeatCancellationRepository.countPendingForCollege(collegeId);
   }

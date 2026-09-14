@@ -387,12 +387,6 @@ export default function DashboardLayout({
                     exactMatch: true,
                   },
                   {
-                    name: "Active Sessions",
-                    path: "/staff/sessions",
-                    icon: MonitorSmartphone,
-                    permission: "staff.sessions.manage",
-                  },
-                  {
                     name: "Hostels Occupancy",
                     path: "/hostels",
                     icon: Home,
@@ -584,6 +578,12 @@ export default function DashboardLayout({
                     path: "/settings",
                     icon: Settings,
                     permission: "profile.view",
+                  },
+                  {
+                    name: "Active Sessions",
+                    path: "/staff/sessions",
+                    icon: MonitorSmartphone,
+                    permission: "staff.sessions.manage",
                   },
                 ]
                   .filter((item) => hasPermission(item.permission))

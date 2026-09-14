@@ -105,6 +105,17 @@ export class OfferLetterService {
     return toDto(created);
   }
 
+  static async getTokenPipelineSummary(collegeId: string) {
+    const { live, lapsed } =
+      await OfferLetterRepository.getPendingTokenTotalsForCollege(collegeId);
+    return {
+      expectedAmount: Number(live._sum.tokenAmount ?? 0),
+      expectedCount: live._count._all,
+      lapsedAmount: Number(lapsed._sum.tokenAmount ?? 0),
+      lapsedCount: lapsed._count._all,
+    };
+  }
+
   static async markTokenPaid(
     applicationCourseId: string,
     transactionId: string,
