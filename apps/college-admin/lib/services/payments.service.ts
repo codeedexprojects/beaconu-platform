@@ -68,6 +68,8 @@ export interface FinanceOverview {
     commuteBooking: string;
     studentHousingBooking: string;
     applicationFees: string;
+    tokenFees: string;
+    otherFees: string;
   };
   paymentMethodBreakdown: {
     method: string;
@@ -77,6 +79,47 @@ export interface FinanceOverview {
   }[];
   overdueBalance: string;
   collectionVsTargetPercent: number;
+}
+
+export interface FinanceAmountCount {
+  amount: number;
+  count: number;
+}
+
+export interface FinanceInsights {
+  receivables: {
+    totalOutstanding: number;
+    aging: { key: string; label: string; amount: number; count: number }[];
+  };
+  awaitingVerification: FinanceAmountCount;
+  failedPayments: FinanceAmountCount;
+  abandonedPayments: FinanceAmountCount;
+  missingReceipts: FinanceAmountCount;
+  refunds: {
+    refundedAmount: number;
+    refundedCount: number;
+    pendingRefundAmount: number;
+    pendingRefundCount: number;
+    penaltiesCollected: number;
+    penaltiesCount: number;
+  };
+  tokenPipeline: {
+    expectedAmount: number;
+    expectedCount: number;
+    lapsedAmount: number;
+    lapsedCount: number;
+  };
+  scholarships: {
+    approvedDiscountAmount: number;
+    approvedCount: number;
+    pendingCount: number;
+  };
+  revenueByCourse: {
+    courseId: string | null;
+    courseName: string;
+    amount: number;
+    count: number;
+  }[];
 }
 
 export interface FinanceTransaction {
@@ -123,6 +166,10 @@ export function getFinanceOverview(
   filters: FinanceFilters = {},
 ): Promise<FinanceOverview> {
   return api.get(`${FINANCE_BASE}/overview?${financeQueryString(filters)}`);
+}
+
+export function getFinanceInsights(): Promise<FinanceInsights> {
+  return api.get(`${FINANCE_BASE}/insights`);
 }
 
 export function getFinanceTransactions(

@@ -1,0 +1,76 @@
+meta {
+  name: Get Finance Insights (College Admin)
+  type: http
+  seq: 4
+}
+
+get {
+  url: {{baseUrl}}/api/v1/college-admin/payments/finance/insights
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{staffAccessToken}}
+}
+
+docs {
+  Collections health, pipeline, outflows, and per-course revenue for this
+  college. Requires staff_member auth + finance.view. All-time, no filters —
+  same "Overall Performance" scope as /finance/overview.
+
+  Response:
+  {
+    receivables: {
+      totalOutstanding: number,     // SUM(balance_amount), unpaid BILLED course fees
+                                    // (fee_structure_id set) with balance > 0
+      aging: [                      // exhaustive + disjoint; sums to totalOutstanding
+        { key, label, amount, count }
+      ]                             // keys: not_yet_due, overdue_1_30, overdue_31_60,
+                                    //       overdue_61_90, overdue_90_plus, no_due_date
+    },
+    awaitingVerification: { amount, count },  // verification_status = pending_verification
+    failedPayments:        { amount, count },  // per FEE, not per attempt: unpaid pay-to-proceed
+                                               // fees with a failed/rejected attempt and no
+                                               // resubmission awaiting verification. amount = balance
+    abandonedPayments:     { amount, count },  // per fee: unpaid pay-to-proceed fees whose online
+                                               // checkout sat pending over 24h, with no failure,
+                                               // no fresh attempt, and no pending verification
+    missingReceipts:       { amount, count },  // completed, no payment_receipts row, older than 1h
+    refunds: {
+      refundedAmount, refundedCount,           // seat_cancellations.refund_status = processed
+      pendingRefundAmount, pendingRefundCount, // refund_amount > 0, not processed, not rejected
+      penaltiesCollected, penaltiesCount       // penalty_paid_at set
+    },
+    tokenPipeline: {
+      expectedAmount, expectedCount,           // issued offers, token pending, valid_until >= today
+      lapsedAmount, lapsedCount                // same but past valid_until
+    },
+    scholarships: {
+      approvedDiscountAmount, approvedCount,   // scholarship_applications approved
+      pendingCount
+    },
+    revenueByCourse: [
+      { courseId: string | null, courseName, amount, count }
+    ]                                          // completed revenue, desc; sums to totalRevenue
+  }
+
+  Caveats:
+  - Unpaid ledger rows are partitioned with no overlap: billed course fees are
+    receivables; unfinished pay-to-proceed attempts are failed or abandoned
+    (failed wins). Every pay-to-proceed flow creates its ledger row when
+    checkout starts, so those rows are not money anyone owes.
+  - The overdue aging buckets use the same predicate as /overview's
+    overdueBalance (due_date before today in IST), so they sum to that card.
+    A fee is not overdue on its own due date.
+  - tokenPipeline is split on valid_until because there is no offer-expiry
+    job: lapsed offers stay "issued" with a pending token indefinitely.
+  - Penalties are recorded without creating a Transaction, so they are NOT
+    part of totalRevenue — they are additional money collected.
+  - revenueByCourse links a payment to its course via the ledger's application
+    course, enrollment, or fee structure (course fees link only through the
+    fee structure). The one courseId-null row is hostel booking and commute.
+  - scholarships.approvedDiscountAmount is the value approved. It is not yet
+    deducted from student_fee_ledger.scholarship_discount, which nothing
+    writes today.
+}

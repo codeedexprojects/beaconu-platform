@@ -29,11 +29,13 @@ docs {
   Requires staff_member auth + finance.view.
 
   Query (all optional):
-  - from_date, to_date (YYYY-MM-DD, filters Transaction.createdAt)
-  - course_id — matches transactions whose ledger entry is linked to an
-    ApplicationCourse or Enrollment for this course. Transactions with no
-    course link (e.g. commute/hostel booking fees) are excluded when this
-    filter is set.
+  - from_date, to_date (YYYY-MM-DD, filters Transaction.createdAt). These are
+    IST days (00:00–23:59 +05:30), not UTC — a payment made after midnight IST
+    belongs to that IST date.
+  - course_id — matches transactions whose ledger entry is linked to this
+    course through an ApplicationCourse, an Enrollment, or (for course fees) a
+    FeeStructure. Transactions with no course link (hostel booking, commute)
+    are excluded when this filter is set.
   - fee_category — StudentFeeLedger.feeCategory exact match
   - payment_method — "mock" | "demand_draft" | "bank_transfer"
   - page (default 1), limit (default 20, max 100)

@@ -16,6 +16,7 @@ import {
   financeTransactionsExportQuerySchema,
 } from "../validators/finance.validator";
 import { FinanceSummaryQuery } from "../queries/finance-summary.query";
+import { FinanceInsightsService } from "../services/finance-insights.service";
 
 function toCsv(
   rows: Array<{
@@ -115,6 +116,13 @@ export class CollegeAdminPaymentController {
       query,
     );
     return res.json(ApiResponse.success("Finance overview fetched", result));
+  }
+
+  static async getFinanceInsights(req: Request, res: Response) {
+    const result = await FinanceInsightsService.getInsights(
+      req.collegeId as string,
+    );
+    return res.json(ApiResponse.success("Finance insights fetched", result));
   }
 
   static async listFinanceTransactions(req: Request, res: Response) {

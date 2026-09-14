@@ -24,6 +24,11 @@ router.get(
   CollegeAdminPaymentController.getFinanceOverview,
 );
 router.get(
+  "/finance/insights",
+  authorize("finance.view"),
+  CollegeAdminPaymentController.getFinanceInsights,
+);
+router.get(
   "/finance/transactions",
   authorize("finance.view"),
   CollegeAdminPaymentController.listFinanceTransactions,

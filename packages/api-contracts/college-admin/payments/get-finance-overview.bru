@@ -23,7 +23,7 @@ docs {
   Finance dashboard summary for this college. Requires staff_member auth +
   finance.view.
 
-  Query (both optional, YYYY-MM-DD, filters on Transaction.createdAt) —
+  Query (both optional, YYYY-MM-DD IST days, filters on Transaction.createdAt) —
   the college-admin dashboard calls this WITHOUT any date filter (all-time
   "Overall Performance" totals), independent of whatever date range the
   Transactions History table below it has selected. Pass from_date/to_date
@@ -36,14 +36,27 @@ docs {
     categories: {
       tuitionFees: string,               // fee_category in (tuition_fee, semester_fees, "tution fee")
       commuteBooking: string,            // fee_category = commute_fee
-      studentHousingBooking: string,     // fee_category = hostel_booking_fee
+      studentHousingBooking: string,     // fee_category in (hostel_booking_fee, hostel_fee)
       applicationFees: string,           // fee_category = application_fee
+      tokenFees: string,                 // fee_category = token_fee
+      otherFees: string,                 // totalRevenue minus the five above: remaining fee-structure
+                                         // categories (admission, exam, library, lab, etc.), legacy
+                                         // values, and transactions with no ledger entry
     },
+
+  The six categories always sum to totalRevenue.
     paymentMethodBreakdown: [
       { method: string, label: string, amount: string, percentage: number }
-    ],
-    overdueBalance: string,              // SUM(balance_amount) where status != paid AND due_date < now
-    collectionVsTargetPercent: number,   // SUM(paid_amount) / SUM(net_amount) across all ledger rows, college-wide
+    ],                                   // percentages use largest-remainder rounding and
+                                         // always sum to exactly 100
+    overdueBalance: string,              // billed course fees (fee_structure_id set), unpaid,
+                                         // due_date before today in IST — a fee is not overdue
+                                         // on its own due date
+    collectionVsTargetPercent: number,   // SUM(paid_amount) / SUM(net_amount) over billed course
+                                         // fees only. Pay-to-proceed fees (application, token,
+                                         // hostel, commute) are excluded: their ledger rows exist
+                                         // only once checkout starts, so they would read ~100%
+                                         // and unfinished attempts would add fees nobody owes
   }
 
   Important caveats (real limitations of current data, not bugs):
@@ -51,8 +64,8 @@ docs {
     payments — no real sub-method capture exists yet), "demand_draft", and
     "bank_transfer" (offline token payments). There is no UPI/Cards/Net
     Banking breakdown until a real Razorpay webhook is built.
-  - overdueBalance will read 0 until StudentFeeLedger.dueDate actually
-    gets populated somewhere in the payment flows (nothing sets it today).
+  - overdueBalance only ever reflects instalment-based course fees — the only
+    ledger rows that get a dueDate.
   - category amounts only ever reflect the online/mock provider + offline
     token flows that exist today — no admin dashboard-only fields.
 }

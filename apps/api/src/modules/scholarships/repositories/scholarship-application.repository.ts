@@ -104,6 +104,21 @@ export class ScholarshipApplicationRepository {
     });
   }
 
+  static async getDiscountTotalsForCollege(collegeId: string) {
+    const scope = { scholarshipConfig: { collegeId } };
+    const [approved, pending] = await Promise.all([
+      prisma.scholarshipApplication.aggregate({
+        where: { ...scope, status: "approved" },
+        _sum: { discountAmount: true },
+        _count: { _all: true },
+      }),
+      prisma.scholarshipApplication.count({
+        where: { ...scope, status: "pending" },
+      }),
+    ]);
+    return { approved, pending };
+  }
+
   static async countPendingForCollege(collegeId: string) {
     return prisma.scholarshipApplication.count({
       where: { scholarshipConfig: { collegeId }, status: "pending" },

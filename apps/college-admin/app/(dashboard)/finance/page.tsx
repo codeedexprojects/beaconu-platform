@@ -8,6 +8,8 @@ import {
   Bus,
   BedDouble,
   FileText,
+  BadgeCheck,
+  Layers,
   AlertTriangle,
   Download,
   PieChart,
@@ -33,8 +35,9 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { cn } from "@/lib/utils";
+import { cn, formatCurrency } from "@/lib/utils";
 import { useCollegeCoursesMinimal } from "@/hooks/use-colleges";
+import { FinanceInsightsSection } from "@/components/finance/finance-insights";
 import {
   useFinanceOverview,
   useFinanceTransactions,
@@ -75,37 +78,25 @@ const STATUS_BADGE: Record<
 
 type DatePreset = "today" | "yesterday" | "custom";
 
+// The API reads date filters as IST days, so presets must be IST dates too —
+// toISOString() would give the UTC date, which is "yesterday" before 05:30 IST.
 function toDateOnly(date: Date): string {
-  return date.toISOString().slice(0, 10);
+  return new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Kolkata" }).format(
+    date,
+  );
 }
 
 function presetToRange(preset: DatePreset): { from?: string; to?: string } {
-  const today = new Date();
+  const now = new Date();
   if (preset === "today") {
-    const d = toDateOnly(today);
+    const d = toDateOnly(now);
     return { from: d, to: d };
   }
   if (preset === "yesterday") {
-    const y = new Date(today);
-    y.setDate(y.getDate() - 1);
-    const d = toDateOnly(y);
+    const d = toDateOnly(new Date(now.getTime() - 24 * 60 * 60 * 1000));
     return { from: d, to: d };
   }
   return {};
-}
-
-function formatCr(amount: string | number): string {
-  const value = Number(amount);
-  if (Number.isNaN(value)) return "₹0";
-  const crores = value / 1_00_00_000;
-  if (Math.abs(crores) >= 0.01) {
-    return `₹${crores.toFixed(1)} Cr`;
-  }
-  const lakhs = value / 1_00_000;
-  if (Math.abs(lakhs) >= 0.01) {
-    return `₹${lakhs.toFixed(1)} L`;
-  }
-  return `₹${value.toLocaleString("en-IN")}`;
 }
 
 function formatRupees(amount: string | number): string {
@@ -141,7 +132,9 @@ function StatCard({
         <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground mt-3">
           {label}
         </p>
-        <p className="text-2xl font-bold mt-1">{formatCr(amount)}</p>
+        <p className="text-2xl font-bold mt-1">
+          {formatCurrency(Number(amount))}
+        </p>
       </CardContent>
     </Card>
   );
@@ -325,7 +318,7 @@ export default function FinancePage() {
                   <Skeleton className="h-7 w-24 mt-1 bg-white/10" />
                 ) : (
                   <p className="text-2xl font-bold mt-0.5">
-                    {formatCr(overview?.totalRevenue ?? "0")}
+                    {formatCurrency(Number(overview?.totalRevenue ?? "0"))}
                   </p>
                 )}
               </div>
@@ -338,8 +331,8 @@ export default function FinancePage() {
 
         {/* Category cards */}
         {isOverviewLoading ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {Array.from({ length: 4 }).map((_, i) => (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {Array.from({ length: 6 }).map((_, i) => (
               <Card key={i} className="border-none shadow-sm">
                 <CardContent className="p-5 space-y-3">
                   <Skeleton className="h-9 w-9 rounded-lg" />
@@ -350,7 +343,7 @@ export default function FinancePage() {
             ))}
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             <StatCard
               icon={GraduationCap}
               label="Tuition Fees"
@@ -374,6 +367,18 @@ export default function FinancePage() {
               label="Application Fees"
               amount={overview?.categories.applicationFees ?? "0"}
               iconClassName="bg-emerald-50 text-emerald-600"
+            />
+            <StatCard
+              icon={BadgeCheck}
+              label="Token Fees"
+              amount={overview?.categories.tokenFees ?? "0"}
+              iconClassName="bg-amber-50 text-amber-600"
+            />
+            <StatCard
+              icon={Layers}
+              label="Other Fees"
+              amount={overview?.categories.otherFees ?? "0"}
+              iconClassName="bg-slate-100 text-slate-600"
             />
           </div>
         )}
@@ -409,7 +414,7 @@ export default function FinancePage() {
                 <Skeleton className="h-8 w-28 mt-1" />
               ) : (
                 <p className="text-2xl font-bold text-destructive mt-1">
-                  {formatCr(overview?.overdueBalance ?? "0")}
+                  {formatCurrency(Number(overview?.overdueBalance ?? "0"))}
                 </p>
               )}
               <div className="mt-5 flex items-center justify-between text-xs">
@@ -431,6 +436,8 @@ export default function FinancePage() {
             </CardContent>
           </Card>
         </div>
+
+        <FinanceInsightsSection />
 
         {/* Transactions History */}
         <Card className="border-none shadow-sm overflow-hidden">

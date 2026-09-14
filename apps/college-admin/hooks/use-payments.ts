@@ -5,6 +5,7 @@ import {
   getOfflineReviewQueue,
   reviewOfflineTokenPayment,
   getFinanceOverview,
+  getFinanceInsights,
   getFinanceTransactions,
   type OfflineReviewQueueFilters,
   type ReviewOfflineTokenPaymentInput,
@@ -45,6 +46,13 @@ export function useFinanceOverview(filters: FinanceFilters = {}) {
   return useQuery({
     queryKey: QUERY_KEYS.financeOverview(filters),
     queryFn: () => getFinanceOverview(filters),
+  });
+}
+
+export function useFinanceInsights() {
+  return useQuery({
+    queryKey: QUERY_KEYS.financeInsights,
+    queryFn: getFinanceInsights,
   });
 }
 
