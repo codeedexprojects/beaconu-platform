@@ -228,6 +228,8 @@ export default function AcademicMastersPage() {
   });
   const [courseForm, setCourseForm] = useState({
     discipline_id: "",
+    study_level_id: "",
+    program_type_id: "",
     name: "",
     sort_order: 0,
   });
@@ -263,6 +265,8 @@ export default function AcademicMastersPage() {
   const [editingCourse, setEditingCourse] = useState<CourseMaster | null>(null);
   const [editCourseForm, setEditCourseForm] = useState({
     discipline_id: "",
+    study_level_id: "",
+    program_type_id: "",
     name: "",
     sort_order: 0,
   });
@@ -280,6 +284,16 @@ export default function AcademicMastersPage() {
     limit: 200,
   });
   const allActiveDisciplines = allActiveDisciplinesPage?.data ?? [];
+  const { data: allActiveStudyLevelsPage } = useStudyLevels({
+    is_active: true,
+    limit: 100,
+  });
+  const allActiveStudyLevels = allActiveStudyLevelsPage?.data ?? [];
+  const { data: allActiveProgramTypesPage } = useProgramTypes({
+    is_active: true,
+    limit: 100,
+  });
+  const allActiveProgramTypes = allActiveProgramTypesPage?.data ?? [];
 
   function switchTab(tab: Tab) {
     setActiveTab(tab);
@@ -485,6 +499,8 @@ export default function AcademicMastersPage() {
         name: courseForm.name,
         slug: slugify(courseForm.name),
         discipline_id: courseForm.discipline_id,
+        study_level_id: courseForm.study_level_id || undefined,
+        program_type_id: courseForm.program_type_id || undefined,
         sort_order: courseForm.sort_order,
       },
       {
@@ -493,6 +509,8 @@ export default function AcademicMastersPage() {
           setCourseForm((prev) => ({
             ...prev,
             discipline_id: "",
+            study_level_id: "",
+            program_type_id: "",
             name: "",
             sort_order: 0,
           }));
@@ -505,6 +523,8 @@ export default function AcademicMastersPage() {
   function openEditCourse(course: CourseMaster) {
     setEditCourseForm({
       discipline_id: course.disciplineId,
+      study_level_id: course.studyLevelId ?? "",
+      program_type_id: course.programTypeId ?? "",
       name: course.name,
       sort_order: course.sortOrder,
     });
@@ -525,6 +545,8 @@ export default function AcademicMastersPage() {
           name: editCourseForm.name,
           slug: slugify(editCourseForm.name),
           discipline_id: editCourseForm.discipline_id,
+          study_level_id: editCourseForm.study_level_id || undefined,
+          program_type_id: editCourseForm.program_type_id || undefined,
           sort_order: editCourseForm.sort_order,
         },
       },
@@ -1218,6 +1240,61 @@ export default function AcademicMastersPage() {
                     />
                   </div>
 
+                  <div className="space-y-2">
+                    <Label>Study Level</Label>
+                    <Select
+                      value={courseForm.study_level_id || undefined}
+                      onValueChange={(value) =>
+                        setCourseForm((prev) => ({
+                          ...prev,
+                          study_level_id: value,
+                        }))
+                      }
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select study level" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {allActiveStudyLevels.map((level) => (
+                          <SelectItem key={level.id} value={level.id}>
+                            {level.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <p className="text-xs text-muted-foreground">
+                      Colleges linking this course inherit it and can&apos;t
+                      change it.
+                    </p>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label>Default Program Type</Label>
+                    <Select
+                      value={courseForm.program_type_id || undefined}
+                      onValueChange={(value) =>
+                        setCourseForm((prev) => ({
+                          ...prev,
+                          program_type_id: value,
+                        }))
+                      }
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select program type" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {allActiveProgramTypes.map((type) => (
+                          <SelectItem key={type.id} value={type.id}>
+                            {type.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <p className="text-xs text-muted-foreground">
+                      Pre-filled for colleges; they can change it.
+                    </p>
+                  </div>
+
                   <div className="space-y-2 md:col-span-3">
                     <Label>Course Name</Label>
                     <Input
@@ -1265,7 +1342,15 @@ export default function AcademicMastersPage() {
                         <p className="text-xs text-muted-foreground">
                           {course.discipline.stream.name} &gt;{" "}
                           {course.discipline.name}
+                          {course.studyLevel
+                            ? ` · ${course.studyLevel.name}`
+                            : ""}
                         </p>
+                        {!course.studyLevelId && (
+                          <p className="text-xs text-amber-600">
+                            No study level set
+                          </p>
+                        )}
                       </div>
                       <div className="flex items-center gap-3">
                         <Button
@@ -1695,6 +1780,61 @@ export default function AcademicMastersPage() {
                     ))}
                   </SelectContent>
                 </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label>Study Level</Label>
+                <Select
+                  value={editCourseForm.study_level_id || undefined}
+                  onValueChange={(value) =>
+                    setEditCourseForm((prev) => ({
+                      ...prev,
+                      study_level_id: value,
+                    }))
+                  }
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select study level" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {allActiveStudyLevels.map((level) => (
+                      <SelectItem key={level.id} value={level.id}>
+                        {level.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <p className="text-xs text-muted-foreground">
+                  Colleges linking this course inherit it and can&apos;t change
+                  it.
+                </p>
+              </div>
+
+              <div className="space-y-2">
+                <Label>Default Program Type</Label>
+                <Select
+                  value={editCourseForm.program_type_id || undefined}
+                  onValueChange={(value) =>
+                    setEditCourseForm((prev) => ({
+                      ...prev,
+                      program_type_id: value,
+                    }))
+                  }
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select program type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {allActiveProgramTypes.map((type) => (
+                      <SelectItem key={type.id} value={type.id}>
+                        {type.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <p className="text-xs text-muted-foreground">
+                  Pre-filled for colleges; they can change it.
+                </p>
               </div>
 
               <div className="space-y-2">

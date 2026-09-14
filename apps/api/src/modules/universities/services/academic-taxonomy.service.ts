@@ -340,6 +340,77 @@ export class AcademicTaxonomyService {
     return AcademicTaxonomyQuery.listCourseMastersForPublic(query);
   }
 
+  /** Taxonomy for a college course. A linked catalogue course fixes the
+   * discipline, and the study level when the catalogue entry has one. Program
+   * type stays the college's choice, defaulting to the catalogue's when the
+   * link is first set.
+   *
+   * Active checks apply only to values that change, so editing an existing
+   * course that still points at a since-retired study level doesn't fail. */
+  static async resolveCollegeCourseTaxonomy(
+    input: {
+      courseMasterId?: string | null;
+      disciplineId?: string;
+      studyLevelId?: string;
+      programTypeId?: string;
+    },
+    current?: {
+      courseMasterId: string | null;
+      disciplineId: string;
+      studyLevelId: string;
+      programTypeId: string;
+    },
+  ) {
+    const out: {
+      disciplineId?: string;
+      studyLevelId?: string;
+      programTypeId?: string;
+    } = {
+      disciplineId: input.disciplineId,
+      studyLevelId: input.studyLevelId,
+      programTypeId: input.programTypeId,
+    };
+
+    const masterId =
+      input.courseMasterId === undefined
+        ? current?.courseMasterId
+        : input.courseMasterId;
+
+    if (masterId) {
+      const linkChanged = !current || masterId !== current.courseMasterId;
+      const master =
+        await AcademicTaxonomyRepository.findCourseMasterById(masterId);
+      if (!master || (linkChanged && !master.isActive)) {
+        throw new NotFoundError("Catalogue course not found");
+      }
+      out.disciplineId = master.disciplineId;
+      if (master.studyLevelId) out.studyLevelId = master.studyLevelId;
+      if (linkChanged && !input.programTypeId && master.programTypeId) {
+        out.programTypeId = master.programTypeId;
+      }
+    }
+
+    if (out.studyLevelId && out.studyLevelId !== current?.studyLevelId) {
+      const studyLevel = await AcademicTaxonomyRepository.findStudyLevelById(
+        out.studyLevelId,
+      );
+      if (!studyLevel || !studyLevel.isActive) {
+        throw new NotFoundError("Study level not found");
+      }
+    }
+
+    if (out.programTypeId && out.programTypeId !== current?.programTypeId) {
+      const programType = await AcademicTaxonomyRepository.findProgramTypeById(
+        out.programTypeId,
+      );
+      if (!programType || !programType.isActive) {
+        throw new NotFoundError("Program type not found");
+      }
+    }
+
+    return out;
+  }
+
   static async createCourseMaster(data: CreateCourseMasterInput) {
     const discipline = await AcademicTaxonomyRepository.findDisciplineById(
       data.discipline_id,

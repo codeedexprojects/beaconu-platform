@@ -1,0 +1,70 @@
+meta {
+  name: List Course Filter Options
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{baseUrl}}/api/v1/public/colleges/courses/filter-options
+  body: none
+  auth: none
+}
+
+query {
+  ~streamId:
+  ~disciplineId:
+  ~studyLevelId:
+  ~programTypeId:
+  ~search:
+  ~universityId:
+  ~state:
+  ~district:
+  ~city:
+}
+
+docs {
+  Course options for the explore filter flow's "choose a course" screen.
+  No auth.
+
+  App filter flow and the API behind each screen:
+    1. Stream ("Academic Discipline")  GET /public/universities/streams
+    2. Discipline ("Choose your        GET /public/universities/disciplines?stream_id=
+       Expertise")
+    3. Study Level                     GET /public/universities/study-levels
+    4. Program Type                    GET /public/universities/program-types
+    5. Course (this endpoint)          GET /public/colleges/courses/filter-options
+                                         ?streamId&disciplineId&studyLevelId&programTypeId
+    Results                            GET /public/colleges
+                                         ?...same ids...&courseMasterId=<option.courseMasterId>
+                                         (or &courseName=<option.name> when courseMasterId is null)
+
+  Query (all optional, same names and meaning as List Colleges):
+  - streamId (ignored if disciplineId is set), disciplineId, studyLevelId,
+    programTypeId — pass the choices from the earlier screens
+  - search — course name or catalogue name contains (case-insensitive)
+  - universityId, state, district, city — pass if active on the results list
+
+  Response:
+  data: [
+    {
+      courseMasterId: string | null,
+      name: string,
+      collegeCount: number,
+      logoUrl: string | null
+    }
+  ]
+  Sorted by collegeCount desc, then name.
+
+  - Built from real college courses. Only active courses at active, listed
+    colleges are included — the same visibility rules as List Colleges.
+  - Courses linked to a catalogue entry are grouped under it and show the
+    catalogue name, so "Master of Business Administration" at one college and
+    "MBA Digital Transformation" at another become one "MBA" option.
+  - Courses not linked yet are grouped by name case-insensitively and have
+    courseMasterId null.
+  - Every option returns exactly `collegeCount` colleges when passed to List
+    Colleges (courseMasterId, or courseName when null) with the same filters.
+  - logoUrl is the course's discipline logo, falling back to its stream logo.
+    Null when neither is set, so the app needs a default icon.
+  - Not paginated: the earlier steps narrow the list.
+}

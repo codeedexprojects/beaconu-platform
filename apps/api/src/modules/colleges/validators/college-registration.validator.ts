@@ -248,6 +248,7 @@ export const updateCampusSchema = createCampusSchema.partial();
 export const createCourseSchema = z.object({
   name: z.string().trim().min(2).max(255),
   code: z.string().trim().min(1).max(30),
+  courseMasterId: z.string().trim().min(1).optional().nullable(),
   disciplineId: z.string(),
   studyLevelId: z.string(),
   programTypeId: z.string(),

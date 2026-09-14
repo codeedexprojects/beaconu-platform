@@ -79,6 +79,7 @@ export class CollegeRegistrationRepository {
     },
     studyLevel: { select: { id: true, name: true } },
     programType: { select: { id: true, name: true } },
+    courseMaster: { select: { id: true, name: true, studyLevelId: true } },
     campus: { select: { id: true, name: true } },
     department: { select: { id: true, name: true } },
     _count: { select: { quotas: true, feeStructures: true } },
@@ -94,6 +95,7 @@ export class CollegeRegistrationRepository {
     },
     studyLevel: { select: { id: true, name: true } },
     programType: { select: { id: true, name: true } },
+    courseMaster: { select: { id: true, name: true, studyLevelId: true } },
   };
 
   private static async existsCampusInCollege(
@@ -336,6 +338,7 @@ export class CollegeRegistrationRepository {
       data: {
         collegeId,
         campusId: data.campusId,
+        courseMasterId: data.courseMasterId ?? null,
         disciplineId: data.disciplineId,
         studyLevelId: data.studyLevelId,
         programTypeId: data.programTypeId,
@@ -376,6 +379,18 @@ export class CollegeRegistrationRepository {
     });
   }
 
+  static async findCourseTaxonomy(courseId: string, collegeId: string) {
+    return prisma.course.findFirst({
+      where: { id: courseId, collegeId },
+      select: {
+        courseMasterId: true,
+        disciplineId: true,
+        studyLevelId: true,
+        programTypeId: true,
+      },
+    });
+  }
+
   static async getDisciplineById(disciplineId: string) {
     return prisma.discipline.findUnique({
       where: { id: disciplineId },
@@ -399,6 +414,9 @@ export class CollegeRegistrationRepository {
       where: { id: courseId },
       data: {
         campusId: data.campusId,
+        ...(data.courseMasterId !== undefined && {
+          courseMasterId: data.courseMasterId,
+        }),
         disciplineId: data.disciplineId,
         studyLevelId: data.studyLevelId,
         programTypeId: data.programTypeId,
@@ -415,6 +433,7 @@ export class CollegeRegistrationRepository {
           referralCommissionAmount: data.referralCommissionAmount,
         }),
       },
+      include: this.COURSE_RELATIONS_INCLUDE_NO_CAMPUS,
     });
   }
 

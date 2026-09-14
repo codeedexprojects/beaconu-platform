@@ -16,6 +16,8 @@ query {
   ~disciplineId:
   ~studyLevelId:
   ~programTypeId:
+  ~courseMasterId:
+  ~courseName:
   ~sortBy: popularity
   ~state: Karnataka
   ~district: Bangalore
@@ -46,6 +48,11 @@ docs {
   - disciplineId: Filter by discipline UUID
   - studyLevelId: Filter by study level UUID
   - programTypeId: Filter by program type UUID
+  - courseMasterId: Filter by catalogue course id. Use when a List Course
+    Filter Options entry has a non-null `courseMasterId`.
+  - courseName: Filter by course name — case-insensitive exact match, only
+    against courses not linked to the catalogue. Use when the option's
+    `courseMasterId` is null. Ignored if courseMasterId is sent.
   - sortBy: Sort colleges by one of:
     - popularity
     - fees_high_to_low
@@ -53,6 +60,10 @@ docs {
     (aliases `sort` and `filter` are also accepted)
   - state: Filter by state name (case-insensitive, e.g. "Karnataka")
   - district: Filter by district/city name (case-insensitive, e.g. "Bangalore")
+
+  All course filters (streamId/disciplineId, studyLevelId, programTypeId,
+  courseMasterId/courseName) must be satisfied by the SAME course at a college, not spread
+  across different courses.
 
   Response includes per college:
   - Core fields: id, name, slug, code, domain, logoUrl, coverImageUrl,
