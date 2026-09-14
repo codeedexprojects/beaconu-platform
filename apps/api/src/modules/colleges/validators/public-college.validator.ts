@@ -34,12 +34,48 @@ export const publicCollegeSchemas = {
     sectionName: sectionIdentifierParam,
   }),
 
+  courseOptionsQuery: z.object({
+    universityId: optionalUuidFromQuery,
+    streamId: optionalUuidFromQuery,
+    disciplineId: optionalUuidFromQuery,
+    studyLevelId: optionalUuidFromQuery,
+    programTypeId: optionalUuidFromQuery,
+    search: z
+      .string()
+      .trim()
+      .max(100)
+      .optional()
+      .transform((v) => v || undefined),
+    state: z
+      .string()
+      .trim()
+      .optional()
+      .transform((v) => v || undefined),
+    district: z
+      .string()
+      .trim()
+      .optional()
+      .transform((v) => v || undefined),
+    city: z
+      .string()
+      .trim()
+      .optional()
+      .transform((v) => v || undefined),
+  }),
+
   listQuery: z.object({
     universityId: optionalUuidFromQuery,
     streamId: optionalUuidFromQuery,
     disciplineId: optionalUuidFromQuery,
     studyLevelId: optionalUuidFromQuery,
     programTypeId: optionalUuidFromQuery,
+    courseMasterId: optionalUuidFromQuery,
+    courseName: z
+      .string()
+      .trim()
+      .max(255)
+      .optional()
+      .transform((v) => v || undefined),
     sortBy: optionalListSortFromQuery,
     sort: optionalListSortFromQuery,
     filter: optionalListSortFromQuery,

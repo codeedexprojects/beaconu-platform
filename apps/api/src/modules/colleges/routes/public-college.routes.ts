@@ -11,6 +11,10 @@ const router: Router = Router();
 router.get("/", authenticateOptional, PublicCollegeController.getColleges);
 router.get("/courses/minimal", PublicCollegeController.listCoursesMinimal);
 router.get(
+  "/courses/filter-options",
+  PublicCollegeController.listCourseOptions,
+);
+router.get(
   "/:collegeId/section/:sectionName",
   PublicCollegeController.getCollegeSection,
 );

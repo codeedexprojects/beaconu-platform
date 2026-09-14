@@ -93,6 +93,7 @@ export interface CreateCampusInput {
 export interface CreateCourseInput {
   name: string;
   code: string;
+  courseMasterId?: string | null;
   disciplineId: string;
   studyLevelId: string;
   programTypeId: string;

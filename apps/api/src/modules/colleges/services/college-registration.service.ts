@@ -13,6 +13,7 @@ import {
 import { InstitutionGroupService } from "./institution-group.service";
 import { InstitutionDepartmentsQuery } from "../queries/institution-departments.query";
 import { COURSE_SETUP_TAB_IDS } from "../validators/course-tabs.validator";
+import { AcademicTaxonomyService } from "@/modules/universities/services/academic-taxonomy.service";
 
 // The 19 tabs shown on the college-admin course-setup sidebar
 // (apps/college-admin/components/academics/constants.ts's COURSE_TABS):
@@ -910,8 +911,16 @@ export class CollegeRegistrationService {
   }
 
   static async addCourse(collegeId: string, data: CreateCourseData) {
-    await this.ensureDisciplineAllowedForCollege(collegeId, data.disciplineId);
-    return CollegeRegistrationRepository.createCourse(collegeId, data);
+    const taxonomy =
+      await AcademicTaxonomyService.resolveCollegeCourseTaxonomy(data);
+    const disciplineId = taxonomy.disciplineId ?? data.disciplineId;
+    await this.ensureDisciplineAllowedForCollege(collegeId, disciplineId);
+    return CollegeRegistrationRepository.createCourse(collegeId, {
+      ...data,
+      disciplineId,
+      studyLevelId: taxonomy.studyLevelId ?? data.studyLevelId,
+      programTypeId: taxonomy.programTypeId ?? data.programTypeId,
+    });
   }
 
   static async updateCourse(
@@ -919,17 +928,30 @@ export class CollegeRegistrationService {
     collegeId: string,
     data: UpdateCourseData,
   ) {
-    if (data.disciplineId) {
+    const current = await CollegeRegistrationRepository.findCourseTaxonomy(
+      courseId,
+      collegeId,
+    );
+    if (!current) throw new NotFoundError("Course not found");
+
+    const taxonomy = await AcademicTaxonomyService.resolveCollegeCourseTaxonomy(
+      data,
+      current,
+    );
+    if (
+      taxonomy.disciplineId &&
+      taxonomy.disciplineId !== current.disciplineId
+    ) {
       await this.ensureDisciplineAllowedForCollege(
         collegeId,
-        data.disciplineId,
+        taxonomy.disciplineId,
       );
     }
 
     const course = await CollegeRegistrationRepository.updateCourse(
       courseId,
       collegeId,
-      data,
+      { ...data, ...taxonomy },
     );
     if (!course) throw new NotFoundError("Course not found");
     return course;

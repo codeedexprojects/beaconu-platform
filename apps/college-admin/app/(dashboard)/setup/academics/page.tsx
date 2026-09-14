@@ -145,6 +145,7 @@ export default function SetupAcademicsPage() {
           data: {
             name: data.name,
             code: data.code,
+            courseMasterId: data.courseMasterId ?? undefined,
             disciplineId: data.disciplineId,
             studyLevelId: data.studyLevelId,
             programTypeId: data.programTypeId,
@@ -169,6 +170,7 @@ export default function SetupAcademicsPage() {
         {
           name: data.name,
           code: data.code,
+          courseMasterId: data.courseMasterId ?? undefined,
           disciplineId: data.disciplineId,
           studyLevelId: data.studyLevelId,
           programTypeId: data.programTypeId,

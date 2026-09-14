@@ -18,6 +18,7 @@ body:json {
   {
     "name": "Bachelor of Technology in Computer Science",
     "code": "BTECH-CSE",
+    "courseMasterId": "{{courseMasterId}}",
     "disciplineId": "{{disciplineId}}",
     "studyLevelId": "{{studyLevelId}}",
     "programTypeId": "{{programTypeId}}",
@@ -1108,6 +1109,16 @@ docs {
     - list-study-levels-lookup (sets `studyLevelId`)
     - list-program-types-lookup (sets `programTypeId`)
     - create-campus or list-campuses (sets `campusId`)
+
+  Catalogue link (`courseMasterId`, optional, nullable):
+    - When set, the course is linked to that catalogue entry. The server
+      overrides `disciplineId` with the entry's discipline and `studyLevelId`
+      with its study level (when the entry has one). `programTypeId` defaults
+      to the entry's program type only when not sent.
+    - 404 "Catalogue course not found" if the id is unknown or inactive.
+    - The same rules apply on PATCH /college-admin/courses/:id. Omitting the
+      field keeps the current link; `null` removes it. While linked, the
+      discipline and study level cannot be changed independently.
 
   Course tabs for create flow (14):
     course_info, admission_policy, placements, fees, financial_aid,

@@ -36,9 +36,9 @@ script:post-response {
 
 docs {
   Creates a new course-master entry. Only a Discipline (which carries its
-  Stream) and a name are required — Study Level and Program Type are
-  optional classification fields, not asked for at creation time since
-  picking a Discipline already establishes the relevant context. Rejects
+  Stream) and a name are required. Set Study Level and Program Type too:
+  colleges linking a course to this entry inherit its discipline and study
+  level (locked) and get its program type pre-filled (editable). Rejects
   duplicates: the combination of (discipline_id, slug) must be unique —
   a 409 is returned if the exact same course already exists under that
   discipline.

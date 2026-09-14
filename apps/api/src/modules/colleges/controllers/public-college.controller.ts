@@ -8,6 +8,7 @@ import { BlinkService } from "@/modules/blink/services/blink.service";
 import { WishlistService } from "@/modules/wishlist/services/wishlist.service";
 import { AdmissionCycleService } from "@/modules/admissions/services/admission-cycle.service";
 import { PublicCollegeExtrasQuery } from "../queries/public-college-extras.query";
+import { PublicCollegeFilterQuery } from "../queries/public-college-filter.query";
 import { SiteAnnouncementService } from "../services/site-announcement.service";
 
 function requestingStudentId(req: Request): string | null {
@@ -257,6 +258,8 @@ export class PublicCollegeController {
       disciplineId,
       studyLevelId,
       programTypeId,
+      courseMasterId,
+      courseName,
       sortBy,
       sort,
       filter,
@@ -269,38 +272,18 @@ export class PublicCollegeController {
     const isFeeSort =
       sortOption === "fees_high_to_low" || sortOption === "fees_low_to_high";
 
-    const filters: any = {
-      status: "active",
-      settings: { path: ["isListed"], equals: true },
-    };
-
-    if (universityId) {
-      filters.universityId = universityId as string;
-    }
-
-    if (state) {
-      filters.state = { equals: state, mode: "insensitive" };
-    }
-
-    if (district) {
-      filters.district = { equals: district, mode: "insensitive" };
-    }
-
-    if (city) {
-      filters.city = { equals: city, mode: "insensitive" };
-    }
-
-    if (streamId || disciplineId || studyLevelId || programTypeId) {
-      filters.courses = {
-        some: {
-          status: "active",
-          ...(!disciplineId && streamId && { discipline: { streamId } }),
-          ...(disciplineId && { disciplineId }),
-          ...(studyLevelId && { studyLevelId }),
-          ...(programTypeId && { programTypeId }),
-        },
-      };
-    }
+    const filters = PublicCollegeFilterQuery.buildCollegeListWhere({
+      universityId,
+      streamId,
+      disciplineId,
+      studyLevelId,
+      programTypeId,
+      courseMasterId,
+      courseName,
+      state,
+      district,
+      city,
+    });
 
     let colleges = (await prisma.college.findMany({
       where: filters,
@@ -589,6 +572,16 @@ export class PublicCollegeController {
     return res
       .status(200)
       .json(ApiResponse.success("Courses fetched successfully", mappedCourses));
+  }
+
+  static async listCourseOptions(req: Request, res: Response) {
+    const query = publicCollegeSchemas.courseOptionsQuery.parse(req.query);
+    const options = await PublicCollegeFilterQuery.listCourseOptions(query);
+    return res
+      .status(200)
+      .json(
+        ApiResponse.success("Course options fetched successfully", options),
+      );
   }
 
   static async listCoursesMinimal(req: Request, res: Response) {

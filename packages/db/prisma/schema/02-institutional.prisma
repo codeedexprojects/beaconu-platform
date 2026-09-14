@@ -420,6 +420,7 @@ model CourseMaster {
   discipline  Discipline   @relation(fields: [disciplineId], references: [id])
   studyLevel  StudyLevel?  @relation(fields: [studyLevelId], references: [id])
   programType ProgramType? @relation(fields: [programTypeId], references: [id])
+  courses     Course[]
 
   @@unique([disciplineId, slug], name: "uq_course_master_discipline_slug")
   @@index([disciplineId], name: "idx_course_masters_discipline")
@@ -479,6 +480,7 @@ model Course {
   collegeId                String   @map("college_id")
   campusId                 String?  @map("campus_id")
   disciplineId             String   @map("discipline_id")
+  courseMasterId           String?  @map("course_master_id")
   studyLevelId             String   @map("study_level_id")
   programTypeId            String   @map("program_type_id")
   appFeeCommissionType     String?  @map("app_fee_commission_type") @db.VarChar(10)
@@ -527,6 +529,7 @@ model Course {
   campus                      Campus?                      @relation(fields: [campusId], references: [id])
   department                  Department?                  @relation(fields: [departmentId], references: [id])
   discipline                  Discipline                   @relation(fields: [disciplineId], references: [id])
+  courseMaster                CourseMaster?                @relation(fields: [courseMasterId], references: [id])
   studyLevel                  StudyLevel                   @relation(fields: [studyLevelId], references: [id])
   programType                 ProgramType                  @relation(fields: [programTypeId], references: [id])
   quotas                      CourseQuota[]
@@ -545,6 +548,7 @@ model Course {
   collegeWishlists            CollegeWishlist[]
 
   @@unique([collegeId, code], name: "uq_course_code_college")
+  @@index([courseMasterId], name: "idx_courses_course_master")
   @@index([collegeId], name: "idx_courses_college")
   @@index([campusId], name: "idx_courses_campus")
   @@index([departmentId], name: "idx_courses_department")

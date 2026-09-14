@@ -36,6 +36,7 @@ export const courseSchema = z.object({
       /^[A-Z0-9-]+$/,
       "Course code can only contain uppercase letters, numbers, and hyphens",
     ),
+  courseMasterId: z.string().optional().nullable(),
   disciplineId: z.string().min(1, "Discipline is required"),
   studyLevelId: z.string().min(1, "Study level is required"),
   programTypeId: z.string().min(1, "Program type is required"),
@@ -109,6 +110,17 @@ export function BasicDetailsTab({
     useState<PublicCourseMaster | null>(null);
   const nameFieldRef = useRef<HTMLDivElement>(null);
   const watchedDisciplineId = watch("disciplineId");
+  const watchedStudyLevelId = watch("studyLevelId");
+  const watchedProgramTypeId = watch("programTypeId");
+  // A course linked to the catalogue — picked now, or saved earlier — takes
+  // its discipline, and its study level when the catalogue sets one, from
+  // there. The API enforces the same rule.
+  const isLinkedToCatalogue =
+    !!selectedCourse || !!editingCourse?.courseMasterId;
+  const catalogueStudyLevelId = selectedCourse
+    ? (selectedCourse.studyLevel?.id ?? null)
+    : (editingCourse?.courseMaster?.studyLevelId ?? null);
+  const isStudyLevelLocked = isLinkedToCatalogue && !!catalogueStudyLevelId;
   const watchedCoverImageUrl = watch("coverImageUrl");
 
   useEffect(() => {
@@ -137,6 +149,7 @@ export function BasicDetailsTab({
       reset({
         name: editingCourse.name || "",
         code: editingCourse.code || "",
+        courseMasterId: editingCourse.courseMasterId ?? null,
         disciplineId: editingCourse.disciplineId || "",
         studyLevelId: editingCourse.studyLevelId || "",
         programTypeId: editingCourse.programTypeId || "",
@@ -220,7 +233,16 @@ export function BasicDetailsTab({
                         onClick={() => {
                           setNameQuery(course.name);
                           setValue("name", course.name);
+                          setValue("courseMasterId", course.id);
                           setValue("disciplineId", course.discipline.id);
+                          if (course.studyLevel) {
+                            setValue("studyLevelId", course.studyLevel.id);
+                            trigger("studyLevelId");
+                          }
+                          if (course.programType) {
+                            setValue("programTypeId", course.programType.id);
+                            trigger("programTypeId");
+                          }
                           trigger("name");
                           trigger("disciplineId");
                           setSelectedCourse(course);
@@ -280,7 +302,7 @@ export function BasicDetailsTab({
                   setValue("disciplineId", val);
                   trigger("disciplineId");
                 }}
-                disabled={!!selectedCourse}
+                disabled={isLinkedToCatalogue}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Select discipline" />
@@ -293,7 +315,7 @@ export function BasicDetailsTab({
                   ))}
                 </SelectContent>
               </Select>
-              {selectedCourse && (
+              {isLinkedToCatalogue && (
                 <p className="text-xs text-muted-foreground">
                   Set from the selected course — pick a different course to
                   change it.
@@ -311,11 +333,12 @@ export function BasicDetailsTab({
                 Study Level *
               </Label>
               <Select
+                value={watchedStudyLevelId || undefined}
                 onValueChange={(val) => {
                   setValue("studyLevelId", val);
                   trigger("studyLevelId");
                 }}
-                defaultValue={editingCourse?.studyLevelId}
+                disabled={isStudyLevelLocked}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Select level" />
@@ -328,6 +351,11 @@ export function BasicDetailsTab({
                   ))}
                 </SelectContent>
               </Select>
+              {isStudyLevelLocked && (
+                <p className="text-xs text-muted-foreground">
+                  Set by the selected catalogue course.
+                </p>
+              )}
               {errors.studyLevelId && (
                 <p className="text-xs text-destructive">
                   {errors.studyLevelId.message}
@@ -340,11 +368,11 @@ export function BasicDetailsTab({
                 Program Type *
               </Label>
               <Select
+                value={watchedProgramTypeId || undefined}
                 onValueChange={(val) => {
                   setValue("programTypeId", val);
                   trigger("programTypeId");
                 }}
-                defaultValue={editingCourse?.programTypeId}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Select type" />
