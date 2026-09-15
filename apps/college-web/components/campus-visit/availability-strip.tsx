@@ -31,7 +31,7 @@ export function AvailabilityStrip({ availability }: AvailabilityStripProps) {
                 day.isOff && "text-muted-foreground/60",
               )}
             >
-              {day.isOff ? "Closed" : day.time}
+              {day.isOff ? "Closed" : "Open"}
             </p>
           </div>
         ))}
