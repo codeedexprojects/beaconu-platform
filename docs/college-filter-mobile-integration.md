@@ -1,6 +1,6 @@
 # Explore Colleges Filter — Mobile Integration Guide
 
-Handoff doc for the mobile team. It covers the step-by-step "find a college" filter (Stream → Discipline → Study Level → Program Type → Course → results): every endpoint, its request and response, and how to wire the screens.
+Handoff doc for the mobile team. It covers the step-by-step "find a college" filter (Stream → Discipline → Study Level → Program Type → Course → State → District → results): every endpoint, its request and response, and how to wire the screens.
 
 All endpoints are public (`/api/v1/public/*`) and need no auth. The one exception is the results list, which accepts an optional student token (see §2.6).
 
@@ -27,16 +27,18 @@ Never send both. If you do, `courseName` is ignored. Sending `courseName` for an
 
 ## 1. Flow at a glance
 
-| #   | Screen                             | Endpoint                                      | Sends                                                       |
-| --- | ---------------------------------- | --------------------------------------------- | ----------------------------------------------------------- |
-| 1   | Academic Discipline (stream)       | `GET /public/universities/streams`            | —                                                           |
-| 2   | Choose your Expertise (discipline) | `GET /public/universities/disciplines`        | `stream_id`                                                 |
-| 3   | Study Level                        | `GET /public/universities/study-levels`       | —                                                           |
-| 4   | Program Type                       | `GET /public/universities/program-types`      | —                                                           |
-| 5   | Course                             | `GET /public/colleges/courses/filter-options` | `streamId`, `disciplineId`, `studyLevelId`, `programTypeId` |
-| —   | Results                            | `GET /public/colleges`                        | all of the above + `courseMasterId` or `courseName`         |
+| #   | Screen                             | Endpoint                                        | Sends                                                       |
+| --- | ---------------------------------- | ----------------------------------------------- | ----------------------------------------------------------- |
+| 1   | Academic Discipline (stream)       | `GET /public/universities/streams`              | —                                                           |
+| 2   | Choose your Expertise (discipline) | `GET /public/universities/disciplines`          | `stream_id`                                                 |
+| 3   | Study Level                        | `GET /public/universities/study-levels`         | —                                                           |
+| 4   | Program Type                       | `GET /public/universities/program-types`        | —                                                           |
+| 5   | Course                             | `GET /public/colleges/courses/filter-options`   | `streamId`, `disciplineId`, `studyLevelId`, `programTypeId` |
+| 6   | State (optional)                   | `GET /public/colleges/locations/filter-options` | all of the above + `courseMasterId` or `courseName`         |
+| 7   | District (optional)                | `GET /public/colleges/locations/filter-options` | same as 6 + `state`                                         |
+| —   | Results                            | `GET /public/colleges`                          | all of the above + `state`, `district`                      |
 
-Heads-up on casing: the taxonomy endpoints (1–4) take **snake_case** query params (`stream_id`). The college endpoints (5, results) take **camelCase** (`streamId`).
+Heads-up on casing: the taxonomy endpoints (1–4) take **snake_case** query params (`stream_id`). The college endpoints (5–7, results) take **camelCase** (`streamId`).
 
 Standard envelope on every response:
 
@@ -334,6 +336,53 @@ Response (list in `data`, **no pagination**, every match is returned):
 - `campuses` are active only, main campus first.
 - Fee sorts use each college's lowest active fee. Colleges without fees go last.
 
+### 2.7 Location options (state, district)
+
+`GET /api/v1/public/colleges/locations/filter-options`
+
+| Query                                                       | Type   | Notes                                                                       |
+| ----------------------------------------------------------- | ------ | --------------------------------------------------------------------------- |
+| `state`                                                     | string | when sent, the response lists **districts** in that state instead of states |
+| `streamId`, `disciplineId`, `studyLevelId`, `programTypeId` | string | same as the results call                                                    |
+| `courseMasterId` / `courseName`                             | string | same rule as the results call: one or the other                             |
+| `universityId`                                              | string |                                                                             |
+
+Example: `GET /api/v1/public/colleges/locations/filter-options?disciplineId=DSC-21&courseMasterId=CRM-27`
+
+Response without `state`:
+
+```json
+{
+  "success": true,
+  "message": "Location options fetched successfully",
+  "data": [
+    { "state": "Kerala", "collegeCount": 4 },
+    { "state": "Karnataka", "collegeCount": 2 }
+  ],
+  "timestamp": "…"
+}
+```
+
+Response with `state=Kerala`:
+
+```json
+{
+  "success": true,
+  "message": "Location options fetched successfully",
+  "data": [
+    { "district": "Aluva", "collegeCount": 1 },
+    { "district": "Malappuram", "collegeCount": 1 }
+  ],
+  "timestamp": "…"
+}
+```
+
+- Sorted by `collegeCount` (highest first), then name. Not paginated.
+- Only states that have at least one matching college are listed, so the user can't pick a dead end. `GET /public/india-states` lists all 36 states; don't use it for this step.
+- Pass the option's `state` (and `district`) unchanged to the results call. It returns exactly `collegeCount` colleges.
+- Some colleges have no district, so district counts can add up to less than the state's count. Offer "All of Kerala" as the first district choice.
+- District names are whatever colleges entered, so casing can vary (e.g. `palakkad`). Display them as returned.
+
 ### Errors
 
 A malformed query, such as `limit=500` or an unknown `sortBy`, returns `400`:
@@ -366,44 +415,65 @@ class CollegeFilter {
 
 Keep the display names alongside the IDs so the results screen can render filter chips without refetching.
 
-**Clear downstream choices when an upstream one changes.** Changing the stream clears the discipline and course. Changing the discipline, study level or program type clears the course. A stale course option can silently return zero results.
+**Clear downstream choices when an upstream one changes.** Changing the stream clears the discipline and course. Changing the discipline, study level or program type clears the course. Changing the state clears the district. A stale course option can silently return zero results.
+
+State and district are not cleared when a course filter changes. The results screen may then show zero colleges; its empty state should offer to remove the state chip.
 
 ### 3.2 Query builders
 
 Build the params in one place so every screen sends identical values:
 
 ```dart
-Map<String, String> courseScopeParams(CollegeFilter f) => {
+Map<String, String> taxonomyParams(CollegeFilter f) => {
   if (f.discipline != null) 'disciplineId': f.discipline!.id
   else if (f.stream != null) 'streamId': f.stream!.id,
   if (f.studyLevel != null) 'studyLevelId': f.studyLevel!.id,
   if (f.programType != null) 'programTypeId': f.programType!.id,
   if (f.universityId != null) 'universityId': f.universityId!,
+};
+
+Map<String, String> courseParams(CollegeFilter f) => {
+  if (f.course?.courseMasterId != null) 'courseMasterId': f.course!.courseMasterId!
+  else if (f.course != null) 'courseName': f.course!.name,
+};
+
+Map<String, String> locationParams(CollegeFilter f) => {
   if (f.state != null) 'state': f.state!,
   if (f.district != null) 'district': f.district!,
   if (f.city != null) 'city': f.city!,
 };
 
+// Step 5
+Map<String, String> courseOptionParams(CollegeFilter f) =>
+    {...taxonomyParams(f), ...locationParams(f)};
+
+// Steps 6 and 7 (pass the chosen state to load districts)
+Map<String, String> locationOptionParams(CollegeFilter f, {String? state}) =>
+    {...taxonomyParams(f), ...courseParams(f), if (state != null) 'state': state};
+
+// Results
 Map<String, String> collegeListParams(CollegeFilter f) => {
-  ...courseScopeParams(f),
-  if (f.course?.courseMasterId != null) 'courseMasterId': f.course!.courseMasterId!
-  else if (f.course != null) 'courseName': f.course!.name,
+  ...taxonomyParams(f),
+  ...courseParams(f),
+  ...locationParams(f),
   if (f.sortBy != null) 'sortBy': f.sortBy!,
 };
 ```
 
-The course options call uses `courseScopeParams`, and the results call uses `collegeListParams`. That shared base is what guarantees an option's `collegeCount` matches the results.
+Every options call sends the same filters as the results call, apart from the step it's choosing. That's what guarantees an option's `collegeCount` matches the results.
 
 ### 3.3 Screens
 
-| Screen         | Load                                           | Behaviour                                                                                                                                                                                               |
-| -------------- | ---------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 1 Stream       | `streams?limit=100`                            | Grid of icon + name. Cache for the session.                                                                                                                                                             |
-| 2 Discipline   | `disciplines?stream_id=…&limit=100`            | Read `data.data`. Show a "Skip" option that keeps only the stream.                                                                                                                                      |
-| 3 Study Level  | `study-levels?limit=100`                       | Read `data.data`. Cache for the session. Skippable.                                                                                                                                                     |
-| 4 Program Type | `program-types?limit=100`                      | Read `data.data`. Cache for the session. Skippable.                                                                                                                                                     |
-| 5 Course       | `courses/filter-options` + `courseScopeParams` | Search box with a ~300 ms debounce that re-calls with `search`. Show `collegeCount` as "N colleges". Empty list → "No courses match — change study level / program type" with a back action. Skippable. |
-| Results        | `colleges` + `collegeListParams`               | Removable chips for each applied filter. Removing a chip clears its downstream choices (§3.1) and refetches. Sort sheet sets `sortBy`.                                                                  |
+| Screen         | Load                                                          | Behaviour                                                                                                                                                                                               |
+| -------------- | ------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1 Stream       | `streams?limit=100`                                           | Grid of icon + name. Cache for the session.                                                                                                                                                             |
+| 2 Discipline   | `disciplines?stream_id=…&limit=100`                           | Read `data.data`. Show a "Skip" option that keeps only the stream.                                                                                                                                      |
+| 3 Study Level  | `study-levels?limit=100`                                      | Read `data.data`. Cache for the session. Skippable.                                                                                                                                                     |
+| 4 Program Type | `program-types?limit=100`                                     | Read `data.data`. Cache for the session. Skippable.                                                                                                                                                     |
+| 5 Course       | `courses/filter-options` + `courseOptionParams`               | Search box with a ~300 ms debounce that re-calls with `search`. Show `collegeCount` as "N colleges". Empty list → "No courses match — change study level / program type" with a back action. Skippable. |
+| 6 State        | `locations/filter-options` + `locationOptionParams`           | List of states with "N colleges". Skippable ("All India").                                                                                                                                              |
+| 7 District     | `locations/filter-options` + `locationOptionParams(state: …)` | Only after a state is picked. First choice "All of <state>". Skippable.                                                                                                                                 |
+| Results        | `colleges` + `collegeListParams`                              | Removable chips for each applied filter. Removing a chip clears its downstream choices (§3.1) and refetches. Sort sheet sets `sortBy`.                                                                  |
 
 ### 3.4 Models
 
@@ -426,6 +496,8 @@ The course options call uses `courseScopeParams`, and the results call uses `col
 4. Change the study level after picking a course → the course is cleared and results don't collapse to zero.
 5. Pick Undergraduate + an MBA discipline → the course step shows the empty state.
 6. Log out, then open results → `isWishlisted` is false and there is no error.
+7. Pick a state → results count equals that state's `collegeCount`; pick a district → count equals the district's `collegeCount`.
+8. Change the state after picking a district → the district is cleared.
 
 ---
 
@@ -433,4 +505,5 @@ The course options call uses `courseScopeParams`, and the results call uses `col
 
 - Course options only get a `courseMasterId` after backend links college courses to the catalogue. Until that data fix runs, every option has `courseMasterId: null` and the `courseName` path is what gets used. The app code above handles both, so there's no change needed on your side when linking goes live.
 - Some junk streams (e.g. "BSC CS", "Software") and a duplicate "UnderGraduate" study level still show in local/staging lists. They are removed by the same data fix, so don't hard-code IDs or filter them out client-side.
-- The Bruno collection has the live contracts: `packages/api-contracts/public/colleges/list-colleges.bru` and `list-course-filter-options.bru`.
+- The Bruno collection has the live contracts: `packages/api-contracts/public/colleges/list-colleges.bru`, `list-course-filter-options.bru` and `list-location-filter-options.bru`.
+- Colleges with a missing or misspelled state don't appear in the state step until they're corrected in college settings. The college forms now only accept states from the official list.

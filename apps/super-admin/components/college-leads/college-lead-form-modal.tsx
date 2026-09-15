@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
-import { useForm } from "react-hook-form";
+import { Controller, useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@/lib/zod-resolver";
 import { Loader2, X } from "lucide-react";
@@ -21,6 +21,7 @@ import type {
   CollegeLead,
   CollegeLeadUpsertInput,
 } from "@/lib/services/college-leads.service";
+import { IndiaStateSelect } from "@/components/ui/india-state-select";
 
 const leadFormSchema = z.object({
   collegeName: z.string().trim().min(2, "College name is required"),
@@ -220,7 +221,17 @@ export function CollegeLeadFormModal({
 
               <div className="space-y-2">
                 <Label htmlFor="state">State</Label>
-                <Input id="state" {...form.register("state")} />
+                <Controller
+                  name="state"
+                  control={form.control}
+                  render={({ field }) => (
+                    <IndiaStateSelect
+                      id="state"
+                      value={field.value ?? ""}
+                      onChange={field.onChange}
+                    />
+                  )}
+                />
               </div>
 
               <div className="space-y-2 md:col-span-2">

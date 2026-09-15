@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useForm, useFieldArray } from "react-hook-form";
+import { Controller, useForm, useFieldArray } from "react-hook-form";
+import { IndiaStateSelect } from "@/components/ui/india-state-select";
 import { zodResolver } from "@/lib/zod-resolver";
 import * as z from "zod";
 import { Plus, Trash2, Users } from "lucide-react";
@@ -394,11 +395,18 @@ export function DemographicsTab({
           nationalArray.fields.map((field, idx) => (
             <div key={field.id} className="space-y-1">
               <div className="flex gap-2 items-center">
-                <Input
-                  className="flex-1"
-                  placeholder="State (e.g. Kerala)"
-                  {...register(`national_presence.items.${idx}.state`)}
-                />
+                <div className="flex-1">
+                  <Controller
+                    name={`national_presence.items.${idx}.state`}
+                    control={control}
+                    render={({ field }) => (
+                      <IndiaStateSelect
+                        value={field.value ?? ""}
+                        onChange={field.onChange}
+                      />
+                    )}
+                  />
+                </div>
                 <Input
                   type="number"
                   className="w-24"

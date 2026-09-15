@@ -1,3 +1,4 @@
+import { canonicalIndiaState } from "@beaconu/utils";
 import {
   toSlug,
   toCollegeCode,
@@ -52,7 +53,7 @@ export class CollegeProvisioningService {
         slug,
         code,
         city: input.city ?? null,
-        state: input.state ?? null,
+        state: canonicalIndiaState(input.state),
         contactEmail: input.contactEmail,
         contactName: input.contactName,
         universityId: input.universityId ?? null,

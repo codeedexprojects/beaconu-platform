@@ -25,6 +25,7 @@ import {
 } from "@/hooks/use-application";
 import { useEducationBoards } from "@/hooks/use-education-boards";
 import { useIndiaStates, useMediums } from "@/hooks/use-geo";
+import { IndiaStateSelect } from "@/components/ui/india-state-select";
 import { DocumentRow } from "@/components/applications/file-preview";
 
 const subjectSchema = z.object({
@@ -160,7 +161,7 @@ export function TenthGradeForm({ applicationId }: TenthGradeFormProps) {
     undefined,
     true,
   );
-  const { data: states, isLoading: isLoadingStates } = useIndiaStates();
+  const { data: states } = useIndiaStates();
   const { data: mediums, isLoading: isLoadingMediums } = useMediums();
 
   async function handleMarksheetChange(e: React.ChangeEvent<HTMLInputElement>) {
@@ -320,29 +321,12 @@ export function TenthGradeForm({ applicationId }: TenthGradeFormProps) {
           label="School State"
           error={form.formState.errors.school_state?.message}
         >
-          <Select
-            value={schoolState || undefined}
-            onValueChange={(v) =>
+          <IndiaStateSelect
+            value={schoolState ?? ""}
+            onChange={(v) =>
               form.setValue("school_state", v, { shouldValidate: true })
             }
-          >
-            <SelectTrigger>
-              <SelectValue placeholder="Select state" />
-            </SelectTrigger>
-            <SelectContent>
-              {isLoadingStates ? (
-                <div className="px-2 py-1.5 text-sm text-muted-foreground">
-                  Loading...
-                </div>
-              ) : (
-                (states ?? []).map((state) => (
-                  <SelectItem key={state.code} value={state.name}>
-                    {state.name}
-                  </SelectItem>
-                ))
-              )}
-            </SelectContent>
-          </Select>
+          />
         </Field>
         <div className="sm:col-span-2">
           <Field label="School Address" optional>

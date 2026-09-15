@@ -15,6 +15,10 @@ router.get(
   PublicCollegeController.listCourseOptions,
 );
 router.get(
+  "/locations/filter-options",
+  PublicCollegeController.listLocationOptions,
+);
+router.get(
   "/:collegeId/section/:sectionName",
   PublicCollegeController.getCollegeSection,
 );

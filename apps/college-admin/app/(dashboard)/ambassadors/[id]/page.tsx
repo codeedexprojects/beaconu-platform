@@ -3,7 +3,8 @@
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
-import { useForm } from "react-hook-form";
+import { Controller, useForm } from "react-hook-form";
+import { IndiaStateSelect } from "@/components/ui/india-state-select";
 import { zodResolver } from "@/lib/zod-resolver";
 import { z } from "zod";
 import { toast } from "sonner";
@@ -368,10 +369,16 @@ export default function AmbassadorDetailPage() {
                     State{" "}
                     <span className="text-muted-foreground">(optional)</span>
                   </Label>
-                  <Input
-                    id="state"
-                    placeholder="State"
-                    {...form.register("state")}
+                  <Controller
+                    name="state"
+                    control={form.control}
+                    render={({ field }) => (
+                      <IndiaStateSelect
+                        id="state"
+                        value={field.value ?? ""}
+                        onChange={field.onChange}
+                      />
+                    )}
                   />
                 </div>
               </div>

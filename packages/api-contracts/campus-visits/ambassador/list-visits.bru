@@ -11,7 +11,8 @@ get {
 }
 
 query {
-  ~status: pending
+  ~when: upcoming
+  ~status: pending,confirmed
   ~date: 2026-08-15
   page: 1
   limit: 20
@@ -24,8 +25,9 @@ headers {
 script:post-response {
   if (res.status === 200) {
     const data = res.getBody();
-    if (data.data && data.data.length > 0 && data.data[0].id) {
-      bru.setEnvVar("campusVisitId", data.data[0].id);
+    const visits = data.data && data.data.visits;
+    if (visits && visits.length > 0 && visits[0].id) {
+      bru.setEnvVar("campusVisitId", visits[0].id);
     }
   }
 }

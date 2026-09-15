@@ -1,12 +1,13 @@
 "use client";
 
 import { forwardRef, useEffect, useState } from "react";
-import { useForm } from "react-hook-form";
+import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@/lib/zod-resolver";
 import { z } from "zod";
 import { toast } from "sonner";
 import { Check } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { StateCombobox } from "@/components/landing/state-combobox";
 
 const onboardingSchema = z.object({
   college_name: z
@@ -71,6 +72,7 @@ export const OnboardingForm = forwardRef<HTMLDivElement>(
       register,
       handleSubmit,
       reset,
+      control,
       formState: { errors },
     } = useForm<OnboardingFormData>({
       resolver: zodResolver(onboardingSchema),
@@ -321,14 +323,20 @@ export const OnboardingForm = forwardRef<HTMLDivElement>(
                     <label className={labelClass} htmlFor="state">
                       State
                     </label>
-                    <input
-                      id="state"
-                      {...register("state")}
-                      className={cn(
-                        inputClass,
-                        errors.state && inputErrorClass,
+                    <Controller
+                      name="state"
+                      control={control}
+                      render={({ field }) => (
+                        <StateCombobox
+                          id="state"
+                          value={field.value ?? ""}
+                          onChange={field.onChange}
+                          className={cn(
+                            inputClass,
+                            errors.state && inputErrorClass,
+                          )}
+                        />
                       )}
-                      placeholder="e.g. Maharashtra"
                     />
                     {errors.state && (
                       <span className="text-xs font-medium text-destructive">

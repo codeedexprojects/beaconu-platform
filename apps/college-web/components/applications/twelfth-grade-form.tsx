@@ -30,6 +30,7 @@ import {
   useEducationBoards,
 } from "@/hooks/use-education-boards";
 import { useIndiaStates, useMediums } from "@/hooks/use-geo";
+import { IndiaStateSelect } from "@/components/ui/india-state-select";
 
 const subjectSchema = z.object({
   subject_name: z.string().trim().min(1, "Subject name is required").max(100),
@@ -198,7 +199,7 @@ export function TwelfthGradeForm({ applicationId }: TwelfthGradeFormProps) {
     undefined,
     true,
   );
-  const { data: states, isLoading: isLoadingStates } = useIndiaStates();
+  const { data: states } = useIndiaStates();
   const { data: mediums, isLoading: isLoadingMediums } = useMediums();
 
   // 12th-grade board detail with no ?course= returns the course picker
@@ -436,29 +437,12 @@ export function TwelfthGradeForm({ applicationId }: TwelfthGradeFormProps) {
           label="School State"
           error={form.formState.errors.school_state?.message}
         >
-          <Select
-            value={schoolState || undefined}
-            onValueChange={(v) =>
+          <IndiaStateSelect
+            value={schoolState ?? ""}
+            onChange={(v) =>
               form.setValue("school_state", v, { shouldValidate: true })
             }
-          >
-            <SelectTrigger>
-              <SelectValue placeholder="Select state" />
-            </SelectTrigger>
-            <SelectContent>
-              {isLoadingStates ? (
-                <div className="px-2 py-1.5 text-sm text-muted-foreground">
-                  Loading...
-                </div>
-              ) : (
-                (states ?? []).map((state) => (
-                  <SelectItem key={state.code} value={state.name}>
-                    {state.name}
-                  </SelectItem>
-                ))
-              )}
-            </SelectContent>
-          </Select>
+          />
         </Field>
         <div className="sm:col-span-2">
           <Field label="School Address" optional>

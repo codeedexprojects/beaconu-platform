@@ -11,8 +11,9 @@ get {
 }
 
 query {
+  ~when: upcoming
+  ~status: completed,cancelled
   ~college_id: {{collegeId}}
-  ~status: pending
   ~date: 2026-08-15
   page: 1
   limit: 20
@@ -25,8 +26,40 @@ headers {
 script:post-response {
   if (res.status === 200) {
     const data = res.getBody();
-    if (data.data && data.data.length > 0 && data.data[0].id) {
-      bru.setEnvVar("campusVisitId", data.data[0].id);
+    const visits = data.data && data.data.visits;
+    if (visits && visits.length > 0 && visits[0].id) {
+      bru.setEnvVar("campusVisitId", visits[0].id);
     }
   }
+}
+
+docs {
+  The logged-in student's own campus visits. Works for every student,
+  whether enrolled or not.
+
+  Query (all optional):
+  - when: upcoming | past
+    - upcoming: status not completed/cancelled AND proposed date is today
+      (IST) or later. Sorted soonest first.
+    - past: everything else (date before today, or completed/cancelled).
+      Sorted newest first.
+    - omitted: all visits, sorted oldest first.
+  - status: one or more of pending, arrived, confirmed, completed,
+    cancelled, reassigned. Comma-separated (`status=completed,cancelled`)
+    or repeated (`status=completed&status=cancelled`). Combines with `when`.
+  - college_id, date (YYYY-MM-DD)
+  - page (default 1), limit (default 20, max 100)
+
+  Response:
+  data: {
+    visits: [{ id, collegeId, college: { id, name, address, city, district,
+      state, pinCode }, studentName, email, phoneNumber, ambassador: { id,
+      fullName, phoneNumber, avatarUrl, campusCode } | null, proposedDate,
+      proposedTime, status, reasonForVisit, additionalVisitorsCount,
+      cancellationReason, createdAt }],
+    meta: { total, page, limit, hasNext }
+  }
+
+  The same `when` and multi-value `status` filters apply to the ambassador
+  and college-admin visit lists.
 }

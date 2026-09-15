@@ -1,4 +1,22 @@
 import { z } from "zod";
+import { canonicalIndiaState } from "@beaconu/utils";
+
+const indiaStateSchema = z
+  .string()
+  .trim()
+  .max(100)
+  .optional()
+  .nullable()
+  .transform((value, ctx) => {
+    if (value === undefined) return undefined;
+    if (!value) return null;
+    const state = canonicalIndiaState(value);
+    if (!state) {
+      ctx.addIssue({ code: "custom", message: "Select a valid Indian state" });
+      return z.NEVER;
+    }
+    return state;
+  });
 
 export const REGISTRATION_TAB_IDS = [
   "student_code_of_conduct",
@@ -209,7 +227,7 @@ export const updateCollegeProfileSchema = z.object({
   address: z.string().trim().optional().nullable(),
   city: z.string().trim().max(100).optional().nullable(),
   district: z.string().trim().max(100).optional().nullable(),
-  state: z.string().trim().max(100).optional().nullable(),
+  state: indiaStateSchema,
   collegeType: z.string().trim().max(30).optional().nullable(),
   pinCode: z.string().trim().max(10).optional().nullable(),
   requestedGroupCode: z.string().trim().max(30).optional().nullable(),

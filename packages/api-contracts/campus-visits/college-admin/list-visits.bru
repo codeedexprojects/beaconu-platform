@@ -11,7 +11,8 @@ get {
 }
 
 query {
-  ~status: pending
+  ~when: upcoming
+  ~status: pending,confirmed
   ~date: 2026-08-15
   ~ambassador_id: {{ambassadorId}}
   page: 1

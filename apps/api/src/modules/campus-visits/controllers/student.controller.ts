@@ -45,7 +45,9 @@ export class StudentCampusVisitController {
     const visit = await CampusVisitsQuery.getDetail(
       req.params.visitId as string,
     );
-    if (!visit) throw new NotFoundError("Campus visit not found");
+    if (!visit || visit.studentId !== req.userId) {
+      throw new NotFoundError("Campus visit not found");
+    }
     return res.json(ApiResponse.success("Campus visit fetched", visit));
   }
 

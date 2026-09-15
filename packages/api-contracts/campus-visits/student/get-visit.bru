@@ -1,0 +1,23 @@
+meta {
+  name: Get My Campus Visit
+  type: http
+  seq: 3
+}
+
+get {
+  url: {{baseUrl}}/api/v1/student/campus-visits/{{campusVisitId}}
+  body: none
+  auth: none
+}
+
+headers {
+  Authorization: Bearer {{accessToken}}
+}
+
+docs {
+  Full detail of one of the logged-in student's campus visits: guests,
+  reschedule history, arrival time, notes and rating.
+
+  Returns 404 "Campus visit not found" when the visit doesn't exist or
+  belongs to another student.
+}

@@ -63,6 +63,27 @@ export const publicCollegeSchemas = {
       .transform((v) => v || undefined),
   }),
 
+  locationOptionsQuery: z.object({
+    universityId: optionalUuidFromQuery,
+    streamId: optionalUuidFromQuery,
+    disciplineId: optionalUuidFromQuery,
+    studyLevelId: optionalUuidFromQuery,
+    programTypeId: optionalUuidFromQuery,
+    courseMasterId: optionalUuidFromQuery,
+    courseName: z
+      .string()
+      .trim()
+      .max(255)
+      .optional()
+      .transform((v) => v || undefined),
+    state: z
+      .string()
+      .trim()
+      .max(100)
+      .optional()
+      .transform((v) => v || undefined),
+  }),
+
   listQuery: z.object({
     universityId: optionalUuidFromQuery,
     streamId: optionalUuidFromQuery,

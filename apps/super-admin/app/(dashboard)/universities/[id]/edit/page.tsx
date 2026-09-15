@@ -33,6 +33,7 @@ import {
   useUniversityType,
   useUniversityTypes,
 } from "@/hooks/use-university-types";
+import { IndiaStateSelect } from "@/components/ui/india-state-select";
 
 type GovernanceMemberForm = {
   userPhotoUrl: string;
@@ -737,13 +738,12 @@ export default function EditUniversityPage() {
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="edit-state">State</Label>
-                    <Input
+                    <IndiaStateSelect
                       id="edit-state"
                       value={form.state ?? ""}
-                      onChange={(e) =>
-                        setForm((prev) => ({ ...prev, state: e.target.value }))
+                      onChange={(state) =>
+                        setForm((prev) => ({ ...prev, state }))
                       }
-                      placeholder="e.g. Delhi"
                     />
                   </div>
                 </div>
