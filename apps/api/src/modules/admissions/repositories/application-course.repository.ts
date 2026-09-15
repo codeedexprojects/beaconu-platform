@@ -402,6 +402,9 @@ export class ApplicationCourseRepository {
             referralCommissionAmount: true,
           },
         },
+        offerLetter: {
+          select: { tokenAmount: true, tokenPaymentStatus: true },
+        },
         application: {
           select: {
             studentId: true,

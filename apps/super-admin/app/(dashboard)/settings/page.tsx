@@ -188,8 +188,9 @@ function SystemConfigurationSection() {
               Student Referral Percentage (%)
             </Label>
             <p className="text-xs text-muted-foreground">
-              Reward = this percentage of the enrolled course&apos;s Referral
-              Commission (set per course by the college). At 0, referrals are
+              Reward = this percentage of the token amount the invited student
+              paid for their seat. The course&apos;s Referral Commission is only
+              for Blink users and isn&apos;t used here. At 0, referrals are
               recorded but pay nothing, and they are not paid later when this is
               raised.
             </p>

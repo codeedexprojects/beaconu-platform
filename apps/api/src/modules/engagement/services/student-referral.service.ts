@@ -165,12 +165,13 @@ export class StudentReferralService {
     }
   }
 
-  /** Runs inside the caller's enrollment transaction. Payout is a configured
-   * percentage of the course's referral_commission_amount. Never throws. */
+  /** Runs inside the caller's enrollment transaction. Payout is the
+   * platform's studentReferralPercentage of the token amount the invited
+   * student paid. Never throws. */
   static async creditReferralForEnrollment(
     tx: Prisma.TransactionClient,
     referredStudentId: string,
-    referralCommissionAmount: Prisma.Decimal | number | null,
+    paidTokenAmount: Prisma.Decimal | number | null,
   ): Promise<void> {
     try {
       const referral =
@@ -185,12 +186,12 @@ export class StudentReferralService {
         : [];
       const now = new Date().toISOString();
 
-      const base = Number(referralCommissionAmount ?? 0);
+      const base = Number(paidTokenAmount ?? 0);
       const config = await PlatformConfigService.getConfig();
       const percentage = Number(config.studentReferralPercentage ?? 0);
       const payout = roundToPaise((base * percentage) / 100);
 
-      // No course amount or percentage still 0 — record it, pay nothing.
+      // No paid token or percentage still 0 — record it, pay nothing.
       if (base <= 0 || percentage <= 0 || payout <= 0) {
         await StudentReferralRepository.markEnrolledUnpaid(tx, referral.id, [
           ...statusHistory,

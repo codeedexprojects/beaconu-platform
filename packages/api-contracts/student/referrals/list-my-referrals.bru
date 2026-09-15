@@ -22,8 +22,8 @@ docs {
 
   status flow:
     signed_up — invitee created an account with this code
-    enrolled  — invitee enrolled, but nothing was payable (course had no
-                referral_commission_amount, or studentReferralPercentage is 0)
+    enrolled  — invitee enrolled, but nothing was payable (no paid token
+                amount on the offer letter, or studentReferralPercentage is 0)
     paid      — credited to the referrer's BeaconU Card
 
   earnedAmount is null until status is paid.

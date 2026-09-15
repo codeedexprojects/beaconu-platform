@@ -184,14 +184,16 @@ export class EnrollmentService {
         course.course.referralCommissionAmount,
       );
 
-      // Student Hub app-invite referral — a separate scheme from Blink above,
-      // with its own tables and payout rule. Both can fire for one enrollment:
-      // Blink pays the agency that sourced the student, this pays the student
-      // who invited them to the app. Never throws.
+      // Student Hub app-invite referral — a separate scheme from Blink above.
+      // Blink is paid the course's referral commission; the inviting student
+      // is paid a platform-configured percentage of the token amount this
+      // student paid. Both can fire for one enrollment. Never throws.
       await StudentReferralService.creditReferralForEnrollment(
         tx,
         course.application.studentId,
-        course.course.referralCommissionAmount,
+        course.offerLetter?.tokenPaymentStatus === "paid"
+          ? course.offerLetter.tokenAmount
+          : null,
       );
 
       await BeaconuCardService.ensureCardForStudent(
