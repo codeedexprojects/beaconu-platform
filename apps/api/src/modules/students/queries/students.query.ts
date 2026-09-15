@@ -116,6 +116,71 @@ export class StudentsQuery {
       prisma.enrollment.count({ where }),
     ]);
 
+    const studentIds = [...new Set(rows.map((row) => row.student.id))];
+    const [codes, referralGroups, cards, pendingRedemptions] =
+      await Promise.all([
+        prisma.studentReferralCode.findMany({
+          where: { studentId: { in: studentIds } },
+          select: { studentId: true, code: true, isActive: true },
+        }),
+        prisma.studentReferral.groupBy({
+          by: ["referrerStudentId", "status"],
+          where: { referrerStudentId: { in: studentIds } },
+          _count: { _all: true },
+          _sum: { payoutAmount: true },
+        }),
+        prisma.beaconuCard.findMany({
+          where: { studentId: { in: studentIds } },
+          select: {
+            studentId: true,
+            balance: true,
+            totalEarned: true,
+            totalWithdrawn: true,
+          },
+        }),
+        prisma.studentWalletTransaction.groupBy({
+          by: ["studentId"],
+          where: {
+            studentId: { in: studentIds },
+            type: "debit",
+            withdrawalStatus: "pending",
+          },
+          _sum: { amount: true },
+        }),
+      ]);
+
+    const referralFor = (studentId: string) => {
+      const code = codes.find((c) => c.studentId === studentId);
+      const groups = referralGroups.filter(
+        (g) => g.referrerStudentId === studentId && g.status !== "void",
+      );
+      if (!code && groups.length === 0) return null;
+      const count = (status: string) =>
+        groups.find((g) => g.status === status)?._count._all ?? 0;
+      return {
+        code: code?.code ?? null,
+        isActive: code?.isActive ?? false,
+        invited: groups.reduce((sum, g) => sum + g._count._all, 0),
+        enrolled: count("enrolled") + count("paid"),
+        rewarded: count("paid"),
+        earned: groups
+          .reduce((sum, g) => sum + Number(g._sum.payoutAmount ?? 0), 0)
+          .toFixed(2),
+      };
+    };
+
+    const walletFor = (studentId: string) => {
+      const card = cards.find((c) => c.studentId === studentId);
+      if (!card) return null;
+      const pending = pendingRedemptions.find((p) => p.studentId === studentId);
+      return {
+        balance: card.balance.toString(),
+        totalEarned: card.totalEarned.toString(),
+        totalWithdrawn: card.totalWithdrawn.toString(),
+        pendingRedemption: Number(pending?._sum.amount ?? 0).toFixed(2),
+      };
+    };
+
     return {
       students: rows.map((row) => ({
         id: row.student.id,
@@ -131,6 +196,8 @@ export class StudentsQuery {
         academicYear: row.academicYear,
         enrollmentStatus: row.status,
         enrolledAt: row.enrolledAt.toISOString(),
+        referral: referralFor(row.student.id),
+        wallet: walletFor(row.student.id),
       })),
       meta: PaginationHelper.createMeta(total, filters.page, filters.limit),
     };

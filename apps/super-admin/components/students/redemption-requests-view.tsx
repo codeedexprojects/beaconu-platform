@@ -19,6 +19,7 @@ import { Header } from "@/components/layout/header";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import {
   Table,
@@ -63,6 +64,9 @@ export function RedemptionRequestsView() {
     "" | "pending" | "approved" | "rejected"
   >("pending");
   const [remarksById, setRemarksById] = useState<Record<string, string>>({});
+  const [referenceById, setReferenceById] = useState<Record<string, string>>(
+    {},
+  );
   const [payoutRequestId, setPayoutRequestId] = useState<string | null>(null);
   const [pendingReview, setPendingReview] = useState<PendingReview | null>(
     null,
@@ -80,7 +84,14 @@ export function RedemptionRequestsView() {
     reviewMutation.mutate(
       {
         id: request.id,
-        data: { status, remarks: remarksById[request.id] || undefined },
+        data: {
+          status,
+          payoutReference:
+            status === "approved"
+              ? referenceById[request.id]?.trim()
+              : undefined,
+          remarks: remarksById[request.id] || undefined,
+        },
       },
       {
         onSuccess: () => {
@@ -253,6 +264,11 @@ export function RedemptionRequestsView() {
                               {sc.label}
                             </Badge>
                           )}
+                          {req.payoutReference && (
+                            <p className="text-[10px] text-muted-foreground mt-1 font-mono">
+                              UTR: {req.payoutReference}
+                            </p>
+                          )}
                           {req.reviewRemarks && (
                             <p className="text-[10px] text-muted-foreground mt-1 max-w-[160px]">
                               {req.reviewRemarks}
@@ -276,6 +292,18 @@ export function RedemptionRequestsView() {
                             </Button>
                             {isPending && (
                               <>
+                                <Input
+                                  placeholder="Transfer reference / UTR"
+                                  value={referenceById[req.id] ?? ""}
+                                  onChange={(e) =>
+                                    setReferenceById((prev) => ({
+                                      ...prev,
+                                      [req.id]: e.target.value,
+                                    }))
+                                  }
+                                  maxLength={100}
+                                  className="h-8 w-56 text-xs"
+                                />
                                 <Textarea
                                   placeholder="Remarks (optional)"
                                   value={remarksById[req.id] ?? ""}
@@ -298,7 +326,15 @@ export function RedemptionRequestsView() {
                                         status: "approved",
                                       })
                                     }
-                                    disabled={reviewMutation.isPending}
+                                    disabled={
+                                      reviewMutation.isPending ||
+                                      !referenceById[req.id]?.trim()
+                                    }
+                                    title={
+                                      referenceById[req.id]?.trim()
+                                        ? undefined
+                                        : "Enter the transfer reference first"
+                                    }
                                   >
                                     <Check className="h-4 w-4 mr-1" />
                                     Mark paid
@@ -349,7 +385,7 @@ export function RedemptionRequestsView() {
         description={
           pendingReview
             ? pendingReview.status === "approved"
-              ? `Confirm you have transferred ₹${pendingReview.request.amount.toFixed(2)} to ${pendingReview.request.student.fullName}. This deducts the amount from their card balance and cannot be undone here.`
+              ? `Confirm you have transferred ₹${pendingReview.request.amount.toFixed(2)} to ${pendingReview.request.student.fullName} (reference ${referenceById[pendingReview.request.id]?.trim()}). This deducts the amount from their card balance and cannot be undone here.`
               : `Decline ${pendingReview.request.student.fullName}'s ₹${pendingReview.request.amount.toFixed(2)} request. Their balance is unchanged and stays available to redeem.`
             : ""
         }

@@ -35,6 +35,14 @@ docs {
   phone, avatar, enrollmentId/Number, course name/code, academicYear,
   enrollmentStatus, enrolledAt). Newest-enrolled first.
 
+  Each row also carries:
+  - referral: { code, isActive, invited, enrolled, rewarded, earned } or null
+    when the student has no code and no referrals. Voided referrals are not
+    counted; `enrolled` includes rewarded ones.
+  - wallet: { balance, totalEarned, totalWithdrawn, pendingRedemption } or
+    null when no BeaconU Card exists. pendingRedemption is held, not yet
+    deducted from balance. Amounts are strings.
+
   Different from `GET /students` (the lean search-combobox endpoint used by
   Request Document) — this one carries course/enrollment context for a
   browsable table, that one is deliberately minimal for a dropdown.

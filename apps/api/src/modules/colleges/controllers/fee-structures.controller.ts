@@ -9,6 +9,13 @@ import {
 } from "../validators/fee-structure.validator";
 
 export class FeeStructuresController {
+  static async listAcademicYears(req: Request, res: Response) {
+    const years = await FeeStructureService.listAcademicYears(req.collegeId!);
+    return res
+      .status(200)
+      .json(ApiResponse.success("Fee academic years fetched", years));
+  }
+
   static async listFeeStructures(req: Request, res: Response) {
     const collegeId = req.collegeId!;
     const { id } = courseIdOnlyParamSchema.parse(req.params);

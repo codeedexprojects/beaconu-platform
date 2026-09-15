@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Search, SlidersHorizontal } from "lucide-react";
+import { Gift, Search, SlidersHorizontal, Wallet } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -35,6 +35,10 @@ function avatarColor(seed: string) {
   for (let i = 0; i < seed.length; i++)
     hash = (hash + seed.charCodeAt(i)) % AVATAR_PALETTE.length;
   return AVATAR_PALETTE[hash];
+}
+
+function formatRupees(value: string) {
+  return `₹${Number(value).toLocaleString("en-IN", { maximumFractionDigits: 2 })}`;
 }
 
 const STATUS_OPTIONS = [
@@ -144,6 +148,49 @@ export default function EnrolledStudentsPage() {
               <p className="font-mono text-xs tracking-wide text-muted-foreground">
                 {student.enrollmentNumber ?? student.id}
               </p>
+              <div className="mt-2 grid w-full grid-cols-2 gap-2 text-left">
+                <div className="rounded-lg bg-gold-pale/50 px-3 py-2">
+                  <p className="flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+                    <Gift className="h-3 w-3" /> Referral
+                  </p>
+                  {student.referral ? (
+                    <>
+                      <p className="mt-0.5 truncate font-mono text-xs font-semibold text-navy">
+                        {student.referral.code ?? "No code"}
+                      </p>
+                      <p className="text-[10px] text-muted-foreground">
+                        {student.referral.invited} invited ·{" "}
+                        {student.referral.rewarded} rewarded
+                      </p>
+                    </>
+                  ) : (
+                    <p className="mt-0.5 text-xs text-muted-foreground">
+                      Not started
+                    </p>
+                  )}
+                </div>
+                <div className="rounded-lg bg-gold-pale/50 px-3 py-2">
+                  <p className="flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+                    <Wallet className="h-3 w-3" /> Wallet
+                  </p>
+                  {student.wallet ? (
+                    <>
+                      <p className="mt-0.5 text-xs font-semibold text-navy">
+                        {formatRupees(student.wallet.balance)}
+                      </p>
+                      <p className="text-[10px] text-muted-foreground">
+                        {Number(student.wallet.pendingRedemption) > 0
+                          ? `${formatRupees(student.wallet.pendingRedemption)} pending`
+                          : `${formatRupees(student.wallet.totalEarned)} earned`}
+                      </p>
+                    </>
+                  ) : (
+                    <p className="mt-0.5 text-xs text-muted-foreground">
+                      No card
+                    </p>
+                  )}
+                </div>
+              </div>
               <Button
                 variant="outline"
                 className="mt-2 w-full rounded-lg border-border bg-muted/40 text-sm font-medium hover:bg-muted"

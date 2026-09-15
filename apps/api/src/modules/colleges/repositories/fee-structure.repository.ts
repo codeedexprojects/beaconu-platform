@@ -40,6 +40,14 @@ export class FeeStructureRepository {
     });
   }
 
+  static async findActiveAcademicYears(collegeId: string) {
+    return prisma.feeStructure.findMany({
+      where: { collegeId, isActive: true, course: { status: "active" } },
+      select: { academicYear: true, courseId: true },
+      distinct: ["academicYear", "courseId"],
+    });
+  }
+
   static async findByCourseId(courseId: string) {
     return prisma.feeStructure.findMany({
       where: { courseId },

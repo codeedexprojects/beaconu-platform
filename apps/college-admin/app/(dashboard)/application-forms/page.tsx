@@ -56,6 +56,7 @@ import {
   useDeleteAdmissionCycle,
 } from "@/hooks/use-admission-cycles";
 import { useAssessmentTemplates } from "@/hooks/use-assessments";
+import { useFeeAcademicYears } from "@/hooks/use-fee-structures";
 import { ConfirmDialog } from "@/components/confirm-dialog";
 import { ManageCoursesDialog } from "@/components/application-forms/manage-courses-dialog";
 import { ManageSeatPoolsDialog } from "@/components/application-forms/manage-seat-pools-dialog";
@@ -129,11 +130,22 @@ export default function ApplicationFormsPage() {
   const { mutate: update, isPending: isUpdating } = useUpdateAdmissionCycle();
   const { mutate: remove, isPending: isDeleting } = useDeleteAdmissionCycle();
   const { data: templates } = useAssessmentTemplates();
+  const { data: feeYears } = useFeeAcademicYears();
 
   const form = useForm<ApplicationFormValues>({
     resolver: zodResolver(applicationFormSchema),
     defaultValues: EMPTY_VALUES,
   });
+
+  const admissionYear = form.watch("admission_year");
+  // Keep an existing form's year selectable even if no fee rows use it.
+  const yearOptions = [
+    ...(feeYears ?? []),
+    ...(admissionYear &&
+    !(feeYears ?? []).some((y) => y.academicYear === admissionYear)
+      ? [{ academicYear: admissionYear, courseCount: 0 }]
+      : []),
+  ];
 
   function openCreate() {
     setEditing(null);
@@ -254,12 +266,44 @@ export default function ApplicationFormsPage() {
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1.5">
-                  <Label htmlFor="admission_year">Admission Year</Label>
-                  <Input
-                    id="admission_year"
-                    placeholder="e.g. 2026"
-                    {...form.register("admission_year")}
-                  />
+                  <Label htmlFor="admission_year">Academic Year</Label>
+                  <Select
+                    value={admissionYear || undefined}
+                    onValueChange={(value) =>
+                      form.setValue("admission_year", value, {
+                        shouldValidate: true,
+                        shouldDirty: true,
+                      })
+                    }
+                  >
+                    <SelectTrigger id="admission_year">
+                      <SelectValue
+                        placeholder={
+                          yearOptions.length
+                            ? "Select academic year"
+                            : "No fee years yet"
+                        }
+                      />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {yearOptions.map((option) => (
+                        <SelectItem
+                          key={option.academicYear}
+                          value={option.academicYear}
+                        >
+                          {option.academicYear}
+                          {option.courseCount > 0 &&
+                            ` · ${option.courseCount} course${option.courseCount === 1 ? "" : "s"}`}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  {yearOptions.length === 0 && (
+                    <p className="text-xs text-muted-foreground">
+                      Add fee structures with an academic year in Academic
+                      Catalog → Fees &amp; Dues first.
+                    </p>
+                  )}
                   {form.formState.errors.admission_year && (
                     <p className="text-xs text-destructive">
                       {form.formState.errors.admission_year.message}

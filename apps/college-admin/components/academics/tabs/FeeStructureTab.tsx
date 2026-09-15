@@ -20,7 +20,6 @@ import {
   useCreateFeeStructure,
   useDeleteFeeStructure,
 } from "@/hooks/use-fee-structures";
-import { useAdmissionCycles } from "@/hooks/use-admission-cycles";
 import type {
   FeeStructureDto,
   FeeStructureInstalmentItem,
@@ -121,16 +120,13 @@ function isSemesterRow(row: FeeStructureDto) {
   );
 }
 
+const ACADEMIC_YEAR_PATTERN = /^\d{4}-\d{2}$/;
+
 export function FeeStructureTab({ courseId }: { courseId: string }) {
   const { data: rows, isLoading } = useFeeStructures(courseId);
-  const { data: admissionCycles } = useAdmissionCycles();
   const { mutateAsync: createRow } = useCreateFeeStructure(courseId);
   const { mutate: deleteRow, isPending: isDeleting } =
     useDeleteFeeStructure(courseId);
-
-  const academicYearOptions = Array.from(
-    new Set((admissionCycles ?? []).map((c) => c.admissionYear)),
-  ).sort();
 
   const [deleteTarget, setDeleteTarget] = useState<FeeStructureDto | null>(
     null,
@@ -203,8 +199,8 @@ export function FeeStructureTab({ courseId }: { courseId: string }) {
   }
 
   async function handleCreateAdditional() {
-    if (!additionalAcademicYear.trim()) {
-      toast.error("Academic year is required");
+    if (!ACADEMIC_YEAR_PATTERN.test(additionalAcademicYear.trim())) {
+      toast.error("Academic year must be in YYYY-YY format (e.g. 2026-27)");
       return;
     }
     if (
@@ -293,8 +289,8 @@ export function FeeStructureTab({ courseId }: { courseId: string }) {
   }
 
   async function handleCreate() {
-    if (!academicYear.trim()) {
-      toast.error("Academic year is required");
+    if (!ACADEMIC_YEAR_PATTERN.test(academicYear.trim())) {
+      toast.error("Academic year must be in YYYY-YY format (e.g. 2026-27)");
       return;
     }
     if (
@@ -393,21 +389,15 @@ export function FeeStructureTab({ courseId }: { courseId: string }) {
         <div className="grid gap-3 md:grid-cols-3">
           <div className="space-y-1">
             <Label className="text-xs">Academic Year</Label>
-            <Select value={academicYear} onValueChange={setAcademicYear}>
-              <SelectTrigger>
-                <SelectValue placeholder="Select academic year" />
-              </SelectTrigger>
-              <SelectContent>
-                {academicYearOptions.map((y) => (
-                  <SelectItem key={y} value={y}>
-                    {y}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <Input
+              value={academicYear}
+              onChange={(e) => setAcademicYear(e.target.value)}
+              placeholder="e.g. 2026-27"
+              maxLength={7}
+            />
             <p className="text-[10px] text-muted-foreground">
-              Pulled from this college&apos;s admission cycles — create an
-              application form first if none show here.
+              Format YYYY-YY. Application forms pick their admission year from
+              the years entered here.
             </p>
           </div>
           <div className="space-y-1">
@@ -643,21 +633,12 @@ export function FeeStructureTab({ courseId }: { courseId: string }) {
         <div className="grid gap-3 md:grid-cols-3">
           <div className="space-y-1">
             <Label className="text-xs">Academic Year</Label>
-            <Select
+            <Input
               value={additionalAcademicYear}
-              onValueChange={setAdditionalAcademicYear}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Select academic year" />
-              </SelectTrigger>
-              <SelectContent>
-                {academicYearOptions.map((y) => (
-                  <SelectItem key={y} value={y}>
-                    {y}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+              onChange={(e) => setAdditionalAcademicYear(e.target.value)}
+              placeholder="e.g. 2026-27"
+              maxLength={7}
+            />
           </div>
           <div className="space-y-1">
             <Label className="text-xs">Due Date (optional)</Label>

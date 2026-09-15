@@ -59,6 +59,7 @@ export class StudentReferralQuery {
           amount: true,
           description: true,
           withdrawalStatus: true,
+          payoutReference: true,
           balanceAfter: true,
           createdAt: true,
           studentReferral: {
@@ -80,6 +81,7 @@ export class StudentReferralQuery {
         amount: Number(t.amount),
         description: t.description,
         withdrawalStatus: t.withdrawalStatus,
+        payoutReference: t.payoutReference,
         balanceAfter: Number(t.balanceAfter),
         createdAt: t.createdAt.toISOString(),
         // Present only on referral credits — lets the app answer "why this

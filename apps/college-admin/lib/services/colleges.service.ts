@@ -894,6 +894,17 @@ export type UpdateFeeStructureInput = Partial<CreateFeeStructureInput> & {
   isActive?: boolean;
 };
 
+export interface FeeAcademicYear {
+  academicYear: string;
+  courseCount: number;
+}
+
+export async function getFeeAcademicYears(): Promise<FeeAcademicYear[]> {
+  return api.get<FeeAcademicYear[]>(
+    "/api/v1/college-admin/courses/fee-structures/academic-years",
+  );
+}
+
 export async function getFeeStructures(
   courseId: string,
 ): Promise<FeeStructureDto[]> {

@@ -25,6 +25,18 @@ docs {
   supportTickets[] (link into the Student Queries inbox via ticketNumber),
   and beaconuCard (null if not issued).
 
+  referral:
+  - code: { code, shareUrl, isActive, totalClicks, totalSignups, createdAt } | null
+  - summary: { invited, signedUp, enrolled, rewarded, totalEarned } (voided excluded)
+  - referrals[]: { id, referredStudentName, status (signed_up | enrolled |
+    paid | void), payoutBaseAmount, payoutPercentage, payoutAmount, paidAt,
+    joinedAt }, newest first
+
+  wallet:
+  - pendingRedemption: amount held by pending redemption requests
+  - recentTransactions[]: latest 20 { id, type (credit | debit), amount,
+    description, withdrawalStatus, payoutReference, balanceAfter, createdAt }
+
   404 NotFoundError if this student has no Enrollment at this college
   (staff can't view students at other colleges).
 }

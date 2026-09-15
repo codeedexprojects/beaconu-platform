@@ -1,0 +1,28 @@
+meta {
+  name: Get Redemption Payout Details
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{baseUrl}}/api/v1/admin/student-redemptions/{{redemptionId}}/payout-details
+  body: none
+  auth: none
+}
+
+headers {
+  Authorization: Bearer {{accessToken}}
+}
+
+docs {
+  The only endpoint that returns a decrypted bank account number, one
+  request at a time. Requires: Platform Admin token, students.manage.
+
+  data: { id, amount, status, requestedAt,
+    student: { id, fullName, phoneNumber },
+    snapshot: masked bank details as submitted with the request,
+    account: { bankName, accountHolderName, accountNumber | null,
+      accountNumberLast4, ifscCode, accountType } | null }
+
+  accountNumber is null when decryption fails (e.g. ENCRYPTION_KEY changed).
+}

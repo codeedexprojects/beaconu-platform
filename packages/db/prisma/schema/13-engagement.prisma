@@ -191,6 +191,7 @@ model StudentWalletTransaction {
   withdrawalStatus  String?   @map("withdrawal_status") @db.VarChar(20)
   reviewedBy        String?   @map("reviewed_by")
   reviewRemarks     String?   @map("review_remarks") @db.VarChar(500)
+  payoutReference   String?   @map("payout_reference") @db.VarChar(100)
   reviewedAt        DateTime? @map("reviewed_at") @db.Timestamptz
   balanceAfter      Decimal   @map("balance_after") @db.Decimal(12, 2)
   createdAt         DateTime  @default(now()) @map("created_at") @db.Timestamptz

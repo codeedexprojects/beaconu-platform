@@ -1,0 +1,45 @@
+meta {
+  name: List Card Redemptions
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/api/v1/admin/student-redemptions
+  body: none
+  auth: none
+}
+
+headers {
+  Authorization: Bearer {{accessToken}}
+}
+
+params:query {
+  ~status: pending
+  ~page: 1
+  ~limit: 20
+}
+
+script:post-response {
+  if (res.status === 200) {
+    const data = res.getBody();
+    if (data.data && data.data[0] && data.data[0].id) {
+      bru.setEnvVar("redemptionId", data.data[0].id);
+    }
+  }
+}
+
+docs {
+  BeaconU Card redemption queue (student_wallet_transactions, type=debit).
+  Oldest first. Requires: Platform Admin token, students.view.
+
+  Query: status (pending | approved | rejected; omit for all), page, limit (max 100)
+
+  data: [{ id, amount, status, payoutDetails: { bankName, accountHolderName,
+    accountNumberLast4, ifscCode, accountType } | null, reviewRemarks,
+    payoutReference, reviewedAt, requestedAt, student: { id, fullName, email,
+    phoneNumber }, card: { cardNumber, balance } | null }]
+  meta: { total, page, limit, ... }
+
+  Account numbers are always masked here; see Get Payout Details.
+}

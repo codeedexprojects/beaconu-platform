@@ -135,35 +135,58 @@ export class WalletRepository {
     });
   }
 
-  /** Records a payout that was already made by hand. */
-  static async approveRedemption(
-    id: string,
-    studentId: string,
-    amount: number,
-    adminId: string,
-    remarks: string | undefined,
-  ) {
-    return prisma.$transaction(async (tx) => {
-      const card = await tx.beaconuCard.update({
-        where: { studentId },
-        data: {
-          balance: { decrement: amount },
-          totalWithdrawn: { increment: amount },
-        },
-        select: { balance: true },
-      });
+  /** Records a payout that was already made by hand. The status flip is
+   * conditional on `pending`, so a concurrent second review claims nothing and
+   * the card is debited at most once. */
+  static async approveRedemption(data: {
+    id: string;
+    studentId: string;
+    amount: number;
+    adminId: string;
+    payoutReference: string;
+    remarks: string | undefined;
+  }) {
+    try {
+      return await prisma.$transaction(async (tx) => {
+        const claimed = await tx.studentWalletTransaction.updateMany({
+          where: { id: data.id, type: "debit", withdrawalStatus: "pending" },
+          data: {
+            withdrawalStatus: "approved",
+            reviewedBy: data.adminId,
+            reviewRemarks: data.remarks,
+            payoutReference: data.payoutReference,
+            reviewedAt: new Date(),
+          },
+        });
+        if (claimed.count === 0) {
+          throw new RedemptionRollback("already_reviewed");
+        }
 
-      return tx.studentWalletTransaction.update({
-        where: { id },
-        data: {
-          withdrawalStatus: "approved",
-          reviewedBy: adminId,
-          reviewRemarks: remarks,
-          reviewedAt: new Date(),
-          balanceAfter: card.balance,
-        },
+        const debited = await tx.beaconuCard.updateMany({
+          where: { studentId: data.studentId, balance: { gte: data.amount } },
+          data: {
+            balance: { decrement: data.amount },
+            totalWithdrawn: { increment: data.amount },
+          },
+        });
+        if (debited.count === 0) {
+          throw new RedemptionRollback("insufficient_balance");
+        }
+
+        const card = await tx.beaconuCard.findUniqueOrThrow({
+          where: { studentId: data.studentId },
+          select: { balance: true },
+        });
+        const transaction = await tx.studentWalletTransaction.update({
+          where: { id: data.id },
+          data: { balanceAfter: card.balance },
+        });
+        return { transaction };
       });
-    });
+    } catch (error) {
+      if (error instanceof RedemptionRollback) return { error: error.reason };
+      throw error;
+    }
   }
 
   /** No balance change: nothing was debited, the hold simply lifts. */
@@ -172,14 +195,24 @@ export class WalletRepository {
     adminId: string,
     remarks: string | undefined,
   ) {
-    return prisma.studentWalletTransaction.update({
-      where: { id },
-      data: {
-        withdrawalStatus: "rejected",
-        reviewedBy: adminId,
-        reviewRemarks: remarks,
-        reviewedAt: new Date(),
-      },
+    return prisma.$transaction(async (tx) => {
+      const claimed = await tx.studentWalletTransaction.updateMany({
+        where: { id, type: "debit", withdrawalStatus: "pending" },
+        data: {
+          withdrawalStatus: "rejected",
+          reviewedBy: adminId,
+          reviewRemarks: remarks,
+          reviewedAt: new Date(),
+        },
+      });
+      if (claimed.count === 0) return null;
+      return tx.studentWalletTransaction.findUniqueOrThrow({ where: { id } });
     });
+  }
+}
+
+class RedemptionRollback extends Error {
+  constructor(readonly reason: "already_reviewed" | "insufficient_balance") {
+    super(reason);
   }
 }

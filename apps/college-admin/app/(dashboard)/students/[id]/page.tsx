@@ -10,6 +10,7 @@ import {
   Download,
   Eye,
   FileText,
+  Gift,
   Home,
   Loader2,
   Mail,
@@ -19,6 +20,7 @@ import {
   ShieldCheck,
   UserCircle2,
   Users,
+  Wallet,
 } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
@@ -54,6 +56,7 @@ const TABS = [
   { id: "qualifications", label: "Qualifications" },
   { id: "documents", label: "Documents" },
   { id: "payments", label: "Payments" },
+  { id: "referrals", label: "Referrals & Wallet" },
 ] as const;
 type TabId = (typeof TABS)[number]["id"];
 
@@ -75,6 +78,9 @@ const STATUS_BADGE_CLASS: Record<string, string> = {
   awaiting_response: "bg-red-50 text-red-700 border-red-200",
   resolved: "bg-green-50 text-green-700 border-green-200",
   closed: "bg-blue-50 text-blue-700 border-blue-200",
+  signed_up: "bg-amber-50 text-amber-700 border-amber-200",
+  enrolled: "bg-blue-50 text-blue-700 border-blue-200",
+  void: "bg-muted text-muted-foreground",
 };
 
 function statusClass(status: string) {
@@ -680,6 +686,211 @@ function PaymentsTab({ student }: { student: StudentDetailDto }) {
   );
 }
 
+/* ---------- Referrals & Wallet tab ---------- */
+
+function formatRupees(value: string | null | undefined) {
+  if (value === null || value === undefined) return "—";
+  return `₹${Number(value).toLocaleString("en-IN", { maximumFractionDigits: 2 })}`;
+}
+
+function ReferralsTab({ student }: { student: StudentDetailDto }) {
+  const { code, summary, referrals } = student.referral;
+  const card = student.beaconuCard;
+
+  return (
+    <div className="space-y-4">
+      <div className="grid gap-4 md:grid-cols-2">
+        <SectionCard
+          title="Referral Code"
+          icon={<Gift className="h-3.5 w-3.5" />}
+        >
+          {code ? (
+            <div className="grid grid-cols-2 gap-2">
+              <InfoBox label="Code" value={code.code} />
+              <InfoBox
+                label="Status"
+                value={code.isActive ? "Active" : "Inactive"}
+              />
+              <InfoBox label="Link Clicks" value={code.totalClicks} />
+              <InfoBox label="Sign-ups" value={code.totalSignups} />
+              <InfoBox label="Created" value={formatDate(code.createdAt)} />
+              {code.shareUrl && (
+                <div className="col-span-2 rounded-lg bg-gold-pale/50 px-3 py-2.5">
+                  <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+                    Share Link
+                  </p>
+                  <a
+                    href={code.shareUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="mt-0.5 block break-all text-sm font-medium text-gold hover:underline"
+                  >
+                    {code.shareUrl}
+                  </a>
+                </div>
+              )}
+            </div>
+          ) : (
+            <p className="text-xs text-muted-foreground">
+              The student hasn&apos;t generated a referral code yet.
+            </p>
+          )}
+          <div className="grid grid-cols-4 gap-2 pt-1">
+            <InfoBox label="Invited" value={summary.invited} />
+            <InfoBox label="Signed Up" value={summary.signedUp} />
+            <InfoBox label="Enrolled" value={summary.enrolled} />
+            <InfoBox label="Rewarded" value={summary.rewarded} />
+          </div>
+        </SectionCard>
+
+        <SectionCard title="Wallet" icon={<Wallet className="h-3.5 w-3.5" />}>
+          {card ? (
+            <div className="grid grid-cols-2 gap-2">
+              <InfoBox label="Card Number" value={card.cardNumber} />
+              <InfoBox label="Card Status" value={humanize(card.status)} />
+              <InfoBox label="Balance" value={formatRupees(card.balance)} />
+              <InfoBox
+                label="Pending Redemption"
+                value={formatRupees(student.wallet.pendingRedemption)}
+              />
+              <InfoBox
+                label="Total Earned"
+                value={formatRupees(card.totalEarned)}
+              />
+              <InfoBox
+                label="Total Redeemed"
+                value={formatRupees(card.totalWithdrawn)}
+              />
+              <InfoBox
+                label="Referral Earnings"
+                value={formatRupees(summary.totalEarned)}
+              />
+              <InfoBox
+                label="Valid Until"
+                value={formatDate(card.validUntil)}
+              />
+            </div>
+          ) : (
+            <p className="text-xs text-muted-foreground">No card issued.</p>
+          )}
+        </SectionCard>
+      </div>
+
+      <SectionCard
+        title={`Referrals (${referrals.length})`}
+        icon={<Users className="h-3.5 w-3.5" />}
+      >
+        {referrals.length === 0 ? (
+          <p className="text-xs text-muted-foreground">No referrals yet.</p>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-border text-left text-[11px] uppercase text-muted-foreground">
+                  <th className="py-2 pr-3 font-semibold">Invitee</th>
+                  <th className="py-2 pr-3 font-semibold">Status</th>
+                  <th className="py-2 pr-3 font-semibold">Reward</th>
+                  <th className="py-2 pr-3 font-semibold">Joined</th>
+                  <th className="py-2 font-semibold">Rewarded On</th>
+                </tr>
+              </thead>
+              <tbody>
+                {referrals.map((r) => (
+                  <tr
+                    key={r.id}
+                    className="border-b border-border last:border-0"
+                  >
+                    <td className="py-2 pr-3 font-medium text-navy">
+                      {r.referredStudentName}
+                    </td>
+                    <td className="py-2 pr-3">
+                      <Badge
+                        variant="outline"
+                        className={statusClass(r.status)}
+                      >
+                        {r.status === "paid" ? "Rewarded" : humanize(r.status)}
+                      </Badge>
+                    </td>
+                    <td className="py-2 pr-3">
+                      {r.payoutAmount ? (
+                        <>
+                          {formatRupees(r.payoutAmount)}
+                          {r.payoutPercentage && r.payoutBaseAmount && (
+                            <span className="block text-[10px] text-muted-foreground">
+                              {Number(r.payoutPercentage)}% of{" "}
+                              {formatRupees(r.payoutBaseAmount)}
+                            </span>
+                          )}
+                        </>
+                      ) : (
+                        "—"
+                      )}
+                    </td>
+                    <td className="py-2 pr-3 text-muted-foreground">
+                      {formatDate(r.joinedAt)}
+                    </td>
+                    <td className="py-2 text-muted-foreground">
+                      {formatDate(r.paidAt)}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </SectionCard>
+
+      <SectionCard
+        title="Recent Wallet Activity"
+        icon={<CreditCard className="h-3.5 w-3.5" />}
+      >
+        {student.wallet.recentTransactions.length === 0 ? (
+          <p className="text-xs text-muted-foreground">No wallet activity.</p>
+        ) : (
+          <div className="space-y-2">
+            {student.wallet.recentTransactions.map((t) => (
+              <div
+                key={t.id}
+                className="flex items-start justify-between gap-3 rounded-lg border border-border p-3 text-sm"
+              >
+                <div>
+                  <p className="font-medium">
+                    {t.description ??
+                      (t.type === "credit" ? "Credit" : "Redemption")}
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    {formatDateTime(t.createdAt)}
+                    {t.payoutReference && ` · UTR ${t.payoutReference}`}
+                  </p>
+                </div>
+                <div className="text-right">
+                  <p
+                    className={cn(
+                      "font-semibold",
+                      t.type === "credit" ? "text-green-700" : "text-navy",
+                    )}
+                  >
+                    {t.type === "credit" ? "+" : "−"}
+                    {formatRupees(t.amount)}
+                  </p>
+                  {t.withdrawalStatus && (
+                    <Badge
+                      variant="outline"
+                      className={cn("mt-1", statusClass(t.withdrawalStatus))}
+                    >
+                      {humanize(t.withdrawalStatus)}
+                    </Badge>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </SectionCard>
+    </div>
+  );
+}
+
 /* ---------- Overview tab ---------- */
 
 function OverviewTab({
@@ -1114,6 +1325,7 @@ export default function StudentDetailPage() {
         />
       )}
       {tab === "payments" && <PaymentsTab student={student} />}
+      {tab === "referrals" && <ReferralsTab student={student} />}
     </div>
   );
 }

@@ -47,6 +47,13 @@ const systemConfigSchema = z.object({
   counsellorMinWithdrawalAmount: z.coerce
     .number()
     .positive("Must be greater than zero"),
+  studentReferralPercentage: z.coerce
+    .number()
+    .min(0, "Must be ≥ 0")
+    .max(100, "Must be ≤ 100"),
+  studentMinWithdrawalAmount: z.coerce
+    .number()
+    .positive("Must be greater than zero"),
 });
 type SystemConfigInput = z.infer<typeof systemConfigSchema>;
 
@@ -67,6 +74,8 @@ function SystemConfigurationSection() {
     defaultValues: {
       meetingGstPercentage: 0,
       counsellorMinWithdrawalAmount: 0,
+      studentReferralPercentage: 0,
+      studentMinWithdrawalAmount: 0,
     },
   });
 
@@ -75,6 +84,8 @@ function SystemConfigurationSection() {
       form.reset({
         meetingGstPercentage: data.meetingGstPercentage,
         counsellorMinWithdrawalAmount: data.counsellorMinWithdrawalAmount,
+        studentReferralPercentage: data.studentReferralPercentage,
+        studentMinWithdrawalAmount: data.studentMinWithdrawalAmount,
       });
     }
   }, [data, form]);
@@ -121,9 +132,9 @@ function SystemConfigurationSection() {
       <CardHeader>
         <CardTitle className="text-lg">System Configuration</CardTitle>
         <CardDescription>
-          Platform-wide values used for counselling session payouts. Other
-          payment flows (e.g. Blink referral commissions) apply their own
-          independent GST percentage.
+          Platform-wide values for counselling payouts and Student Hub
+          referrals. Blink referral commissions apply their own independent GST
+          percentage.
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -161,6 +172,56 @@ function SystemConfigurationSection() {
             {form.formState.errors.counsellorMinWithdrawalAmount && (
               <p className="text-sm text-destructive">
                 {form.formState.errors.counsellorMinWithdrawalAmount.message}
+              </p>
+            )}
+          </div>
+          <Separator className="my-4" />
+          <div>
+            <h3 className="text-sm font-semibold">Student Referrals</h3>
+            <p className="text-xs text-muted-foreground">
+              Enrolled students earn a reward on their BeaconU Card when someone
+              they invited to the app enrolls at any college.
+            </p>
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="studentReferralPercentage">
+              Student Referral Percentage (%)
+            </Label>
+            <p className="text-xs text-muted-foreground">
+              Reward = this percentage of the enrolled course&apos;s Referral
+              Commission (set per course by the college). At 0, referrals are
+              recorded but pay nothing, and they are not paid later when this is
+              raised.
+            </p>
+            <Input
+              id="studentReferralPercentage"
+              type="number"
+              step="0.01"
+              {...form.register("studentReferralPercentage")}
+            />
+            {form.formState.errors.studentReferralPercentage && (
+              <p className="text-sm text-destructive">
+                {form.formState.errors.studentReferralPercentage.message}
+              </p>
+            )}
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="studentMinWithdrawalAmount">
+              Student Minimum Redemption Amount (₹)
+            </Label>
+            <p className="text-xs text-muted-foreground">
+              Smallest BeaconU Card balance a student can request to redeem to
+              their bank account.
+            </p>
+            <Input
+              id="studentMinWithdrawalAmount"
+              type="number"
+              step="0.01"
+              {...form.register("studentMinWithdrawalAmount")}
+            />
+            {form.formState.errors.studentMinWithdrawalAmount && (
+              <p className="text-sm text-destructive">
+                {form.formState.errors.studentMinWithdrawalAmount.message}
               </p>
             )}
           </div>

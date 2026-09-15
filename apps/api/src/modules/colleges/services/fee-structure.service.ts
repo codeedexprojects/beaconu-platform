@@ -26,6 +26,22 @@ async function assertCourseInCollege(courseId: string, collegeId: string) {
 }
 
 export class FeeStructureService {
+  /** Academic years that have fees set up — the options for an application
+   * form's admission year, so enrollments always find a matching fee row. */
+  static async listAcademicYears(collegeId: string) {
+    const rows =
+      await FeeStructureRepository.findActiveAcademicYears(collegeId);
+    const courses = new Map<string, Set<string>>();
+    for (const row of rows) {
+      const year = row.academicYear.trim();
+      if (!courses.has(year)) courses.set(year, new Set());
+      courses.get(year)!.add(row.courseId);
+    }
+    return [...courses.entries()]
+      .map(([academicYear, ids]) => ({ academicYear, courseCount: ids.size }))
+      .sort((a, b) => b.academicYear.localeCompare(a.academicYear));
+  }
+
   static async listForCourse(courseId: string, collegeId: string) {
     await assertCourseInCollege(courseId, collegeId);
     const rows = await FeeStructureRepository.findByCourseId(courseId);

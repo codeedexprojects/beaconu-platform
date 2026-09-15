@@ -1,6 +1,8 @@
 export interface PlatformConfig {
   meetingGstPercentage: number;
   counsellorMinWithdrawalAmount: number;
+  studentReferralPercentage: number;
+  studentMinWithdrawalAmount: number;
   updatedByAdminId: string | null;
   updatedAt: string;
 }

@@ -111,23 +111,37 @@ export class WalletService {
     if (!request || request.withdrawalStatus === null) {
       throw new NotFoundError("Redemption request");
     }
-    if (request.withdrawalStatus !== "pending") {
-      throw new ConflictError(
-        "This redemption request has already been reviewed",
-      );
-    }
+    const alreadyReviewed = new ConflictError(
+      "This redemption request has already been reviewed",
+    );
+    if (request.withdrawalStatus !== "pending") throw alreadyReviewed;
 
     const amount = Number(request.amount);
-    const updated =
-      data.status === "approved"
-        ? await WalletRepository.approveRedemption(
-            id,
-            request.studentId,
-            amount,
-            adminId,
-            data.remarks,
-          )
-        : await WalletRepository.rejectRedemption(id, adminId, data.remarks);
+    let updated;
+    if (data.status === "approved") {
+      const result = await WalletRepository.approveRedemption({
+        id,
+        studentId: request.studentId,
+        amount,
+        adminId,
+        payoutReference: data.payoutReference!,
+        remarks: data.remarks,
+      });
+      if ("error" in result) {
+        if (result.error === "already_reviewed") throw alreadyReviewed;
+        throw new ConflictError(
+          "The student's card balance is lower than this request, so it can't be marked paid",
+        );
+      }
+      updated = result.transaction;
+    } else {
+      updated = await WalletRepository.rejectRedemption(
+        id,
+        adminId,
+        data.remarks,
+      );
+      if (!updated) throw alreadyReviewed;
+    }
 
     logger.info(
       {
@@ -153,6 +167,7 @@ export class WalletService {
       id: updated.id,
       withdrawalStatus: updated.withdrawalStatus,
       reviewRemarks: updated.reviewRemarks ?? null,
+      payoutReference: updated.payoutReference ?? null,
       reviewedAt: updated.reviewedAt?.toISOString() ?? null,
     };
   }
