@@ -1,4 +1,5 @@
 import { prisma } from "@beaconu/db";
+import { canonicalIndiaState } from "@beaconu/utils";
 
 export interface PublicCollegeFilterInput {
   universityId?: string;
@@ -75,6 +76,50 @@ export class PublicCollegeFilterQuery {
         courses: { some: courseCriteria(filters) },
       }),
     };
+  }
+
+  /** State options (or, when `state` is given, district options within it)
+   * for the filter flow, narrowed by every other selected filter.
+   *
+   * Only values stored without stray whitespace are offered, because the
+   * results filter matches exactly; that keeps `collegeCount` equal to what
+   * GET /public/colleges returns for the same option. */
+  static async listLocationOptions(
+    filters: Omit<PublicCollegeFilterInput, "district" | "city">,
+  ) {
+    const colleges = await prisma.college.findMany({
+      where: this.buildCollegeListWhere(filters),
+      select: { state: true, district: true },
+    });
+
+    const counts = new Map<string, { name: string; collegeCount: number }>();
+    for (const college of colleges) {
+      const name = filters.state
+        ? college.district
+        : canonicalIndiaState(college.state) && college.state;
+      if (!name || name !== name.trim()) continue;
+      const key = name.toLowerCase();
+      const entry = counts.get(key);
+      if (entry) {
+        entry.collegeCount++;
+      } else {
+        counts.set(key, {
+          name: filters.state ? name : canonicalIndiaState(name)!,
+          collegeCount: 1,
+        });
+      }
+    }
+
+    return [...counts.values()]
+      .sort(
+        (a, b) =>
+          b.collegeCount - a.collegeCount || a.name.localeCompare(b.name),
+      )
+      .map(({ name, collegeCount }) =>
+        filters.state
+          ? { district: name, collegeCount }
+          : { state: name, collegeCount },
+      );
   }
 
   /** Course options for the filter-flow screen, narrowed by the earlier steps.

@@ -30,6 +30,7 @@ import type { CreateUniversityInput } from "@/lib/services/universities.service"
 import { useCreateUniversity } from "@/hooks/use-universities";
 import { useAllActiveStreams } from "@/hooks/use-academic-taxonomy";
 import { useUniversityTypes } from "@/hooks/use-university-types";
+import { IndiaStateSelect } from "@/components/ui/india-state-select";
 
 function toSlug(value: string): string {
   return value
@@ -561,13 +562,12 @@ export default function NewUniversityPage() {
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="state">State</Label>
-                    <Input
+                    <IndiaStateSelect
                       id="state"
-                      value={form.state}
-                      onChange={(e) =>
-                        setForm((prev) => ({ ...prev, state: e.target.value }))
+                      value={form.state ?? ""}
+                      onChange={(state) =>
+                        setForm((prev) => ({ ...prev, state }))
                       }
-                      placeholder="e.g. Delhi"
                     />
                   </div>
                 </div>

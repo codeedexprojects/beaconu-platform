@@ -1,4 +1,4 @@
-import { prisma } from "@beaconu/db";
+import { prisma, type Prisma } from "@beaconu/db";
 import type {
   CampusVisit,
   CampusVisitCalendarDay,
@@ -9,6 +9,52 @@ import type {
 import type { CampusVisitListQuery } from "../validators/campus-visits.validator";
 import { CampusVisitAvailabilityRepository } from "../repositories/campus-visit-availability.repository";
 import { CampusVisitDateOverrideRepository } from "../repositories/campus-visit-date-override.repository";
+
+const CLOSED_STATUSES = ["completed", "cancelled"];
+
+function todayInIst(): Date {
+  const ymd = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Asia/Kolkata",
+  }).format(new Date());
+  return new Date(ymd);
+}
+
+// Upcoming = not closed and dated today or later; past = everything else.
+function listWhere({
+  status,
+  date,
+  when,
+}: CampusVisitListQuery): Prisma.CampusVisitWhereInput[] {
+  const today = todayInIst();
+  return [
+    ...(status ? [{ status: { in: status } }] : []),
+    ...(date ? [{ proposedDate: new Date(date) }] : []),
+    ...(when === "upcoming"
+      ? [{ proposedDate: { gte: today }, status: { notIn: CLOSED_STATUSES } }]
+      : []),
+    ...(when === "past"
+      ? [
+          {
+            OR: [
+              { proposedDate: { lt: today } },
+              { status: { in: CLOSED_STATUSES } },
+            ],
+          },
+        ]
+      : []),
+  ];
+}
+
+function listOrderBy(
+  when: CampusVisitListQuery["when"],
+): Prisma.CampusVisitOrderByWithRelationInput[] {
+  const direction = when === "past" ? "desc" : "asc";
+  return [
+    { proposedDate: direction },
+    { proposedTime: direction },
+    { createdAt: direction },
+  ];
+}
 
 function mapAmbassador(
   ambassador: {
@@ -124,14 +170,15 @@ export class CampusVisitsQuery {
     studentId: string,
     filters: CampusVisitListQuery,
   ): Promise<CampusVisitListResponse> {
-    const { status, date, college_id, page, limit } = filters;
+    const { college_id, page, limit } = filters;
     const skip = (page - 1) * limit;
 
-    const where = {
-      studentId,
-      ...(status ? { status } : {}),
-      ...(date ? { proposedDate: new Date(date) } : {}),
-      ...(college_id ? { collegeId: college_id } : {}),
+    const where: Prisma.CampusVisitWhereInput = {
+      AND: [
+        { studentId },
+        ...(college_id ? [{ collegeId: college_id }] : []),
+        ...listWhere(filters),
+      ],
     };
 
     const [total, rows] = await Promise.all([
@@ -140,7 +187,7 @@ export class CampusVisitsQuery {
         where,
         skip,
         take: limit,
-        orderBy: { proposedDate: "asc" },
+        orderBy: listOrderBy(filters.when),
         include: { ambassador: ambassadorInclude, college: collegeInclude },
       }),
     ]);
@@ -160,15 +207,18 @@ export class CampusVisitsQuery {
     collegeId: string,
     filters: CampusVisitListQuery,
   ): Promise<CampusVisitListResponse> {
-    const { status, date, page, limit } = filters;
+    const { page, limit } = filters;
     const skip = (page - 1) * limit;
 
-    const where = {
-      ...(status ? { status } : {}),
-      ...(date ? { proposedDate: new Date(date) } : {}),
-      OR: [
-        { ambassadorId },
-        { status: "arrived", ambassadorId: null, collegeId },
+    const where: Prisma.CampusVisitWhereInput = {
+      AND: [
+        {
+          OR: [
+            { ambassadorId },
+            { status: "arrived", ambassadorId: null, collegeId },
+          ],
+        },
+        ...listWhere(filters),
       ],
     };
 
@@ -178,7 +228,7 @@ export class CampusVisitsQuery {
         where,
         skip,
         take: limit,
-        orderBy: { proposedDate: "asc" },
+        orderBy: listOrderBy(filters.when),
         include: { ambassador: ambassadorInclude, college: collegeInclude },
       }),
     ]);
@@ -197,14 +247,15 @@ export class CampusVisitsQuery {
     collegeId: string,
     filters: CampusVisitListQuery,
   ): Promise<CampusVisitListResponse> {
-    const { status, date, ambassador_id, page, limit } = filters;
+    const { ambassador_id, page, limit } = filters;
     const skip = (page - 1) * limit;
 
-    const where = {
-      collegeId,
-      ...(status ? { status } : {}),
-      ...(date ? { proposedDate: new Date(date) } : {}),
-      ...(ambassador_id ? { ambassadorId: ambassador_id } : {}),
+    const where: Prisma.CampusVisitWhereInput = {
+      AND: [
+        { collegeId },
+        ...(ambassador_id ? [{ ambassadorId: ambassador_id }] : []),
+        ...listWhere(filters),
+      ],
     };
 
     const [total, rows] = await Promise.all([
@@ -213,7 +264,7 @@ export class CampusVisitsQuery {
         where,
         skip,
         take: limit,
-        orderBy: { proposedDate: "asc" },
+        orderBy: listOrderBy(filters.when),
         include: { ambassador: ambassadorInclude, college: collegeInclude },
       }),
     ]);

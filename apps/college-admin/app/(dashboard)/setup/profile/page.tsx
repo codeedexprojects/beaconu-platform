@@ -77,6 +77,8 @@ import { uploadCollegeAdminFile } from "@/lib/services/colleges.service";
 import { IconPickerField } from "@/components/icon-picker";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { ImageUpload } from "@/components/ui/image-upload";
+import { IndiaStateSelect } from "@/components/ui/india-state-select";
+import { IndiaDistrictSelect } from "@/components/ui/india-district-select";
 import { getCollegeSlugFromPath, getPortalPath } from "@/lib/portal-path";
 import type { PublicGalleryItem } from "@beaconu/types";
 
@@ -613,6 +615,7 @@ export default function SetupProfilePage() {
   });
   // Watched mirrors used only for live preview values (image URLs etc.)
   // alongside the useFieldArray-backed inputs above.
+  const selectedState = watch("state");
   const happeningsWatch = watch("profileSections.happenings.happenings") || [];
   const globalInstitutionsWatch =
     watch("profileSections.institutions_across_world.institutions") || [];
@@ -1104,30 +1107,38 @@ export default function SetupProfilePage() {
                     </div>
 
                     <div className="space-y-2">
-                      <Label
-                        htmlFor="state"
-                        className="font-semibold text-foreground"
-                      >
+                      <Label className="font-semibold text-foreground">
                         State
                       </Label>
-                      <Input
-                        id="state"
-                        placeholder="Karnataka"
-                        {...register("state")}
+                      <Controller
+                        name="state"
+                        control={control}
+                        render={({ field }) => (
+                          <IndiaStateSelect
+                            value={field.value ?? ""}
+                            onChange={(value) => {
+                              field.onChange(value);
+                              setValue("district", "", { shouldDirty: true });
+                            }}
+                          />
+                        )}
                       />
                     </div>
 
                     <div className="space-y-2">
-                      <Label
-                        htmlFor="district"
-                        className="font-semibold text-foreground"
-                      >
+                      <Label className="font-semibold text-foreground">
                         District
                       </Label>
-                      <Input
-                        id="district"
-                        placeholder="Bangalore Urban"
-                        {...register("district")}
+                      <Controller
+                        name="district"
+                        control={control}
+                        render={({ field }) => (
+                          <IndiaDistrictSelect
+                            stateName={selectedState ?? ""}
+                            value={field.value ?? ""}
+                            onChange={field.onChange}
+                          />
+                        )}
                       />
                     </div>
 

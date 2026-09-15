@@ -1,0 +1,50 @@
+meta {
+  name: List Location Filter Options
+  type: http
+  seq: 3
+}
+
+get {
+  url: {{baseUrl}}/api/v1/public/colleges/locations/filter-options
+  body: none
+  auth: none
+}
+
+query {
+  ~state: Kerala
+  ~streamId:
+  ~disciplineId:
+  ~studyLevelId:
+  ~programTypeId:
+  ~courseMasterId:
+  ~courseName:
+  ~universityId:
+}
+
+docs {
+  State options for the explore filter flow's "choose a state" step, or
+  district options inside one state. No auth.
+
+  Query (all optional):
+  - state — when sent, returns districts in that state instead of states
+    (case-insensitive)
+  - streamId (ignored if disciplineId is set), disciplineId, studyLevelId,
+    programTypeId, courseMasterId / courseName, universityId — the choices
+    already made, same meaning as List Colleges
+
+  Response without `state`:
+  data: [{ state: string, collegeCount: number }]
+
+  Response with `state`:
+  data: [{ district: string, collegeCount: number }]
+
+  Sorted by collegeCount desc, then name. Not paginated.
+
+  - Only active, publicly listed colleges that match the other filters.
+  - State names use the official spelling (same list as GET /public/india-states).
+    Colleges with no state or an unrecognised state are left out.
+  - Colleges without a district are counted in the state but have no
+    district option, so district counts can add up to less than the state's.
+  - Every option returns exactly `collegeCount` colleges when passed to
+    List Colleges as `state` (and `district`) with the same filters.
+}

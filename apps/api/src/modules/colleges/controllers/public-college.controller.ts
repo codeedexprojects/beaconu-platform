@@ -584,6 +584,16 @@ export class PublicCollegeController {
       );
   }
 
+  static async listLocationOptions(req: Request, res: Response) {
+    const query = publicCollegeSchemas.locationOptionsQuery.parse(req.query);
+    const options = await PublicCollegeFilterQuery.listLocationOptions(query);
+    return res
+      .status(200)
+      .json(
+        ApiResponse.success("Location options fetched successfully", options),
+      );
+  }
+
   static async listCoursesMinimal(req: Request, res: Response) {
     const { college_id } = publicCollegeSchemas.coursesMinimalQuery.parse(
       req.query,

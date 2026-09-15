@@ -42,18 +42,29 @@ export const reassignCampusVisitSchema = z.object({
   reassignment_reason: z.string().optional(),
 });
 
+const CAMPUS_VISIT_STATUSES = [
+  "pending",
+  "arrived",
+  "confirmed",
+  "completed",
+  "cancelled",
+  "reassigned",
+] as const;
+
 export const campusVisitListQuerySchema = z.object({
   college_id: z.string().optional(),
-  status: z
-    .enum([
-      "pending",
-      "arrived",
-      "confirmed",
-      "completed",
-      "cancelled",
-      "reassigned",
-    ])
-    .optional(),
+  // Accepts `status=a,b` or repeated `status=a&status=b`.
+  status: z.preprocess(
+    (value) => {
+      const values = (Array.isArray(value) ? value : [value])
+        .flatMap((v) => (typeof v === "string" ? v.split(",") : []))
+        .map((v) => v.trim())
+        .filter(Boolean);
+      return values.length ? values : undefined;
+    },
+    z.array(z.enum(CAMPUS_VISIT_STATUSES)).optional(),
+  ),
+  when: z.enum(["upcoming", "past"]).optional(),
   date: z.string().date().optional(),
   ambassador_id: z.string().optional(),
   page: z.coerce.number().int().min(1).default(1),

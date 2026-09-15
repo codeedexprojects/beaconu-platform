@@ -51,6 +51,17 @@ export function getIndiaStates(): GeoOption[] {
   }));
 }
 
+/** Official spelling of an Indian state/UT name, matched ignoring case and
+ * surrounding whitespace. Null when it isn't a known state. */
+export function canonicalIndiaState(value?: string | null): string | null {
+  const needle = value?.trim().toLowerCase();
+  if (!needle) return null;
+  const match = State.getStatesOfCountry("IN").find(
+    (s) => s.name.toLowerCase() === needle,
+  );
+  return match?.name ?? null;
+}
+
 export function getIndiaDistricts(stateName: string): GeoOption[] {
   const state = State.getStatesOfCountry("IN").find(
     (s) => s.name === stateName,
