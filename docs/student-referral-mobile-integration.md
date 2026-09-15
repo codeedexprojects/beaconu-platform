@@ -1,6 +1,6 @@
 # Student Referrals & Card Redemption — Mobile Integration Guide
 
-Handoff doc for the mobile team. An **enrolled** student invites someone to the BeaconU app; when that invitee enrolls at any college, the referrer is credited a percentage of the course's referral amount to their BeaconU Card, which they can then redeem to a bank account.
+Handoff doc for the mobile team. An **enrolled** student invites someone to the BeaconU app; when that invitee enrolls at any college, the referrer is credited a percentage of the token amount the invitee paid to their BeaconU Card, which they can then redeem to a bank account.
 
 The backend is fully built. Nothing here has run against a live database yet — see [Prerequisites](#1-prerequisites--none-of-this-works-until-these-are-done). The mobile app is the only client for the student side; the super-admin web panel handles payout approval.
 
@@ -133,11 +133,11 @@ Store the pending code locally with a **30-day TTL** (matches the existing Blink
 
 Status flow:
 
-| Status      | Meaning                                                                                                                             |
-| ----------- | ----------------------------------------------------------------------------------------------------------------------------------- |
-| `signed_up` | Invitee made an account. `earnedAmount: null`                                                                                       |
-| `enrolled`  | Invitee enrolled but **nothing was payable** — course had no referral amount, or the platform percentage is 0. `earnedAmount: null` |
-| `paid`      | Credited to the card                                                                                                                |
+| Status      | Meaning                                                                                                                              |
+| ----------- | ------------------------------------------------------------------------------------------------------------------------------------ |
+| `signed_up` | Invitee made an account. `earnedAmount: null`                                                                                        |
+| `enrolled`  | Invitee enrolled but **nothing was payable** — no paid token amount was found, or the platform percentage is 0. `earnedAmount: null` |
+| `paid`      | Credited to the card                                                                                                                 |
 
 `enrolled` is a real terminal-looking state that never becomes `paid`. Don't render it as "processing" — it means no reward is coming for that invitee.
 
@@ -185,7 +185,7 @@ Status flow:
 
 `referral` is non-null only on referral credits — enough to render "why this amount" inline without a second call. `type: "debit"` rows are redemptions and carry `withdrawalStatus` (`pending` / `approved` / `rejected`). Approved redemptions also carry `payoutReference`, the bank transfer reference (UTR) the admin recorded; show it so the student can match the credit in their bank statement.
 
-> Open question for the product side: `baseAmount` and `percentage` expose the course commission figure to students. Confirm that's intended before surfacing it in the UI — it's easy to hide client-side.
+> Open question for the product side: `baseAmount` (the invitee's paid token amount) and `percentage` expose another student's payment amount to the referrer. Confirm that's intended before surfacing it in the UI — it's easy to hide client-side.
 
 ### Bank accounts
 
