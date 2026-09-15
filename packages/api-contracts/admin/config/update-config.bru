@@ -21,12 +21,14 @@ headers {
 body:json {
   {
     "meetingGstPercentage": 18,
-    "counsellorMinWithdrawalAmount": 500
+    "counsellorMinWithdrawalAmount": 500,
+    "studentReferralPercentage": 30,
+    "studentMinWithdrawalAmount": 500
   }
 }
 
 docs {
-  Updates the platform-wide config singleton. Both fields optional — send only
+  Updates the platform-wide config singleton. All fields optional — send only
   what changed. At least one field required.
   Requires: platform admin access token + permission "platform.settings.manage".
 
@@ -36,6 +38,11 @@ docs {
     (e.g. Blink referral commissions) have their own separate per-course GST
     and are unaffected by this value.
   - counsellorMinWithdrawalAmount (optional): > 0
+  - studentReferralPercentage (optional): 0-100 — Student Hub referral reward
+    as a percentage of the enrolled course's referral_commission_amount.
+    Default 0 (referrals recorded, nothing paid; not back-paid when raised).
+  - studentMinWithdrawalAmount (optional): > 0 — minimum BeaconU Card
+    redemption request
 
   Response: same shape as GET /admin/config. updatedByAdminId is set to the
   authenticated admin's id automatically.

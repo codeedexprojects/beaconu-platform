@@ -135,6 +135,27 @@ export interface EnrolledStudentListItem {
   academicYear: string;
   enrollmentStatus: string;
   enrolledAt: string;
+  referral: EnrolledStudentReferralSummary | null;
+  wallet: EnrolledStudentWalletSummary | null;
+}
+
+export interface EnrolledStudentReferralSummary {
+  code: string | null;
+  isActive: boolean;
+  /** Excludes voided referrals. */
+  invited: number;
+  /** Invitees who enrolled, rewarded or not. */
+  enrolled: number;
+  rewarded: number;
+  earned: string;
+}
+
+export interface EnrolledStudentWalletSummary {
+  balance: string;
+  totalEarned: string;
+  totalWithdrawn: string;
+  /** Held by pending redemption requests; not yet deducted from balance. */
+  pendingRedemption: string;
 }
 
 export interface EnrolledStudentListResponse {
@@ -281,6 +302,51 @@ export interface StudentDetailDto {
   documentRequests: StudentDetailDocumentRequest[];
   supportTickets: StudentDetailSupportTicket[];
   beaconuCard: StudentDetailBeaconuCard | null;
+  referral: StudentDetailReferral;
+  wallet: StudentDetailWallet;
+}
+
+export interface StudentDetailReferral {
+  code: {
+    code: string;
+    shareUrl: string | null;
+    isActive: boolean;
+    totalClicks: number;
+    totalSignups: number;
+    createdAt: string;
+  } | null;
+  summary: {
+    invited: number;
+    signedUp: number;
+    enrolled: number;
+    rewarded: number;
+    totalEarned: string;
+  };
+  referrals: {
+    id: string;
+    referredStudentName: string;
+    /** signed_up | enrolled | paid | void */
+    status: string;
+    payoutBaseAmount: string | null;
+    payoutPercentage: string | null;
+    payoutAmount: string | null;
+    paidAt: string | null;
+    joinedAt: string;
+  }[];
+}
+
+export interface StudentDetailWallet {
+  pendingRedemption: string;
+  recentTransactions: {
+    id: string;
+    type: string;
+    amount: string;
+    description: string | null;
+    withdrawalStatus: string | null;
+    payoutReference: string | null;
+    balanceAfter: string;
+    createdAt: string;
+  }[];
 }
 
 export interface ListStudentsQuery {

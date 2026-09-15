@@ -1,0 +1,48 @@
+meta {
+  name: Review Card Redemption
+  type: http
+  seq: 3
+}
+
+patch {
+  url: {{baseUrl}}/api/v1/admin/student-redemptions/{{redemptionId}}/status
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  Authorization: Bearer {{accessToken}}
+}
+
+body:json {
+  {
+    "status": "approved",
+    "payoutReference": "UTR123456789012",
+    "remarks": "Paid via NEFT"
+  }
+}
+
+docs {
+  Records the outcome of a manual payout. Requires: Platform Admin token,
+  students.manage.
+
+  Body:
+  - status: approved | rejected
+  - payoutReference: bank transfer reference / UTR, max 100 chars.
+    Required when status is approved.
+  - remarks: optional, max 500 chars (shown to the student on reject)
+
+  approved: deducts the amount from the card balance and sets
+  totalWithdrawn, in one transaction. rejected: no balance change.
+  The student gets a push (type "redemption_reviewed") either way.
+
+  Errors:
+  - 400 payoutReference missing on approve
+  - 404 request not found
+  - 409 already reviewed (also when two admins review at the same time;
+    only the first succeeds)
+  - 409 card balance lower than the request amount
+
+  data: { id, withdrawalStatus, reviewRemarks, payoutReference, reviewedAt }
+}

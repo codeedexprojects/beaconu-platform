@@ -88,6 +88,10 @@ export class StudentDetailQuery {
       documentRequests,
       supportTickets,
       card,
+      referralCode,
+      referrals,
+      walletTransactions,
+      pendingRedemption,
     ] = await Promise.all([
       prisma.hostelEnrollment.findFirst({
         where: { studentId, collegeId },
@@ -212,7 +216,55 @@ export class StudentDetailQuery {
           status: true,
         },
       }),
+      prisma.studentReferralCode.findUnique({
+        where: { studentId },
+        select: {
+          code: true,
+          shareUrl: true,
+          isActive: true,
+          totalClicks: true,
+          totalSignups: true,
+          createdAt: true,
+        },
+      }),
+      prisma.studentReferral.findMany({
+        where: { referrerStudentId: studentId },
+        select: {
+          id: true,
+          status: true,
+          payoutBaseAmount: true,
+          payoutPercentage: true,
+          payoutAmount: true,
+          paidAt: true,
+          createdAt: true,
+          referredStudent: { select: { fullName: true } },
+        },
+        orderBy: { createdAt: "desc" },
+      }),
+      prisma.studentWalletTransaction.findMany({
+        where: { studentId },
+        select: {
+          id: true,
+          type: true,
+          amount: true,
+          description: true,
+          withdrawalStatus: true,
+          payoutReference: true,
+          balanceAfter: true,
+          createdAt: true,
+        },
+        orderBy: { createdAt: "desc" },
+        take: 20,
+      }),
+      prisma.studentWalletTransaction.aggregate({
+        where: { studentId, type: "debit", withdrawalStatus: "pending" },
+        _sum: { amount: true },
+      }),
     ]);
+
+    const liveReferrals = referrals.filter((r) => r.status !== "void");
+    const countReferrals = (status: string) =>
+      liveReferrals.filter((r) => r.status === status).length;
 
     const hostelFees = ledgerRows.filter(
       (row) => row.feeCategory === "hostel_booking_fee",
@@ -376,6 +428,52 @@ export class StudentDetailQuery {
             status: card.status,
           }
         : null,
+      referral: {
+        code: referralCode
+          ? {
+              code: referralCode.code,
+              shareUrl: referralCode.shareUrl,
+              isActive: referralCode.isActive,
+              totalClicks: referralCode.totalClicks,
+              totalSignups: referralCode.totalSignups,
+              createdAt: referralCode.createdAt.toISOString(),
+            }
+          : null,
+        summary: {
+          invited: liveReferrals.length,
+          signedUp: countReferrals("signed_up"),
+          enrolled: countReferrals("enrolled"),
+          rewarded: countReferrals("paid"),
+          totalEarned: liveReferrals
+            .reduce((sum, r) => sum + Number(r.payoutAmount ?? 0), 0)
+            .toFixed(2),
+        },
+        referrals: referrals.map((r) => ({
+          id: r.id,
+          referredStudentName: r.referredStudent.fullName,
+          status: r.status,
+          payoutBaseAmount: r.payoutBaseAmount?.toString() ?? null,
+          payoutPercentage: r.payoutPercentage?.toString() ?? null,
+          payoutAmount: r.payoutAmount?.toString() ?? null,
+          paidAt: r.paidAt ? r.paidAt.toISOString() : null,
+          joinedAt: r.createdAt.toISOString(),
+        })),
+      },
+      wallet: {
+        pendingRedemption: Number(pendingRedemption._sum.amount ?? 0).toFixed(
+          2,
+        ),
+        recentTransactions: walletTransactions.map((t) => ({
+          id: t.id,
+          type: t.type,
+          amount: t.amount.toString(),
+          description: t.description,
+          withdrawalStatus: t.withdrawalStatus,
+          payoutReference: t.payoutReference,
+          balanceAfter: t.balanceAfter.toString(),
+          createdAt: t.createdAt.toISOString(),
+        })),
+      },
     };
   }
 }

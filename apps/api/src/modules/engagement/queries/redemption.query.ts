@@ -30,6 +30,7 @@ export class RedemptionQuery {
           withdrawalStatus: true,
           payoutDetails: true,
           reviewRemarks: true,
+          payoutReference: true,
           reviewedAt: true,
           createdAt: true,
           student: {
@@ -52,6 +53,7 @@ export class RedemptionQuery {
         status: r.withdrawalStatus,
         payoutDetails: r.payoutDetails,
         reviewRemarks: r.reviewRemarks,
+        payoutReference: r.payoutReference,
         reviewedAt: r.reviewedAt?.toISOString() ?? null,
         requestedAt: r.createdAt.toISOString(),
         student: r.student,

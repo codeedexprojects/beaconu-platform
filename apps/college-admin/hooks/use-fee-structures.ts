@@ -3,6 +3,7 @@ import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/api";
 import { QUERY_KEYS } from "@/lib/query-keys";
 import {
+  getFeeAcademicYears,
   getFeeStructures,
   createFeeStructure,
   updateFeeStructure,
@@ -10,6 +11,13 @@ import {
   type CreateFeeStructureInput,
   type UpdateFeeStructureInput,
 } from "@/lib/services/colleges.service";
+
+export function useFeeAcademicYears() {
+  return useQuery({
+    queryKey: QUERY_KEYS.feeAcademicYears,
+    queryFn: getFeeAcademicYears,
+  });
+}
 
 export function useFeeStructures(courseId?: string) {
   return useQuery({
@@ -28,6 +36,9 @@ export function useCreateFeeStructure(courseId: string) {
     onSuccess: () => {
       queryClient.invalidateQueries({
         queryKey: QUERY_KEYS.feeStructures(courseId),
+      });
+      queryClient.invalidateQueries({
+        queryKey: QUERY_KEYS.feeAcademicYears,
       });
     },
     onError: (error) => {
@@ -51,6 +62,9 @@ export function useUpdateFeeStructure(courseId: string) {
       queryClient.invalidateQueries({
         queryKey: QUERY_KEYS.feeStructures(courseId),
       });
+      queryClient.invalidateQueries({
+        queryKey: QUERY_KEYS.feeAcademicYears,
+      });
     },
     onError: (error) => {
       toast.error(getErrorMessage(error));
@@ -67,6 +81,9 @@ export function useDeleteFeeStructure(courseId: string) {
     onSuccess: () => {
       queryClient.invalidateQueries({
         queryKey: QUERY_KEYS.feeStructures(courseId),
+      });
+      queryClient.invalidateQueries({
+        queryKey: QUERY_KEYS.feeAcademicYears,
       });
     },
     onError: (error) => {

@@ -39,6 +39,7 @@ export interface RedemptionRequest {
   status: string | null;
   payoutDetails: RedemptionPayoutSnapshot | null;
   reviewRemarks: string | null;
+  payoutReference: string | null;
   reviewedAt: string | null;
   requestedAt: string;
   student: {
@@ -72,6 +73,8 @@ export interface RedemptionPayoutDetails {
 
 export interface ReviewRedemptionInput {
   status: "approved" | "rejected";
+  /** Bank transfer reference (UTR). Required when approving. */
+  payoutReference?: string;
   remarks?: string;
 }
 
@@ -79,6 +82,7 @@ export interface ReviewRedemptionResult {
   id: string;
   withdrawalStatus: string | null;
   reviewRemarks: string | null;
+  payoutReference: string | null;
   reviewedAt: string | null;
 }
 

@@ -161,6 +161,7 @@ Status flow:
       "amount": 1500,
       "description": "Referral reward",
       "withdrawalStatus": null,
+      "payoutReference": null,
       "balanceAfter": 1500,
       "createdAt": "2026-09-01T11:02:00.000Z",
       "referral": {
@@ -182,7 +183,7 @@ Status flow:
 }
 ```
 
-`referral` is non-null only on referral credits — enough to render "why this amount" inline without a second call. `type: "debit"` rows are redemptions and carry `withdrawalStatus` (`pending` / `approved` / `rejected`).
+`referral` is non-null only on referral credits — enough to render "why this amount" inline without a second call. `type: "debit"` rows are redemptions and carry `withdrawalStatus` (`pending` / `approved` / `rejected`). Approved redemptions also carry `payoutReference`, the bank transfer reference (UTR) the admin recorded; show it so the student can match the credit in their bank statement.
 
 > Open question for the product side: `baseAmount` and `percentage` expose the course commission figure to students. Confirm that's intended before surfacing it in the UI — it's easy to hide client-side.
 

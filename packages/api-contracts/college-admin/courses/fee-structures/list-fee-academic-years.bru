@@ -1,0 +1,28 @@
+meta {
+  name: List Fee Academic Years
+  type: http
+  seq: 5
+}
+
+get {
+  url: {{baseUrl}}/api/v1/college-admin/courses/fee-structures/academic-years
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{staffToken}}
+}
+
+docs {
+  Distinct academic years used by this college's active fee structures on
+  active courses. Feeds the Academic Year dropdown when creating or editing
+  an application form, so enrollments (which take the form's admission year)
+  always have matching fee rows.
+
+  Requires: staff token with academics.view, academics.manage,
+  admissions.view or admissions.manage.
+
+  data: [{ academicYear: "2026-27", courseCount: 2 }]
+  Newest year first. Empty when no fee structures exist yet.
+}

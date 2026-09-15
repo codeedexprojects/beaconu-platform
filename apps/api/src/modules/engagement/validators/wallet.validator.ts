@@ -39,9 +39,15 @@ export const listRedemptionsQuerySchema = z.object({
 
 export type ListRedemptionsQuery = z.infer<typeof listRedemptionsQuerySchema>;
 
-export const reviewRedemptionSchema = z.object({
-  status: z.enum(["approved", "rejected"]),
-  remarks: z.string().trim().max(500).optional(),
-});
+export const reviewRedemptionSchema = z
+  .object({
+    status: z.enum(["approved", "rejected"]),
+    payoutReference: z.string().trim().max(100).optional(),
+    remarks: z.string().trim().max(500).optional(),
+  })
+  .refine((data) => data.status !== "approved" || !!data.payoutReference, {
+    path: ["payoutReference"],
+    message: "Transfer reference (UTR) is required to mark a redemption paid",
+  });
 
 export type ReviewRedemptionInput = z.infer<typeof reviewRedemptionSchema>;

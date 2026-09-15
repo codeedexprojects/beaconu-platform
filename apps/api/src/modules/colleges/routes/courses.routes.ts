@@ -24,6 +24,18 @@ router.get(
 );
 
 router.get(
+  "/fee-structures/academic-years",
+  ...staffAuth,
+  authorizeAny(
+    "academics.view",
+    "academics.manage",
+    "admissions.view",
+    "admissions.manage",
+  ),
+  FeeStructuresController.listAcademicYears,
+);
+
+router.get(
   "/minimal",
   ...staffAuth,
   authorizeAny("academics.view", "academics.manage"),
