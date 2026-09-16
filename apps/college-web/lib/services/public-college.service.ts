@@ -14,6 +14,8 @@ import type {
   PublicCodeOfConductSection,
   AmbassadorOption,
   PublicSiteAnnouncement,
+  PublicLegalDocument,
+  LegalDocumentType,
 } from "@beaconu/types";
 
 export const getCollegeBySlug = cache(
@@ -88,6 +90,21 @@ export async function getCodeOfConductSection(
 ): Promise<PublicCollegeSectionResponse<PublicCodeOfConductSection>> {
   return api.get(
     `/api/v1/public/colleges/${collegeId}/section/student_code_of_conduct`,
+  );
+}
+
+export async function getCollegeLegalDocuments(
+  collegeId: string,
+): Promise<PublicLegalDocument[]> {
+  return api.get(`/api/v1/public/colleges/${collegeId}/legal-documents`);
+}
+
+export async function getCollegeLegalDocument(
+  collegeId: string,
+  docType: LegalDocumentType,
+): Promise<PublicLegalDocument> {
+  return api.get(
+    `/api/v1/public/colleges/${collegeId}/legal-documents/${docType}`,
   );
 }
 

@@ -64,7 +64,7 @@ export function ExamEligibilityTab({
     formState: { errors },
   } = useForm<ExamEligibilityTabData>({
     resolver: zodResolver(examEligibilityTabSchema as any),
-    values: payload,
+    defaultValues: payload,
   });
 
   const examsArray = useFieldArray({

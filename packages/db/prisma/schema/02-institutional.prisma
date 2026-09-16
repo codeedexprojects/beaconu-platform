@@ -158,6 +158,7 @@ model College {
   issuedDocuments               IssuedDocument[]
   documentSubmissionRequests    DocumentSubmissionRequest[]
   hostels                       Hostel[]
+  legalDocuments                CollegeLegalDocument[]
   libraries                     Library[]
   commuteRoutes                 CommuteRoute[]
   newsAlerts                    NewsAlert[]

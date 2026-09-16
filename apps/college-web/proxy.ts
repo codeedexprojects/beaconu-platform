@@ -6,7 +6,23 @@ import { REFERRAL_CODE_KEY } from "@/lib/constants";
 export function proxy(request: NextRequest) {
   const subdomain = extractCollegeSlugFromHost(request.headers.get("host"));
 
-  const response = NextResponse.next();
+  // Every page lives under /college/[subdomain]. On a college host
+  // (beacon-institute-of-technology.localhost:3001, slug.beaconu.com) the slug
+  // is in the host rather than the path, so rewrite it in — without this the
+  // request lands on the bare root page ("Visit your college's subdomain").
+  // Paths that already carry /college/… are left alone, so both forms work.
+  const { pathname } = request.nextUrl;
+  const needsRewrite = subdomain && !pathname.startsWith("/college/");
+
+  let response: NextResponse;
+  if (needsRewrite) {
+    const url = request.nextUrl.clone();
+    url.pathname = `/college/${subdomain}${pathname === "/" ? "" : pathname}`;
+    response = NextResponse.rewrite(url);
+  } else {
+    response = NextResponse.next();
+  }
+
   if (subdomain) {
     response.headers.set("x-college-subdomain", subdomain);
   }

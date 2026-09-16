@@ -105,7 +105,7 @@ export function GeneralOverviewTab({
     formState: { errors },
   } = useForm<GeneralOverviewTabData>({
     resolver: zodResolver(generalOverviewTabSchema as any),
-    values: payload,
+    defaultValues: payload,
   });
 
   const quickInfoArray = useFieldArray({

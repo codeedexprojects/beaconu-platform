@@ -346,7 +346,7 @@ export function ClubsGroupsTab({
     formState: { errors },
   } = useForm<ClubsGroupsTabData>({
     resolver: zodResolver(clubsGroupsTabSchema as any),
-    values: payload,
+    defaultValues: payload,
   });
 
   const clubsArray = useFieldArray({

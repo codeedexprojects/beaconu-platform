@@ -144,6 +144,8 @@ CREATE SEQUENCE IF NOT EXISTS "support_ticket_seq";
 CREATE SEQUENCE IF NOT EXISTS "template_section_seq";
 CREATE SEQUENCE IF NOT EXISTS "ticket_message_seq";
 CREATE SEQUENCE IF NOT EXISTS "transaction_seq";
+CREATE SEQUENCE IF NOT EXISTS "college_legal_document_seq";
+CREATE SEQUENCE IF NOT EXISTS "legal_document_seq";
 CREATE SEQUENCE IF NOT EXISTS "university_seq";
 CREATE SEQUENCE IF NOT EXISTS "university_type_seq";
 CREATE SEQUENCE IF NOT EXISTS "user_session_seq";

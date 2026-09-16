@@ -13,6 +13,7 @@ import {
   Users,
   Home,
   Truck,
+  Scale,
   Settings,
   LayoutDashboard,
   Star,
@@ -249,6 +250,7 @@ export default function DashboardLayout({
   const getRequiredPermissionForPath = (path: string): string | null => {
     if (path.includes("/reports")) return "reports.view";
     if (path.includes("/setup/profile")) return "profile.view";
+    if (path.includes("/legal-documents")) return "profile.view";
     if (path.includes("/setup/campuses")) return "campuses.view";
     if (path.includes("/setup/academics")) return "academics.view";
     if (path.includes("/quotas")) return "academics.view";
@@ -572,6 +574,12 @@ export default function DashboardLayout({
                     path: "/course-switch-requests",
                     icon: Repeat,
                     permission: "staff.view",
+                  },
+                  {
+                    name: "Policies & Legal",
+                    path: "/legal-documents",
+                    icon: Scale,
+                    permission: "profile.view",
                   },
                   {
                     name: "Settings",
@@ -903,6 +911,7 @@ export default function DashboardLayout({
                       { name: "Application Forms", path: "/application-forms" },
                       { name: "Anti-Ragging", path: "/anti-ragging" },
                       { name: "Assessments", path: "/assessments" },
+                      { name: "Policies & Legal", path: "/legal-documents" },
                       { name: "Settings", path: "/settings" },
                     ].find((s) => appPathname.includes(s.path))?.name ||
                     "Overview"}

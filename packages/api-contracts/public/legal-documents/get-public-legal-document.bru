@@ -1,0 +1,19 @@
+meta {
+  name: Get Legal Document
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{baseUrl}}/api/v1/public/legal-documents/terms_and_conditions
+  body: none
+  auth: none
+}
+
+docs {
+  One published document by type. No auth. 404 when it is missing or still a
+  draft; 400 for an unknown docType.
+
+  docType: terms_and_conditions | privacy_policy | refund_and_return_policy |
+  cancellation_policy | shipping_and_delivery_policy
+}

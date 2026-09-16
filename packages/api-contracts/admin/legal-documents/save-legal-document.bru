@@ -1,0 +1,46 @@
+meta {
+  name: Save Legal Document
+  type: http
+  seq: 3
+}
+
+put {
+  url: {{baseUrl}}/api/v1/admin/legal-documents/terms_and_conditions
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{accessToken}}
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "title": "Terms & Conditions",
+    "content": "<h2>1. Introduction</h2><p>By using BeaconU you agree…</p>",
+    "document_url": null,
+    "effective_from": "2026-10-01",
+    "status": "published"
+  }
+}
+
+docs {
+  Creates the document on first call and updates it afterwards (one row per
+  docType). Requires: platform admin token + content.manage.
+
+  Body:
+  - title: required, max 150
+  - content: required — plain text or HTML, rendered as-is by clients
+  - document_url: optional PDF (upload via /admin/uploads/presign + verify)
+  - effective_from: optional YYYY-MM-DD
+  - status: draft | published. Omit to keep the current status
+    (new documents default to draft).
+
+  version increments only when `content` actually changes, so publishing or
+  fixing a title doesn't look like a policy change. publishedAt is set the
+  first time it is published and cleared when unpublished.
+}

@@ -1,0 +1,21 @@
+meta {
+  name: Get Legal Document
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{baseUrl}}/api/v1/admin/legal-documents/terms_and_conditions
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{accessToken}}
+}
+
+docs {
+  One document, draft or published. Requires: platform admin token +
+  content.view. 404 when it hasn't been written yet, 400 for an unknown
+  docType.
+}

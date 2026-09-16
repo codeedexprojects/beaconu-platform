@@ -2,6 +2,10 @@ import Image from "next/image";
 import Link from "next/link";
 import { Building2, ExternalLink, Mail, MapPin, Phone } from "lucide-react";
 import type { PublicCollegeOverviewSocial } from "@beaconu/types";
+import {
+  getCollegeBySlug,
+  getCollegeLegalDocuments,
+} from "@/lib/services/public-college.service";
 
 interface SiteFooterProps {
   collegeName: string;
@@ -26,7 +30,7 @@ const ACADEMICS_LINKS = [
   { label: "Libraries", href: "libraries" },
 ];
 
-export function SiteFooter({
+export async function SiteFooter({
   collegeName,
   logoUrl,
   subdomain,
@@ -36,10 +40,17 @@ export function SiteFooter({
 }: SiteFooterProps) {
   const year = new Date().getFullYear();
 
+  // Only the policies this college has actually published — a link to an
+  // unwritten one would land on a 404. getCollegeBySlug is request-cached,
+  // so this costs one extra call per page at most.
+  const policies = await getCollegeBySlug(subdomain)
+    .then(({ collegeDetails }) => getCollegeLegalDocuments(collegeDetails.id))
+    .catch(() => []);
+
   return (
     <footer className="border-t border-border/60 bg-white">
       <div className="mx-auto max-w-6xl px-4 py-14 sm:px-6">
-        <div className="grid gap-10 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="grid gap-10 sm:grid-cols-2 lg:grid-cols-5">
           <div>
             <div className="flex items-center gap-2.5">
               {logoUrl ? (
@@ -98,6 +109,26 @@ export function SiteFooter({
               ))}
             </ul>
           </div>
+
+          {policies.length > 0 ? (
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-wide text-foreground">
+                Policies
+              </p>
+              <ul className="mt-4 space-y-2.5">
+                {policies.map((policy) => (
+                  <li key={policy.docType}>
+                    <Link
+                      href={`/college/${subdomain}/policies/${policy.docType.replace(/_/g, "-")}`}
+                      className="text-sm text-muted-foreground hover:text-headerTeal"
+                    >
+                      {policy.title}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ) : null}
 
           <div>
             <p className="text-xs font-semibold uppercase tracking-wide text-foreground">

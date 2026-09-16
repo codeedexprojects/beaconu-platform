@@ -497,7 +497,7 @@ export function FinancialAidTab({
     formState: { errors },
   } = useForm<FinancialAidTabData>({
     resolver: zodResolver(financialAidTabSchema as any),
-    values: payload,
+    defaultValues: payload,
   });
 
   const portEntriesArray = useFieldArray({

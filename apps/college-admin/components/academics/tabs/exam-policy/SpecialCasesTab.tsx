@@ -110,7 +110,7 @@ export function SpecialCasesTab({
     formState: { errors },
   } = useForm<SpecialCasesTabData>({
     resolver: zodResolver(specialCasesTabSchema as any),
-    values: payload,
+    defaultValues: payload,
   });
 
   const segmentsArray = useFieldArray({

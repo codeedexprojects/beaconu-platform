@@ -1,0 +1,40 @@
+meta {
+  name: Save College Legal Document
+  type: http
+  seq: 2
+}
+
+put {
+  url: {{baseUrl}}/api/v1/college-admin/legal-documents/privacy_policy
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{staffToken}}
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "title": "Privacy Policy",
+    "content": "<h2>How we use your data</h2><p>…</p>",
+    "document_url": null,
+    "effective_from": "2026-10-01",
+    "status": "published"
+  }
+}
+
+docs {
+  Creates the document on first call, updates it afterwards (one row per
+  college + docType). Requires: staff token + profile.edit.
+
+  Body: title (max 150), content (text or HTML), document_url (optional PDF
+  from /college-admin/uploads/presign + verify), effective_from (YYYY-MM-DD),
+  status (draft | published — omit to keep the current one).
+
+  version increments only when content actually changes.
+}

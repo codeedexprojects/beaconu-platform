@@ -313,7 +313,7 @@ export function AcademicsCurriculumTab({
     formState: { errors },
   } = useForm<AcademicsCurriculumTabData>({
     resolver: zodResolver(academicsCurriculumTabSchema as any),
-    values: payload,
+    defaultValues: payload,
   });
 
   const semestersArray = useFieldArray({

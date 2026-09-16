@@ -49,6 +49,20 @@ export class AttemptService {
       throw new ConflictError("No assessment slot currently scheduled");
     }
 
+    // Without this the attempt is created and then auto-submitted by the
+    // sweep minutes later, burning the student's single attempt.
+    const now = new Date();
+    if (now < slot.windowStart) {
+      throw new ConflictError(
+        "The assessment window hasn't opened yet. Please come back when it starts.",
+      );
+    }
+    if (now > slot.windowEnd) {
+      throw new ConflictError(
+        "The assessment window has closed. Contact your college to reschedule.",
+      );
+    }
+
     const paper = await PaperRepository.findActiveByTemplateAndType(
       slot.templateId,
       "normal",
@@ -69,7 +83,6 @@ export class AttemptService {
       );
     }
 
-    const now = new Date();
     return AttemptRepository.create({
       applicationId: data.application_id,
       studentId,

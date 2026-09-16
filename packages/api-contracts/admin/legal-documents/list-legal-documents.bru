@@ -1,0 +1,31 @@
+meta {
+  name: List Legal Documents
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/api/v1/admin/legal-documents
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{accessToken}}
+}
+
+docs {
+  Every fixed policy type with its document, or null when not written yet.
+  Requires: platform admin token + content.view.
+
+  data: [{ docType, label, document: {
+    id, docType, title, content, documentUrl, version, status (draft |
+    published), effectiveFrom, publishedAt, updatedByAdminId, createdAt,
+    updatedAt } | null }]
+
+  docType is one of: terms_and_conditions, privacy_policy,
+  refund_and_return_policy, cancellation_policy,
+  shipping_and_delivery_policy. New types need a code change.
+
+  Table: legal_documents
+}

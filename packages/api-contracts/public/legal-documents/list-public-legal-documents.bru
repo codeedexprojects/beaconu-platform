@@ -1,0 +1,21 @@
+meta {
+  name: List Legal Documents
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/api/v1/public/legal-documents
+  body: none
+  auth: none
+}
+
+docs {
+  Published policy documents for the app and website footer. No auth.
+
+  data: [{ docType, title, content, documentUrl, version, effectiveFrom,
+    publishedAt, updatedAt }]
+
+  Drafts are never returned. `content` is plain text or HTML authored by the
+  super admin — render it as HTML.
+}

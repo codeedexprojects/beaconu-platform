@@ -48,7 +48,7 @@ export function StudentHousingTab({
 
   const { register, watch, setValue } = useForm<StudentHousingTabData>({
     resolver: zodResolver(studentHousingTabSchema as any),
-    values: payload,
+    defaultValues: payload,
   });
 
   useEffect(() => {

@@ -250,7 +250,7 @@ export function AdmissionPolicyTab({
     formState: { errors },
   } = useForm<AdmissionPolicyTabData>({
     resolver: zodResolver(admissionPolicyTabSchema as any),
-    values: payload,
+    defaultValues: payload,
   });
 
   const rowsArray = useFieldArray({

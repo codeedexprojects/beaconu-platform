@@ -990,7 +990,7 @@ export function ExamPatternsTab({
     formState: { errors },
   } = useForm<ExamPatternsTabData>({
     resolver: zodResolver(examPatternsTabSchema as any),
-    values: payload,
+    defaultValues: payload,
   });
 
   const patternsArray = useFieldArray({

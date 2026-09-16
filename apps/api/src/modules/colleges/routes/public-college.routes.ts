@@ -4,6 +4,7 @@ import { CourseTabsController } from "../controllers/course-tabs.controller";
 import { PublicHostelController } from "../controllers/public-hostel.controller";
 import { PublicLibraryController } from "../controllers/public-library.controller";
 import { PublicCampusVisitController } from "@/modules/campus-visits/controllers/public.controller";
+import { CollegeLegalDocumentPublicController } from "@/modules/content/controllers/college-legal-documents.controller";
 import { authenticateOptional } from "@/shared/middleware/authenticate-optional";
 
 const router: Router = Router();
@@ -69,6 +70,15 @@ router.get(
 router.get(
   "/by-slug/:slug/libraries",
   PublicLibraryController.listPublicLibraries,
+);
+
+router.get(
+  "/:collegeId/legal-documents",
+  CollegeLegalDocumentPublicController.list,
+);
+router.get(
+  "/:collegeId/legal-documents/:docType",
+  CollegeLegalDocumentPublicController.getOne,
 );
 
 router.get(

@@ -171,7 +171,9 @@ Relevant slice of `data`:
 
 Errors: 404 application not found / not yours · 409 "No assessment configured for this admission cycle".
 
-**Start button rules (enforce in the app):** show it only when `myAttempt === null && isWithinWindow`. Before the window, show a countdown to `windowStart`; when `hasWindowPassed`, show "Window closed". See §6.1 — the API does not re-check the window on start.
+**Start button rules:** show Start only when `myAttempt === null && isWithinWindow`. Before the window, show a countdown to `windowStart`; when `hasWindowPassed`, show "Window closed". The API also refuses to start outside the window (§2.4), so this is a UX guard, not the only protection.
+
+`slot` is the window the student would sit now: the one currently open, else the next one opening, else the most recent past one.
 
 ### 2.3 Practice trial (optional)
 
@@ -213,7 +215,9 @@ Keep trial answers in local state only; do not call save/submit endpoints. 404 w
 
 Store `id` and `startedAt` — the countdown is computed from `startedAt` (§5.1), never from the moment the screen opened.
 
-Errors (409 unless noted): application not at assessment stage (`formStatus` not submitted) · assessment not required · no assessment configured · no slot scheduled · no approved paper yet · "You already have an attempt for this application" · 404 application not found.
+Errors (409 unless noted): application not at assessment stage (`formStatus` not submitted) · assessment not required · no assessment configured · no slot scheduled · "The assessment window hasn't opened yet…" · "The assessment window has closed…" · no approved paper yet · "You already have an attempt for this application" · 404 application not found.
+
+Show the window messages as-is; they tell the student what to do. Never retry a start that failed this way.
 
 Get an existing attempt: `GET /api/v1/student/assessments/attempts/:id` → same object (use on resume to read `status` and `startedAt`).
 
@@ -505,7 +509,7 @@ On app start or reopening the assessment:
 
 ## 6. Backend notes (known gaps)
 
-1. **Start doesn't check the slot window.** `POST /attempts` uses the latest active slot but doesn't verify `now` is between `windowStart` and `windowEnd`. The app must gate Start with `isWithinWindow`. An attempt started after `windowEnd` is auto-submitted at the next sweep.
+1. ~~Start doesn't check the slot window.~~ Fixed: `POST /attempts` now rejects a start before or after the window with a 409, so an attempt can no longer be created and then auto-submitted minutes later, burning the student's single attempt. Slot selection also prefers the currently open window over the newest one.
 2. **Web trial calls hit missing routes.** College-web calls `GET /templates/:id/trial` and `POST /templates/:id/trial/submit`; only the `trial/sections` routes exist.
 3. **`word_highlight` is marked auto-scorable but the scorer has no rule for it**, so those answers always score 0 (or negative, with negative marking). Needs a backend fix before colleges use that question type.
 4. **Section and question time limits are not enforced anywhere** — not by the API, not by the web portal. Only total duration and window are server-enforced. If colleges expect per-section timing, that needs a product decision and backend work.

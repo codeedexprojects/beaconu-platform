@@ -1,0 +1,33 @@
+meta {
+  name: List College Legal Documents
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/api/v1/college-admin/legal-documents
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{staffToken}}
+}
+
+docs {
+  This college's policy documents — the same fixed types the platform uses,
+  written per college. Requires: staff token + profile.view.
+
+  data: [{ docType, label, document: { id, collegeId, docType, title,
+    content, documentUrl, version, status, effectiveFrom, publishedAt,
+    updatedByStaffId, createdAt, updatedAt } | null }]
+
+  docType: terms_and_conditions | privacy_policy |
+  refund_and_return_policy | cancellation_policy |
+  shipping_and_delivery_policy
+
+  Separate from the platform-wide documents at /admin/legal-documents;
+  students see both.
+
+  Table: college_legal_documents
+}

@@ -493,7 +493,7 @@ export function AlliancesTiesTab({
     formState: { errors },
   } = useForm<AlliancesTiesTabData>({
     resolver: zodResolver(alliancesTiesTabSchema as any),
-    values: payload,
+    defaultValues: payload,
   });
 
   const alliancesArray = useFieldArray({
