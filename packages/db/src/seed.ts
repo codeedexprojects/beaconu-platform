@@ -3926,6 +3926,173 @@ async function seedContent(superAdminId: string, collegeIds: string[]) {
 // 17. Events (platform + college-scoped, one past event with recording)
 // ─────────────────────────────────────────────────────────────────────────────
 
+/* ────────────────────────────── LEGAL DOCUMENTS ─────────────────────────── */
+
+const PLATFORM_LEGAL_DOCS = [
+  {
+    docType: "terms_and_conditions",
+    title: "Terms & Conditions",
+    content: `<h2>1. About these terms</h2>
+<p>These terms govern your use of BeaconU — the website, the mobile app, and the college portals we host. By creating an account or applying to a college through BeaconU, you accept them.</p>
+<h2>2. Your account</h2>
+<p>You must give accurate information when you register and keep your login details private. You are responsible for everything done through your account.</p>
+<h2>3. Applications and admissions</h2>
+<p>BeaconU passes your application to the college you choose. Admission decisions, eligibility and seat allotment are made by the college, not by BeaconU.</p>
+<h2>4. Payments</h2>
+<p>Application fees, token amounts and course fees are collected on behalf of the college. Refunds follow the college's own refund policy and our Refund &amp; Return Policy.</p>
+<h2>5. Contact</h2>
+<p>Write to support@beaconu.com with any question about these terms.</p>`,
+  },
+  {
+    docType: "privacy_policy",
+    title: "Privacy Policy",
+    content: `<h2>1. What we collect</h2>
+<p>Your name, contact details, academic records and the documents you upload with an application, plus basic usage data from the app and website.</p>
+<h2>2. How we use it</h2>
+<ul>
+<li>To create and manage your BeaconU account.</li>
+<li>To send your application, documents and payments to the college you apply to.</li>
+<li>To tell you about the status of your application.</li>
+</ul>
+<h2>3. Who we share it with</h2>
+<p>Only the colleges you apply to, and the payment and storage providers that run the service. We never sell your data.</p>
+<h2>4. Your choices</h2>
+<p>You can ask for a copy of your data or ask us to delete your account by writing to privacy@beaconu.com.</p>`,
+  },
+  {
+    docType: "refund_and_return_policy",
+    title: "Refund & Return Policy",
+    content: `<h2>1. Application fees</h2>
+<p>Application fees pay for processing and are non-refundable once an application is submitted.</p>
+<h2>2. Token amounts</h2>
+<p>A token amount paid to hold a seat is refundable only as set out by the college, and only before the cut-off date in your offer letter.</p>
+<h2>3. Failed payments</h2>
+<p>If money leaves your account but the payment fails, it is returned automatically by your bank, usually within 5 to 7 working days.</p>
+<h2>4. Requesting a refund</h2>
+<p>Write to payments@beaconu.com with your application number. Approved refunds go back to the original payment method within 10 working days.</p>`,
+  },
+  {
+    docType: "cancellation_policy",
+    title: "Cancellation Policy",
+    content: `<h2>1. Cancelling an application</h2>
+<p>You may withdraw an application at any time before enrolment from your BeaconU account. Fees already paid follow the Refund &amp; Return Policy.</p>
+<h2>2. Cancelling a seat after enrolment</h2>
+<p>Seat cancellation after enrolment is handled by the college and may attract a cancellation charge set by the college.</p>
+<h2>3. Cancellation by the college</h2>
+<p>If a college cancels a course or an admission, any amount you paid for it is refunded in full.</p>`,
+  },
+  {
+    docType: "shipping_and_delivery_policy",
+    title: "Shipping & Delivery Policy",
+    content: `<h2>1. Digital delivery</h2>
+<p>BeaconU delivers services digitally. Offer letters, receipts and other documents appear in your account and are emailed to you, normally within minutes of being issued.</p>
+<h2>2. Physical documents</h2>
+<p>Original certificates and any physical documents are handled by the college directly, at its campus.</p>`,
+  },
+];
+
+function collegeLegalDocs(collegeName: string) {
+  return [
+    {
+      docType: "terms_and_conditions",
+      title: "Terms & Conditions",
+      content: `<h2>1. Scope</h2>
+<p>These terms apply to applicants and enrolled students of ${collegeName} using this portal to apply, pay fees and access campus services.</p>
+<h2>2. Admission</h2>
+<p>An application is complete only when the application fee is paid and all required documents are uploaded. Admission is subject to eligibility, entrance assessment and seat availability.</p>
+<h2>3. Fees</h2>
+<p>Fees must be paid by the dates published in the fee schedule. Late payment may attract a fine as decided by the college.</p>
+<h2>4. Conduct</h2>
+<p>Students are expected to follow the Student Code of Conduct published on this portal. Serious breaches may lead to disciplinary action.</p>
+<h2>5. Changes</h2>
+<p>${collegeName} may update these terms; the current version is always shown on this page.</p>`,
+    },
+    {
+      docType: "privacy_policy",
+      title: "Privacy Policy",
+      content: `<h2>1. Information we hold</h2>
+<p>${collegeName} holds your application, academic records, documents, fee payments and campus service records (hostel, commute, library).</p>
+<h2>2. Why we hold it</h2>
+<p>To process your admission, run academic and campus services, and meet reporting duties to regulators and affiliating universities.</p>
+<h2>3. Sharing</h2>
+<p>We share your details with the affiliating university and statutory bodies where required, and with service providers who run hostel, transport and payment services for us.</p>
+<h2>4. Contact</h2>
+<p>Write to the admissions office for any question about your data.</p>`,
+    },
+    {
+      docType: "refund_and_return_policy",
+      title: "Refund & Return Policy",
+      content: `<h2>1. Application fee</h2>
+<p>The application fee is non-refundable.</p>
+<h2>2. Token amount</h2>
+<p>The token amount paid to confirm a seat is refundable, less administrative charges, if you withdraw before the last date of admission. After that date it is not refundable.</p>
+<h2>3. Tuition and hostel fees</h2>
+<p>Refunds of tuition and hostel fees follow the UGC/AICTE refund schedule applicable to ${collegeName}.</p>
+<h2>4. How to claim</h2>
+<p>Submit a written request to the accounts office with your enrolment number and bank details. Approved refunds are paid within 15 working days.</p>`,
+    },
+  ];
+}
+
+async function seedLegalDocuments(
+  superAdminId: string,
+  colleges: { id: string; name: string }[],
+) {
+  for (const doc of PLATFORM_LEGAL_DOCS) {
+    await prisma.legalDocument.upsert({
+      where: { docType: doc.docType },
+      update: {
+        title: doc.title,
+        content: doc.content,
+        status: "published",
+        publishedAt: new Date(),
+        updatedByAdminId: superAdminId,
+      },
+      create: {
+        docType: doc.docType,
+        title: doc.title,
+        content: doc.content,
+        status: "published",
+        publishedAt: new Date(),
+        updatedByAdminId: superAdminId,
+      },
+    });
+  }
+
+  for (const college of colleges) {
+    for (const doc of collegeLegalDocs(college.name)) {
+      await prisma.collegeLegalDocument.upsert({
+        where: {
+          uq_college_legal_doc: {
+            collegeId: college.id,
+            docType: doc.docType,
+          },
+        },
+        update: {
+          title: doc.title,
+          content: doc.content,
+          status: "published",
+          publishedAt: new Date(),
+        },
+        create: {
+          collegeId: college.id,
+          docType: doc.docType,
+          title: doc.title,
+          content: doc.content,
+          status: "published",
+          publishedAt: new Date(),
+        },
+      });
+    }
+  }
+
+  console.log(
+    `  ✓ Legal documents: ${PLATFORM_LEGAL_DOCS.length} platform, ${
+      colleges.length * 3
+    } college`,
+  );
+}
+
 async function seedEvents(superAdminId: string, collegeIds: string[]) {
   const events = [
     {
@@ -4497,6 +4664,10 @@ async function main() {
   await seedStudents();
   await seedContent(superAdminId, [vydehi.id, beaconTech.id]);
   await seedEvents(superAdminId, [vydehi.id, beaconTech.id]);
+  await seedLegalDocuments(superAdminId, [
+    { id: vydehi.id, name: vydehi.name },
+    { id: beaconTech.id, name: beaconTech.name },
+  ]);
 
   console.log("\n✅  Seed complete!");
   console.log(

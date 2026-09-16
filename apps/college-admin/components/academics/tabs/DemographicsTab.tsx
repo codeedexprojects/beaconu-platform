@@ -95,7 +95,7 @@ export function DemographicsTab({
     formState: { errors },
   } = useForm<DemographicsTabData>({
     resolver: zodResolver(demographicsTabSchema as any),
-    values: payload,
+    defaultValues: payload,
   });
 
   const ageArray = useFieldArray({

@@ -13,6 +13,7 @@ import mediumsPublicRoutes from "@/modules/mediums/routes/public.routes";
 import coursesPublicRoutes from "@/modules/courses/routes/public.routes";
 import blinkReferralPublicRoutes from "@/modules/blink/routes/public.routes";
 import blogsPublicRoutes from "@/modules/content/routes/public.routes";
+import legalDocumentsPublicRoutes from "@/modules/content/routes/legal-documents-public.routes";
 import invitePublicRoutes from "@/modules/engagement/routes/public.routes";
 
 const router: Router = Router();
@@ -32,5 +33,6 @@ router.use("/india-states", indiaStatesPublicRoutes);
 router.use("/mediums", mediumsPublicRoutes);
 router.use("/courses", coursesPublicRoutes);
 router.use("/blogs", blogsPublicRoutes);
+router.use("/legal-documents", legalDocumentsPublicRoutes);
 
 export default router;

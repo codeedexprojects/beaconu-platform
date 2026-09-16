@@ -55,7 +55,7 @@ export function OtherOptionsTab({
     formState: { errors },
   } = useForm<OtherOptionsTabData>({
     resolver: zodResolver(otherOptionsTabSchema as any),
-    values: payload,
+    defaultValues: payload,
   });
 
   const listArray = useFieldArray({

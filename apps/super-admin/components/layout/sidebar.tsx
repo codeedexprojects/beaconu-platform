@@ -35,6 +35,7 @@ import {
   Headset,
   Rss,
   MonitorSmartphone,
+  Scale,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -187,6 +188,12 @@ const navSections: NavSection[] = [
         label: "Institutes of National Importance",
         icon: Trophy,
         permission: "institutes-of-national-importance.view",
+      },
+      {
+        href: "/legal-documents",
+        label: "Legal & Policies",
+        icon: Scale,
+        permission: "content.view",
       },
       {
         href: "/icons",

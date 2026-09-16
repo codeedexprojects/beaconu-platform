@@ -1,0 +1,24 @@
+meta {
+  name: List College Legal Documents
+  type: http
+  seq: 4
+}
+
+get {
+  url: {{baseUrl}}/api/v1/public/colleges/{{collegeId}}/legal-documents
+  body: none
+  auth: none
+}
+
+docs {
+  A college's published policy documents, for its portal footer and the app's
+  college pages. No auth. Drafts are never returned.
+
+  data: [{ docType, title, content, documentUrl, version, effectiveFrom,
+    publishedAt, updatedAt }]
+
+  One document: GET /api/v1/public/colleges/{{collegeId}}/legal-documents/:docType
+  (404 when missing or still draft, 400 for an unknown docType).
+
+  Platform-wide policies are separate: GET /api/v1/public/legal-documents
+}

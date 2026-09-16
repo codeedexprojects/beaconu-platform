@@ -90,7 +90,7 @@ export function AdmissionsTimelineTab({
     formState: { errors },
   } = useForm<AdmissionsTimelineTabData>({
     resolver: zodResolver(admissionsTimelineTabSchema as any),
-    values: payload,
+    defaultValues: payload,
   });
 
   const admissionBatchesArray = useFieldArray({

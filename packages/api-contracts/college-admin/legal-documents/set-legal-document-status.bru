@@ -1,0 +1,30 @@
+meta {
+  name: Publish / Unpublish College Legal Document
+  type: http
+  seq: 3
+}
+
+patch {
+  url: {{baseUrl}}/api/v1/college-admin/legal-documents/privacy_policy/status
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{staffToken}}
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "status": "draft"
+  }
+}
+
+docs {
+  Publishes or unpublishes without touching the content. Requires: staff
+  token + profile.edit. 404 when the document hasn't been written yet.
+}

@@ -198,7 +198,7 @@ export function EligibilityCriteriaTab({
     formState: { errors },
   } = useForm<EligibilityCriteriaTabData>({
     resolver: zodResolver(eligibilityCriteriaTabSchema as any),
-    values: payload,
+    defaultValues: payload,
   });
 
   const quotasArray = useFieldArray({

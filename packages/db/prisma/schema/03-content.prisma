@@ -1,3 +1,46 @@
+model LegalDocument {
+  id               String    @id @default(dbgenerated("('LGD-'::text || (nextval('legal_document_seq'::regclass))::text)"))
+  docType          String    @unique @map("doc_type") @db.VarChar(50)
+  title            String    @db.VarChar(150)
+  content          String    @db.Text
+  documentUrl      String?   @map("document_url") @db.Text
+  version          Int       @default(1)
+  status           String    @default("draft") @db.VarChar(20)
+  effectiveFrom    DateTime? @map("effective_from") @db.Date
+  publishedAt      DateTime? @map("published_at") @db.Timestamptz
+  updatedByAdminId String?   @map("updated_by_admin_id")
+  createdAt        DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt        DateTime  @updatedAt @map("updated_at") @db.Timestamptz
+
+  updatedByAdmin PlatformAdmin? @relation(fields: [updatedByAdminId], references: [id], onDelete: SetNull)
+
+  @@index([status], name: "idx_legal_docs_status")
+  @@map("legal_documents")
+}
+
+model CollegeLegalDocument {
+  id               String    @id @default(dbgenerated("('LGC-'::text || (nextval('college_legal_document_seq'::regclass))::text)"))
+  collegeId        String    @map("college_id")
+  docType          String    @map("doc_type") @db.VarChar(50)
+  title            String    @db.VarChar(150)
+  content          String    @db.Text
+  documentUrl      String?   @map("document_url") @db.Text
+  version          Int       @default(1)
+  status           String    @default("draft") @db.VarChar(20)
+  effectiveFrom    DateTime? @map("effective_from") @db.Date
+  publishedAt      DateTime? @map("published_at") @db.Timestamptz
+  updatedByStaffId String?   @map("updated_by_staff_id")
+  createdAt        DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt        DateTime  @updatedAt @map("updated_at") @db.Timestamptz
+
+  college        College      @relation(fields: [collegeId], references: [id], onDelete: Cascade)
+  updatedByStaff StaffMember? @relation(fields: [updatedByStaffId], references: [id], onDelete: SetNull)
+
+  @@unique([collegeId, docType], name: "uq_college_legal_doc")
+  @@index([collegeId], name: "idx_college_legal_docs_college")
+  @@map("college_legal_documents")
+}
+
 model BlogAuthor {
   id           String    @id @default(dbgenerated("('BLA-'::text || (nextval('blog_author_seq'::regclass))::text)"))
   fullName     String    @map("full_name") @db.VarChar(255)

@@ -45,7 +45,7 @@ export function LibraryAssetsTab({
 
   const { watch, setValue } = useForm<LibraryAssetsTabData>({
     resolver: zodResolver(libraryAssetsTabSchema as any),
-    values: payload,
+    defaultValues: payload,
   });
 
   useEffect(() => {

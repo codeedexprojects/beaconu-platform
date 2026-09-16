@@ -71,7 +71,7 @@ export function GradingTab({
     formState: { errors },
   } = useForm<GradingTabData>({
     resolver: zodResolver(gradingTabSchema as any),
-    values: payload,
+    defaultValues: payload,
   });
 
   const rowsArray = useFieldArray({

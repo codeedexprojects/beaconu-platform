@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Fragment, useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { Loader2, ArrowRight, ArrowLeft, Plus, Save } from "lucide-react";
 import { toast } from "sonner";
@@ -125,16 +125,24 @@ export default function SetupAcademicsPage() {
   );
   const { mutate: updateTab, isPending: isUpdatingTab } = useUpdateCourseTab();
 
-  // Tab State - local JSON fields representing active tab data edits
-  const [localTabState, setLocalTabState] = useState<any>({});
+  // Tab edits live in a ref, not state: every keystroke inside a tab is
+  // pushed up here, and re-rendering this page on each one remounted the tab
+  // (and every useFieldArray row in it), so inputs lost focus after a single
+  // character. Nothing on this page renders from these edits — they are read
+  // in the save/validate handlers — so a ref is enough.
+  const localTabStateRef = useRef<any>({});
+  // What the tab forms are seeded from (defaultValues at mount) — only ever
+  // the server payload, never the in-progress edits above. Bumping the
+  // version remounts the tabs so freshly loaded data reaches them.
+  const [seedTabState, setSeedTabState] = useState<any>({});
+  const [tabSeedVersion, setTabSeedVersion] = useState(0);
 
   // Sync tab state when server response changes
   useEffect(() => {
-    if (tabDataResponse?.tabData) {
-      setLocalTabState(tabDataResponse.tabData);
-    } else {
-      setLocalTabState({});
-    }
+    const serverTabData = tabDataResponse?.tabData ?? {};
+    localTabStateRef.current = serverTabData;
+    setSeedTabState(serverTabData);
+    setTabSeedVersion((version) => version + 1);
   }, [tabDataResponse]);
 
   const handleBasicSubmit = (data: CourseFormData) => {
@@ -302,7 +310,7 @@ export default function SetupAcademicsPage() {
       return;
     }
 
-    const tabPayload = localTabState[activeTab] || {};
+    const tabPayload = getActiveTabPayload();
     const dataWithId = { id: activeTab, ...tabPayload };
 
     updateTab(
@@ -341,18 +349,24 @@ export default function SetupAcademicsPage() {
     return s.disciplines.map((d) => ({ ...d, streamName: s.name }));
   });
 
+  // Read during render (the tabs' seed) — must not touch the edits ref.
+  const getSeedTabPayload = () => {
+    return seedTabState[activeTab] || {};
+  };
+
+  // Read in event handlers only (save/validate), where the live edits matter.
   const getActiveTabPayload = () => {
-    return localTabState[activeTab] || {};
+    return localTabStateRef.current[activeTab] || {};
   };
 
   const updateActiveTabPayload = (updates: any) => {
-    setLocalTabState((prev: any) => ({
-      ...prev,
+    localTabStateRef.current = {
+      ...localTabStateRef.current,
       [activeTab]: {
-        ...(prev[activeTab] || {}),
+        ...(localTabStateRef.current[activeTab] || {}),
         ...updates,
       },
-    }));
+    };
   };
 
   const saveAndGoToTab = (nextTabId: CourseTabId) => {
@@ -370,7 +384,7 @@ export default function SetupAcademicsPage() {
     }
 
     if (editingCourse?.id) {
-      const tabPayload = localTabState[activeTab] || {};
+      const tabPayload = getActiveTabPayload();
       const dataWithId = { id: activeTab, ...tabPayload };
       updateTab(
         {
@@ -404,7 +418,7 @@ export default function SetupAcademicsPage() {
     }
 
     if (editingCourse?.id) {
-      const tabPayload = localTabState[activeTab] || {};
+      const tabPayload = getActiveTabPayload();
       const dataWithId = { id: activeTab, ...tabPayload };
       updateTab(
         {
@@ -548,11 +562,13 @@ export default function SetupAcademicsPage() {
                       <Loader2 className="h-8 w-8 animate-spin text-primary" />
                     </div>
                   ) : (
-                    <>
+                    <Fragment
+                      key={`${editingCourse?.id ?? "new"}-${tabSeedVersion}`}
+                    >
                       {/* COURSE INFO TAB */}
                       {activeTab === "course_info" && (
                         <CourseInfoTab
-                          payload={getActiveTabPayload()}
+                          payload={getSeedTabPayload()}
                           onChange={updateActiveTabPayload}
                           subTab={courseInfoSubTab}
                           onSubTabChange={setCourseInfoSubTab}
@@ -564,21 +580,21 @@ export default function SetupAcademicsPage() {
 
                       {activeTab === "admission_policy" && (
                         <AdmissionPolicyTab
-                          payload={getActiveTabPayload()}
+                          payload={getSeedTabPayload()}
                           onChange={updateActiveTabPayload}
                         />
                       )}
 
                       {activeTab === "eligibility_criteria" && (
                         <EligibilityCriteriaTab
-                          payload={getActiveTabPayload()}
+                          payload={getSeedTabPayload()}
                           onChange={updateActiveTabPayload}
                         />
                       )}
 
                       {activeTab === "placements" && (
                         <PlacementsTab
-                          payload={getActiveTabPayload()}
+                          payload={getSeedTabPayload()}
                           onChange={updateActiveTabPayload}
                           uploadingField={uploadingField}
                           onFieldUpload={handleCourseFieldUpload}
@@ -587,14 +603,14 @@ export default function SetupAcademicsPage() {
 
                       {activeTab === "financial_aid" && (
                         <FinancialAidTab
-                          payload={getActiveTabPayload()}
+                          payload={getSeedTabPayload()}
                           onChange={updateActiveTabPayload}
                         />
                       )}
 
                       {activeTab === "student_housing" && (
                         <StudentHousingTab
-                          payload={getActiveTabPayload()}
+                          payload={getSeedTabPayload()}
                           onChange={updateActiveTabPayload}
                           hostels={hostels}
                         />
@@ -603,7 +619,7 @@ export default function SetupAcademicsPage() {
                       {/* EXAM POLICY */}
                       {activeTab === "exam_policy" && (
                         <ExamPolicyTab
-                          payload={getActiveTabPayload()}
+                          payload={getSeedTabPayload()}
                           onChange={updateActiveTabPayload}
                           subTab={examPolicySubTab}
                           onSubTabChange={setExamPolicySubTab}
@@ -615,21 +631,21 @@ export default function SetupAcademicsPage() {
                       {/* FACULTY */}
                       {activeTab === "faculty" && (
                         <FacultyDirectoryTab
-                          payload={getActiveTabPayload()}
+                          payload={getSeedTabPayload()}
                           onChange={updateActiveTabPayload}
                         />
                       )}
 
                       {activeTab === "review" && (
                         <StudentReviewsTab
-                          payload={getActiveTabPayload()}
+                          payload={getSeedTabPayload()}
                           onChange={updateActiveTabPayload}
                         />
                       )}
 
                       {activeTab === "library" && (
                         <LibraryAssetsTab
-                          payload={getActiveTabPayload()}
+                          payload={getSeedTabPayload()}
                           onChange={updateActiveTabPayload}
                           libraries={libraries}
                         />
@@ -638,7 +654,7 @@ export default function SetupAcademicsPage() {
                       {/* CLUBS */}
                       {activeTab === "clubs_associations" && (
                         <ClubsGroupsTab
-                          payload={getActiveTabPayload()}
+                          payload={getSeedTabPayload()}
                           onChange={updateActiveTabPayload}
                           uploadingField={uploadingField}
                           onFieldUpload={handleCourseFieldUpload}
@@ -647,7 +663,7 @@ export default function SetupAcademicsPage() {
 
                       {activeTab === "alliance" && (
                         <AlliancesTiesTab
-                          payload={getActiveTabPayload()}
+                          payload={getSeedTabPayload()}
                           onChange={updateActiveTabPayload}
                           uploadingField={uploadingField}
                           onFieldUpload={handleCourseFieldUpload}
@@ -656,7 +672,7 @@ export default function SetupAcademicsPage() {
 
                       {activeTab === "other_courses_offered" && (
                         <OtherOptionsTab
-                          payload={getActiveTabPayload()}
+                          payload={getSeedTabPayload()}
                           onChange={updateActiveTabPayload}
                         />
                       )}
@@ -664,25 +680,25 @@ export default function SetupAcademicsPage() {
                       {/* DEMOGRAPHICS */}
                       {activeTab === "demo_graphics" && (
                         <DemographicsTab
-                          payload={getActiveTabPayload()}
+                          payload={getSeedTabPayload()}
                           onChange={updateActiveTabPayload}
                         />
                       )}
 
                       {activeTab === "accreditations" && (
                         <AccreditationsTab
-                          payload={getActiveTabPayload()}
+                          payload={getSeedTabPayload()}
                           onChange={updateActiveTabPayload}
                         />
                       )}
 
                       {activeTab === "entrance_exam_eligibility" && (
                         <ExamEligibilityTab
-                          payload={getActiveTabPayload()}
+                          payload={getSeedTabPayload()}
                           onChange={updateActiveTabPayload}
                         />
                       )}
-                    </>
+                    </Fragment>
                   )}
                 </CardContent>
 

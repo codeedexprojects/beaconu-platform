@@ -33,7 +33,28 @@ export class SlotRepository {
     return prisma.assessmentSlot.findUnique({ where: { id } });
   }
 
+  /** The slot a student would sit right now: the one whose window is open,
+   * else the next one to open, else the most recent past one (so the start
+   * screen can say the window has closed). */
   static async findCurrentActiveForTemplate(templateId: string) {
+    const now = new Date();
+    const open = await prisma.assessmentSlot.findFirst({
+      where: {
+        templateId,
+        status: "active",
+        windowStart: { lte: now },
+        windowEnd: { gte: now },
+      },
+      orderBy: { windowStart: "desc" },
+    });
+    if (open) return open;
+
+    const upcoming = await prisma.assessmentSlot.findFirst({
+      where: { templateId, status: "active", windowStart: { gt: now } },
+      orderBy: { windowStart: "asc" },
+    });
+    if (upcoming) return upcoming;
+
     return prisma.assessmentSlot.findFirst({
       where: { templateId, status: "active" },
       orderBy: { windowStart: "desc" },

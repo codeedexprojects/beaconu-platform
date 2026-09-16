@@ -64,7 +64,7 @@ export function AccreditationsTab({
     formState: { errors },
   } = useForm<AccreditationsTabData>({
     resolver: zodResolver(accreditationsTabSchema as any),
-    values: payload,
+    defaultValues: payload,
   });
 
   const itemsArray = useFieldArray({

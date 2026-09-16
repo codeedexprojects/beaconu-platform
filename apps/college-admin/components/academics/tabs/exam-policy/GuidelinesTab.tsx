@@ -83,7 +83,7 @@ export function GuidelinesTab({
     formState: { errors },
   } = useForm<GuidelinesTabData>({
     resolver: zodResolver(guidelinesTabSchema as any),
-    values: payload,
+    defaultValues: payload,
   });
 
   const policiesArray = useFieldArray({

@@ -388,7 +388,7 @@ export function FacultyDirectoryTab({
     formState: { errors },
   } = useForm<FacultyDirectoryTabData>({
     resolver: zodResolver(facultyDirectoryTabSchema as any),
-    values: payload,
+    defaultValues: payload,
   });
 
   const facultyArray = useFieldArray({

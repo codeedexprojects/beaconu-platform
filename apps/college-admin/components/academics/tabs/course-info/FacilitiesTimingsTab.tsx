@@ -98,7 +98,7 @@ export function FacilitiesTimingsTab({
   const { register, control, watch, setValue } =
     useForm<FacilitiesTimingsTabData>({
       resolver: zodResolver(facilitiesTimingsTabSchema as any),
-      values: {
+      defaultValues: {
         ...payload,
         class_timings: normalizeClassTimings(payload?.class_timings),
       },

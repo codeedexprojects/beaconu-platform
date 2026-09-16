@@ -186,7 +186,7 @@ export function PlacementsTab({
     formState: { errors },
   } = useForm<PlacementsTabData>({
     resolver: zodResolver(placementsTabSchema as any),
-    values: payload,
+    defaultValues: payload,
   });
 
   const summaryStatsArray = useFieldArray({

@@ -31,7 +31,7 @@ export function StudentReviewsTab({
     formState: { errors },
   } = useForm<StudentReviewsTabData>({
     resolver: zodResolver(studentReviewsTabSchema as any),
-    values: payload,
+    defaultValues: payload,
   });
 
   useEffect(() => {
