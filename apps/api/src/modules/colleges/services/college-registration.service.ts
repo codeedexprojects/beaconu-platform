@@ -240,11 +240,13 @@ export class CollegeRegistrationService {
 
     const formatTime = (value: Date | null | undefined) => {
       if (!value) return "";
+      // @db.Time already holds the IST wall-clock value; formatting it in
+      // Asia/Kolkata would add another 5h30m.
       return value.toLocaleTimeString("en-IN", {
         hour: "numeric",
         minute: "2-digit",
         hour12: true,
-        timeZone: "Asia/Kolkata",
+        timeZone: "UTC",
       });
     };
 

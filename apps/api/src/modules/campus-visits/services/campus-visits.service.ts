@@ -2,6 +2,10 @@ import { prisma } from "@beaconu/db";
 import { ConflictError, ForbiddenError, NotFoundError } from "@/shared/errors";
 import { logger } from "@/shared/lib/logger";
 import { getRedisClient } from "@/shared/lib/redis";
+import {
+  istDateString,
+  istWallTimeToInstant,
+} from "@/shared/utils/ist-time.utils";
 import { BlinkService } from "@/modules/blink/services/blink.service";
 import { PushService } from "@/modules/notifications/services/push.service";
 import { CampusVisitsRepository } from "../repositories/campus-visits.repository";
@@ -50,16 +54,12 @@ function formatTime12h(value: Date): string {
 }
 
 function assertMinAdvanceNotice(dateStr: string, time: Date) {
-  const [y, m, d] = dateStr.split("-").map(Number);
-  const visitUtcMs = Date.UTC(
-    y!,
-    m! - 1,
-    d!,
-    time.getUTCHours(),
-    time.getUTCMinutes(),
-  );
+  const visitMs = istWallTimeToInstant(
+    new Date(`${dateStr}T00:00:00Z`),
+    time,
+  ).getTime();
   const minAllowedMs = Date.now() + MIN_ADVANCE_HOURS * 60 * 60 * 1000;
-  if (visitUtcMs < minAllowedMs) {
+  if (visitMs < minAllowedMs) {
     throw new ConflictError(
       `Visits must be booked at least ${MIN_ADVANCE_HOURS} hours in advance`,
     );
@@ -449,7 +449,7 @@ export class CampusVisitsService {
         `Cannot mark arrival for a visit with status '${visit.status}'`,
       );
     }
-    if (formatDateStr(new Date()) !== formatDateStr(visit.proposedDate)) {
+    if (istDateString() !== formatDateStr(visit.proposedDate)) {
       throw new ConflictError(
         "You can only mark arrival on the day of your visit",
       );
@@ -595,13 +595,10 @@ export class CampusVisitsService {
     let count = 0;
 
     for (const visit of visits) {
-      const visitInstantMs = Date.UTC(
-        visit.proposedDate.getUTCFullYear(),
-        visit.proposedDate.getUTCMonth(),
-        visit.proposedDate.getUTCDate(),
-        visit.proposedTime.getUTCHours(),
-        visit.proposedTime.getUTCMinutes(),
-      );
+      const visitInstantMs = istWallTimeToInstant(
+        visit.proposedDate,
+        visit.proposedTime,
+      ).getTime();
       const msUntilVisit = visitInstantMs - now.getTime();
 
       for (const tier of REMINDER_TIERS) {

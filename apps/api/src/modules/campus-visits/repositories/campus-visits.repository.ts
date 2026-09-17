@@ -144,6 +144,8 @@ export class CampusVisitsRepository {
   }
 
   static async findUpcomingActiveVisits(nowUtc: Date) {
+    // Visit dates are India dates; three calendar days covers the 24h
+    // reminder window from any time of day in either timezone.
     const todayStart = new Date(
       Date.UTC(
         nowUtc.getUTCFullYear(),
@@ -151,13 +153,16 @@ export class CampusVisitsRepository {
         nowUtc.getUTCDate(),
       ),
     );
-    const tomorrowStart = new Date(todayStart);
-    tomorrowStart.setUTCDate(tomorrowStart.getUTCDate() + 1);
+    const dates = [0, 1, 2].map((offset) => {
+      const date = new Date(todayStart);
+      date.setUTCDate(date.getUTCDate() + offset);
+      return date;
+    });
 
     return prisma.campusVisit.findMany({
       where: {
-        status: { in: ["pending", "confirmed"] },
-        proposedDate: { in: [todayStart, tomorrowStart] },
+        status: { in: ["pending", "confirmed", "reassigned"] },
+        proposedDate: { in: dates },
       },
       select: {
         id: true,

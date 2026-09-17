@@ -1,4 +1,5 @@
 import { randomUUID } from "crypto";
+import { istStartOfDayInstant } from "@/shared/utils/ist-time.utils";
 import { prisma } from "@beaconu/db";
 import type { Prisma } from "@beaconu/db";
 
@@ -45,8 +46,7 @@ export class TicketRepository {
   }
 
   static async countResolvedTodayForCollege(collegeId: string) {
-    const startOfDay = new Date();
-    startOfDay.setHours(0, 0, 0, 0);
+    const startOfDay = istStartOfDayInstant();
     return prisma.supportTicket.count({
       where: { collegeId, status: "resolved", resolvedAt: { gte: startOfDay } },
     });
