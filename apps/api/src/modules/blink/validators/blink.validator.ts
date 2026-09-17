@@ -92,6 +92,16 @@ export const dashboardSummaryQuerySchema = z
 
 export type DashboardSummaryQuery = z.infer<typeof dashboardSummaryQuerySchema>;
 
+export const ambassadorReferralStatsQuerySchema = z
+  .object({
+    from: z.string().date("from must be YYYY-MM-DD").optional(),
+    to: z.string().date("to must be YYYY-MM-DD").optional(),
+  })
+  .refine((d) => !d.from || !d.to || d.from <= d.to, {
+    message: "`from` must be before or equal to `to`",
+    path: ["from"],
+  });
+
 export const employeeListQuerySchema = z.object({
   status: z
     .enum(["active", "inactive", "suspended", "rejected", "pending_approval"])

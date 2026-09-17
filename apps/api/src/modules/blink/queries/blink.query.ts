@@ -1,4 +1,5 @@
-import { prisma } from "@beaconu/db";
+import { prisma, type Prisma } from "@beaconu/db";
+import { IST_OFFSET_MS } from "@/shared/utils/ist-time.utils";
 import { NotFoundError } from "@/shared/errors";
 import type {
   ReferralListItem,
@@ -121,31 +122,75 @@ export class BlinkQuery {
     filters: { from?: Date; to?: Date },
   ): Promise<AssociateDashboardSummary> {
     const { from, to } = filters;
-    const dateRange =
+    return this.countReferralOutcomes(
+      { blinkUser: { associateParentId: adminId } },
       from || to
         ? { ...(from ? { gte: from } : {}), ...(to ? { lte: to } : {}) }
+        : undefined,
+    );
+  }
+
+  /** Referral Status card on the ambassador app. `from`/`to` are India
+   * calendar dates (YYYY-MM-DD), both inclusive. */
+  static async getAmbassadorReferralStats(
+    ambassadorId: string,
+    filters: { from?: string; to?: string },
+  ): Promise<AssociateDashboardSummary> {
+    const dayStart = (ymd: string) =>
+      new Date(new Date(`${ymd}T00:00:00Z`).getTime() - IST_OFFSET_MS);
+    const range =
+      filters.from || filters.to
+        ? {
+            ...(filters.from ? { gte: dayStart(filters.from) } : {}),
+            ...(filters.to
+              ? { lt: new Date(dayStart(filters.to).getTime() + 86_400_000) }
+              : {}),
+          }
         : undefined;
 
-    const rows = await prisma.referral.groupBy({
-      by: ["status"],
+    return this.countReferralOutcomes({ blinkUserId: ambassadorId }, range);
+  }
+
+  /** Counts referred applications by their real outcome. Referral.status is
+   * only ever moved to "enrolled" (by the commission flow), so the outcome is
+   * read from the referred application course instead. Only submitted
+   * applications count; the date range applies to when they were submitted.
+   * Outcomes are subsets of `applicationSubmitted`, and an application still
+   * in progress counts only there. */
+  private static async countReferralOutcomes(
+    where: Prisma.ReferralWhereInput,
+    submittedAt?: Prisma.DateTimeNullableFilter,
+  ): Promise<AssociateDashboardSummary> {
+    const referrals = await prisma.referral.findMany({
       where: {
-        blinkUser: { associateParentId: adminId },
-        ...(dateRange ? { createdAt: dateRange } : {}),
+        ...where,
+        applicationCourse: {
+          application: {
+            formStatus: "submitted",
+            ...(submittedAt ? { submittedAt } : {}),
+          },
+        },
       },
-      _count: { _all: true },
+      select: { applicationCourse: { select: { status: true } } },
     });
 
-    const counts = rows.reduce<Record<string, number>>((acc, row) => {
-      acc[row.status] = row._count._all;
-      return acc;
-    }, {});
-
-    return {
-      applicationSubmitted: counts["registered"] ?? 0,
-      admissionConfirmed: counts["confirmed"] ?? 0,
-      applicationRejected: counts["rejected"] ?? 0,
-      droppedOut: counts["dropped_out"] ?? 0,
+    const summary: AssociateDashboardSummary = {
+      applicationSubmitted: referrals.length,
+      admissionConfirmed: 0,
+      applicationRejected: 0,
+      droppedOut: 0,
     };
+    for (const referral of referrals) {
+      const status = referral.applicationCourse?.status;
+      if (status === "token_paid" || status === "enrolled") {
+        summary.admissionConfirmed++;
+      } else if (status === "rejected") {
+        summary.applicationRejected++;
+      } else if (status === "dropped_out" || status === "withdrawn") {
+        summary.droppedOut++;
+      }
+    }
+    return summary;
   }
 
   static async listReferralsByAdmin(

@@ -8,6 +8,18 @@ All endpoints below are mounted under `/api/v1/student/chat/*` and require `auth
 
 ---
 
+## ⚠️ Timestamps are UTC — convert before showing them
+
+Every time in these APIs and socket events (`createdAt`, `readAt`, `lastMessageAt`) is a UTC instant, e.g. `"2026-09-17T09:00:21.482Z"` = **2:30 PM IST**. Dart's `DateTime.parse` keeps it in UTC, so formatting it directly shows **9:00** — 5h30m early, and different from the other participant's screen if their app converts. Always:
+
+```dart
+final sentAt = DateTime.parse(json['createdAt']).toLocal();
+```
+
+For a message you just sent, replace the optimistic `DateTime.now()` with the server's `createdAt` (converted with `.toLocal()`) once the send call returns, so both sides show the same time.
+
+---
+
 ## 1. Prerequisite — no new credential, no new setup
 
 - **Auth**: the student's existing JWT access token (from `POST /student/auth/verify-otp` or `POST /student/auth/firebase`) is the only credential chat needs. Send it as `Authorization: Bearer <token>` on every REST call below, and as `auth: { token: accessToken }` on the socket handshake (see `chat-websocket-contract.md`).

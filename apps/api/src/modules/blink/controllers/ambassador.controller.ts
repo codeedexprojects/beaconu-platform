@@ -5,6 +5,7 @@ import { BlinkService } from "../services/blink.service";
 import { BlinkQuery } from "../queries/blink.query";
 import {
   ambassadorProfileUpdateSchema,
+  ambassadorReferralStatsQuerySchema,
   type CollegeListQuery,
   type CreateReferralCodeInput,
   type WalletTransactionQuery,
@@ -86,6 +87,17 @@ export class AmbassadorController {
     return res
       .status(201)
       .json(ApiResponse.success("Referral code ready", result));
+  }
+
+  static async getReferralStats(req: Request, res: Response) {
+    const filters = ambassadorReferralStatsQuerySchema.parse(req.query);
+    const result = await BlinkQuery.getAmbassadorReferralStats(
+      req.userId!,
+      filters,
+    );
+    return res
+      .status(200)
+      .json(ApiResponse.success("Referral stats fetched successfully", result));
   }
 
   static async listReferralCodes(req: Request, res: Response) {

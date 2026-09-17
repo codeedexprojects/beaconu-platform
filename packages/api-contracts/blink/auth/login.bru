@@ -16,16 +16,16 @@ headers {
 
 body:json {
   {
-    "email": "kaja@gmail.com",
-    "password": "Huzain@123",
-    "blink_role": "associate_employee",
-    "agency_reg_number": "REG-1234",
+    "email": "anagacodeedex@gmail.com",
+    "password": "ziat@2004",
+    "blink_role": "campus_ambassador",
+  //   "agency_reg_number": "REG-1234",
     "fcm_token": "optional-firebase-token"
   }
 }
 
 vars:pre-request {
-  baseUrl: http://localhost:4000
+  baseUrl: https://beaconu-platform-1.onrender.com
 }
 
 script:post-response {
@@ -53,12 +53,12 @@ docs {
                        (matched against the employee's parent agency's reg number)
     fcm_token        — optional Firebase Cloud Messaging token for push notifications.
                        Stored in the session. Clears duplicate FCM tokens on other sessions.
-
+  
   Campus ambassadors authenticate with email + password only — no extra factor.
   The former campus_code check was removed: the code is published unauthenticated by
   GET /api/v1/public/colleges/:collegeId/ambassadors and is sequential (CA-<n>),
   so it was never a secret. Sending campus_code is harmless (Zod strips unknown keys).
-
+  
   Returns an access token (90 days) and sets a refreshToken cookie (90 days).
   The JWT userType field distinguishes the role: blink_associate | blink_employee | blink_ambassador.
   
