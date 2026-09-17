@@ -84,8 +84,12 @@ const STATUS_VARIANT: Record<
   inactive: "secondary",
 };
 
+// A datetime-local input expects local wall-clock time; slicing the UTC ISO
+// string showed the slot 5h30m early and re-saving shifted it again.
 function toDatetimeLocal(iso: string): string {
-  return iso.slice(0, 16);
+  const date = new Date(iso);
+  const local = new Date(date.getTime() - date.getTimezoneOffset() * 60_000);
+  return local.toISOString().slice(0, 16);
 }
 
 function formatDateTime(iso: string): string {

@@ -1,3 +1,4 @@
+import { istToday } from "@/shared/utils/ist-time.utils";
 import { prisma } from "@beaconu/db";
 
 const OFFER_LETTER_SELECT = {
@@ -21,7 +22,7 @@ export class OfferLetterRepository {
    * window. There is no offer-expiry job, so lapsed offers stay "issued"
    * with a pending token forever — validUntil is the only signal. */
   static async getPendingTokenTotalsForCollege(collegeId: string) {
-    const today = new Date(new Date().toISOString().slice(0, 10));
+    const today = istToday();
     const base = { collegeId, status: "issued", tokenPaymentStatus: "pending" };
     const [live, lapsed] = await Promise.all([
       prisma.offerLetter.aggregate({

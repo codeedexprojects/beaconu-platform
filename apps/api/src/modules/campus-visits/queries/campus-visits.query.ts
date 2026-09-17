@@ -7,17 +7,11 @@ import type {
   PaginationMeta,
 } from "@beaconu/types";
 import type { CampusVisitListQuery } from "../validators/campus-visits.validator";
+import { istToday } from "@/shared/utils/ist-time.utils";
 import { CampusVisitAvailabilityRepository } from "../repositories/campus-visit-availability.repository";
 import { CampusVisitDateOverrideRepository } from "../repositories/campus-visit-date-override.repository";
 
 const CLOSED_STATUSES = ["completed", "cancelled"];
-
-function todayInIst(): Date {
-  const ymd = new Intl.DateTimeFormat("en-CA", {
-    timeZone: "Asia/Kolkata",
-  }).format(new Date());
-  return new Date(ymd);
-}
 
 // Upcoming = not closed and dated today or later; past = everything else.
 function listWhere({
@@ -25,7 +19,7 @@ function listWhere({
   date,
   when,
 }: CampusVisitListQuery): Prisma.CampusVisitWhereInput[] {
-  const today = todayInIst();
+  const today = istToday();
   return [
     ...(status ? [{ status: { in: status } }] : []),
     ...(date ? [{ proposedDate: new Date(date) }] : []),
@@ -392,8 +386,7 @@ export class CampusVisitsQuery {
   }
 
   static async getCollegeStats(collegeId: string) {
-    const todayStart = new Date();
-    todayStart.setUTCHours(0, 0, 0, 0);
+    const todayStart = istToday();
 
     const [today, pending, arrived, confirmed] = await Promise.all([
       prisma.campusVisit.count({

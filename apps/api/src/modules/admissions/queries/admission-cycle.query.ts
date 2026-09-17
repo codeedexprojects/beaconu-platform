@@ -1,3 +1,4 @@
+import { istToday } from "@/shared/utils/ist-time.utils";
 import { prisma } from "@beaconu/db";
 import type {
   AdmissionCycleListQuery,
@@ -107,8 +108,7 @@ export class AdmissionCycleQuery {
   ): Promise<string[]> {
     if (courseIds.length === 0) return [];
     const now = new Date();
-    const todayMidnight = new Date();
-    todayMidnight.setUTCHours(0, 0, 0, 0);
+    const todayMidnight = istToday();
 
     const rows = await prisma.admissionCycleCourse.findMany({
       where: {
