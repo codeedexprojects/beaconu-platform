@@ -13,11 +13,22 @@ import type {
   CreateCampusVisitInput,
   RescheduleCampusVisitInput,
   CancelCampusVisitInput,
+  CompleteCampusVisitInput,
   ReassignCampusVisitInput,
 } from "../validators/campus-visits.validator";
 
-const RESCHEDULABLE_STATUSES = ["pending", "confirmed"];
-const CANCELLABLE_STATUSES = ["pending", "confirmed", "arrived"];
+// Once the student has arrived the visit is happening — they can no longer
+// move or cancel it themselves.
+const STUDENT_CHANGEABLE_STATUSES = ["pending"];
+// Staff can still cancel a visit that is under way (e.g. a no-show after
+// arrival was marked).
+const ADMIN_CANCELLABLE_STATUSES = [
+  "pending",
+  "arrived",
+  "confirmed",
+  "reassigned",
+];
+const COMPLETABLE_STATUSES = ["confirmed", "reassigned"];
 const MIN_ADVANCE_HOURS = 2;
 const REBROADCAST_AFTER_MS = 5 * 60 * 1000;
 
@@ -193,6 +204,24 @@ async function notifyStudentOfAcceptance(visit: {
   }
 }
 
+async function notifyStudentOfCompletion(visit: {
+  id: string;
+  studentId: string;
+}): Promise<void> {
+  try {
+    await PushService.sendToUser(visit.studentId, "student", {
+      title: "Campus visit completed",
+      body: "Thanks for visiting! Let us know how your campus visit went.",
+      data: { type: "campus_visit_completed", visitId: visit.id },
+    });
+  } catch (error) {
+    logger.error(
+      { err: error, visitId: visit.id },
+      "Failed to notify student of campus visit completion",
+    );
+  }
+}
+
 async function notifyAmbassadorOfReassignment(visit: {
   id: string;
   studentName: string;
@@ -332,7 +361,7 @@ export class CampusVisitsService {
     if (!visit) throw new NotFoundError("Campus visit not found");
     if (visit.studentId !== studentId)
       throw new ForbiddenError("Not your visit");
-    if (!RESCHEDULABLE_STATUSES.includes(visit.status)) {
+    if (!STUDENT_CHANGEABLE_STATUSES.includes(visit.status)) {
       throw new ForbiddenError(
         `Cannot reschedule a visit with status '${visit.status}'`,
       );
@@ -395,7 +424,7 @@ export class CampusVisitsService {
     if (!visit) throw new NotFoundError("Campus visit not found");
     if (visit.studentId !== studentId)
       throw new ForbiddenError("Not your visit");
-    if (!CANCELLABLE_STATUSES.includes(visit.status)) {
+    if (!STUDENT_CHANGEABLE_STATUSES.includes(visit.status)) {
       throw new ForbiddenError(
         `Cannot cancel a visit with status '${visit.status}'`,
       );
@@ -501,6 +530,38 @@ export class CampusVisitsService {
       newAmbassadorId: data.ambassador_id,
     });
     return reassigned;
+  }
+
+  /** The assigned ambassador closes the visit once the tour is done. */
+  static async complete(
+    visitId: string,
+    ambassadorId: string,
+    data: CompleteCampusVisitInput,
+  ) {
+    const visit = await CampusVisitsRepository.findById(visitId);
+    if (!visit) throw new NotFoundError("Campus visit not found");
+    if (visit.ambassadorId !== ambassadorId)
+      throw new ForbiddenError("This visit is not assigned to you");
+    if (!COMPLETABLE_STATUSES.includes(visit.status)) {
+      throw new ForbiddenError(
+        `Cannot complete a visit with status '${visit.status}'`,
+      );
+    }
+
+    const { count } = await CampusVisitsRepository.markCompleted(
+      visitId,
+      ambassadorId,
+      data.visit_notes,
+    );
+    if (count === 0) {
+      throw new ConflictError(
+        "This visit has already been completed or changed",
+      );
+    }
+
+    const completed = await CampusVisitsRepository.findById(visitId);
+    await notifyStudentOfCompletion(completed!);
+    return completed;
   }
 
   static async getAmbassadorVisitStats(ambassadorId: string) {
@@ -670,7 +731,7 @@ export class CampusVisitsService {
     if (!visit || visit.collegeId !== collegeId) {
       throw new NotFoundError("Campus visit not found");
     }
-    if (!CANCELLABLE_STATUSES.includes(visit.status)) {
+    if (!ADMIN_CANCELLABLE_STATUSES.includes(visit.status)) {
       throw new ForbiddenError(
         `Cannot cancel a visit with status '${visit.status}'`,
       );

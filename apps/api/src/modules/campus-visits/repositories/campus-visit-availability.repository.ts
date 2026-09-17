@@ -54,7 +54,7 @@ export class CampusVisitAvailabilityRepository {
       where: {
         collegeId,
         proposedDate: new Date(date + "T00:00:00Z"),
-        status: { in: ["pending", "confirmed"] },
+        status: { in: ["pending", "arrived", "confirmed", "reassigned"] },
       },
     });
   }
