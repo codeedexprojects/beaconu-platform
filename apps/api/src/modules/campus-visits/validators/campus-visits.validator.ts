@@ -37,6 +37,10 @@ export const cancelCampusVisitSchema = z.object({
   cancellation_reason: z.string().min(1, "Cancellation reason is required"),
 });
 
+export const completeCampusVisitSchema = z.object({
+  visit_notes: z.string().trim().max(1000).optional(),
+});
+
 export const reassignCampusVisitSchema = z.object({
   ambassador_id: z.string().min(1, "Ambassador is required"),
   reassignment_reason: z.string().optional(),
@@ -76,6 +80,9 @@ export type RescheduleCampusVisitInput = z.infer<
   typeof rescheduleCampusVisitSchema
 >;
 export type CancelCampusVisitInput = z.infer<typeof cancelCampusVisitSchema>;
+export type CompleteCampusVisitInput = z.infer<
+  typeof completeCampusVisitSchema
+>;
 export type ReassignCampusVisitInput = z.infer<
   typeof reassignCampusVisitSchema
 >;

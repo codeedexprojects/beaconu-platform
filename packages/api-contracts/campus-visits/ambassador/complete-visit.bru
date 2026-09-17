@@ -1,0 +1,37 @@
+meta {
+  name: Complete Campus Visit (Ambassador)
+  type: http
+  seq: 4
+}
+
+patch {
+  url: {{baseUrl}}/api/v1/blink/ambassador/campus-visits/{{campusVisitId}}/complete
+  body: json
+  auth: none
+}
+
+headers {
+  Authorization: Bearer {{accessToken}}
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "visit_notes": "Toured the CS labs and library; student interested in B.Tech CSE."
+  }
+}
+
+docs {
+  The assigned ambassador closes the visit once the tour is over.
+  Requires: ambassador token; the visit must be assigned to this ambassador.
+
+  Body: visit_notes (optional, max 1000) — stored on the visit for staff.
+
+  Allowed from status confirmed or reassigned → completed.
+  The student gets a push (type "campus_visit_completed").
+
+  Errors:
+  - 403 not assigned to you / status not confirmed or reassigned
+  - 404 visit not found
+  - 409 already completed or changed in the meantime
+}

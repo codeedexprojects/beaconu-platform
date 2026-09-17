@@ -69,10 +69,35 @@ export class CampusVisitsRepository {
     });
   }
 
+  /** Unassigned arrivals are open to any ambassador at the college; a visit
+   * already assigned to this ambassador (older bookings, or one reassigned to
+   * them) is theirs to accept. */
   static async claimByAmbassador(id: string, ambassadorId: string) {
     return prisma.campusVisit.updateMany({
-      where: { id, status: "arrived", ambassadorId: null },
+      where: {
+        id,
+        status: "arrived",
+        OR: [{ ambassadorId: null }, { ambassadorId }],
+      },
       data: { status: "confirmed", ambassadorId },
+    });
+  }
+
+  static async markCompleted(
+    id: string,
+    ambassadorId: string,
+    visitNotes: string | undefined,
+  ) {
+    return prisma.campusVisit.updateMany({
+      where: {
+        id,
+        ambassadorId,
+        status: { in: ["confirmed", "reassigned"] },
+      },
+      data: {
+        status: "completed",
+        ...(visitNotes !== undefined && { visitNotes }),
+      },
     });
   }
 
@@ -92,7 +117,7 @@ export class CampusVisitsRepository {
       where: {
         studentId,
         proposedDate: new Date(date + "T00:00:00Z"),
-        status: { in: ["pending", "confirmed"] },
+        status: { in: ["pending", "arrived", "confirmed", "reassigned"] },
         ...(excludeVisitId ? { id: { not: excludeVisitId } } : {}),
       },
     });
@@ -105,7 +130,7 @@ export class CampusVisitsRepository {
       where: {
         collegeId,
         proposedDate: new Date(date + "T00:00:00Z"),
-        status: { in: ["pending", "confirmed", "arrived"] },
+        status: { in: ["pending", "arrived", "confirmed", "reassigned"] },
       },
     });
   }
