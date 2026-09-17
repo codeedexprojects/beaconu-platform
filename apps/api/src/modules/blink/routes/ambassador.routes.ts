@@ -68,6 +68,13 @@ router.post(
 );
 
 router.get(
+  "/referral-stats",
+  authenticate,
+  authorizeUserType("blink_ambassador"),
+  AmbassadorController.getReferralStats,
+);
+
+router.get(
   "/referral-codes",
   authenticate,
   authorizeUserType("blink_ambassador"),

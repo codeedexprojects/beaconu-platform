@@ -8,6 +8,18 @@ All endpoints below are mounted under `/api/v1/blink/ambassador/chat/*` and requ
 
 ---
 
+## ⚠️ Timestamps are UTC — convert before showing them
+
+Every time in these APIs and socket events (`createdAt`, `readAt`, `lastMessageAt`) is a UTC instant, e.g. `"2026-09-17T09:00:21.482Z"` = **2:30 PM IST**. Dart's `DateTime.parse` keeps it in UTC, so formatting it directly shows **9:00** — 5h30m early, and different from the other participant's screen if their app converts. Always:
+
+```dart
+final sentAt = DateTime.parse(json['createdAt']).toLocal();
+```
+
+For a message you just sent, replace the optimistic `DateTime.now()` with the server's `createdAt` (converted with `.toLocal()`) once the send call returns, so both sides show the same time.
+
+---
+
 ## ⚠️ Read this first — ambassadors never start a conversation
 
 **There is no "message a student" action anywhere on the ambassador side.** Only a student can start a conversation (by picking an ambassador from a list on their side). A conversation only ever appears in an ambassador's inbox once a student has already sent the first message into it.

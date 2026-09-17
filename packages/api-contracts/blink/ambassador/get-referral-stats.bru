@@ -1,0 +1,47 @@
+meta {
+  name: Get Referral Stats
+  type: http
+  seq: 15
+}
+
+get {
+  url: {{baseUrl}}/api/v1/blink/ambassador/referral-stats?from=2026-01-01&to=2026-12-31
+  body: none
+  auth: none
+}
+
+params:query {
+  from: 2026-01-01
+  to: 2026-12-31
+}
+
+headers {
+  Authorization: Bearer {{accessToken}}
+}
+
+docs {
+  Counts for the ambassador app's "Referral Status" card.
+  Requires: campus ambassador token.
+
+  Query (both optional, India calendar dates, inclusive):
+  - from: YYYY-MM-DD
+  - to:   YYYY-MM-DD
+  Omit both for all time. For the year picker send from=YYYY-01-01&to=YYYY-12-31.
+  400 when from is after to or a date is malformed.
+
+  Response:
+  data: {
+    applicationSubmitted: number,  // referred applications submitted in the range
+    admissionConfirmed: number,    // of those: token paid or enrolled
+    applicationRejected: number,   // of those: rejected by the college
+    droppedOut: number             // of those: dropped out or withdrawn
+  }
+
+  - Counts referrals made with this ambassador's referral codes.
+  - Only submitted applications count; drafts are ignored.
+  - The date range filters on when the application was submitted.
+  - The three outcomes are subsets of applicationSubmitted. Applications still
+    in progress (under review, interview, shortlisted…) are counted only in
+    applicationSubmitted, so the outcomes don't have to add up to it.
+  - The outcome is taken from the referred course's live status.
+}
