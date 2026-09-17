@@ -80,7 +80,7 @@ Previously, the only date-related rejections were "that weekday is off" and "les
 
 3. **`proposedTime`'s source changed** (not visible as a request-shape change, but matters if the frontend ever displays "your visit is at HH:MM" from the booking response or a subsequent detail fetch — see §3). It used to be read off that specific weekday's own `time` field (`CampusVisitAvailability.time`, one value per weekday, up to 7 different values across the week). It is now always the college's single shared `visitStartTime` (`CampusVisitSettings.visitStartTime`), regardless of which weekday the booked date falls on. Practically: every open day for a given college now shows the same visit time — no more per-weekday variation.
 
-All pre-existing checks are unchanged: weekday-off rejection, the 2-hour minimum advance notice (now measured against the settings' `visitStartTime` instead of a weekday's `time`, same 2-hour rule), and capacity-full rejection.
+All pre-existing checks are unchanged: weekday-off rejection, the 2-hour minimum advance notice (measured against the settings' closing time `visitEndTime`, so same-day bookings are allowed until 2 hours before closing — e.g. until 3:00 PM for a 9 AM – 5 PM window; past dates are rejected with "Visits can't be booked for a past date"), and capacity-full rejection.
 
 ---
 

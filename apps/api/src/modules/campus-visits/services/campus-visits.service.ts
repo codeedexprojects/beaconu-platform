@@ -53,15 +53,24 @@ function formatTime12h(value: Date): string {
   return `${hour}:${minute} ${period}`;
 }
 
-function assertMinAdvanceNotice(dateStr: string, time: Date) {
-  const visitMs = istWallTimeToInstant(
+/** Visiting hours are a window (e.g. 9 AM – 5 PM), so a same-day booking is
+ * fine until MIN_ADVANCE_HOURS before closing — measuring from the opening
+ * time rejected every same-day booking once the morning had passed. */
+function assertMinAdvanceNotice(dateStr: string, closingTime: Date) {
+  if (dateStr < istDateString()) {
+    throw new ConflictError(
+      "Visits can't be booked for a past date. Please choose today or later.",
+    );
+  }
+
+  const closingMs = istWallTimeToInstant(
     new Date(`${dateStr}T00:00:00Z`),
-    time,
+    closingTime,
   ).getTime();
   const minAllowedMs = Date.now() + MIN_ADVANCE_HOURS * 60 * 60 * 1000;
-  if (visitMs < minAllowedMs) {
+  if (closingMs < minAllowedMs) {
     throw new ConflictError(
-      `Visits must be booked at least ${MIN_ADVANCE_HOURS} hours in advance`,
+      `Same-day visits must be booked at least ${MIN_ADVANCE_HOURS} hours before closing (${formatTime12h(closingTime)}). Please choose another date.`,
     );
   }
 }
@@ -105,7 +114,7 @@ async function assertDateBookable(
     );
   }
 
-  assertMinAdvanceNotice(date, settings.visitStartTime);
+  assertMinAdvanceNotice(date, settings.visitEndTime);
   return {
     visitTime: settings.visitStartTime,
     maxCapacity: availability.maxCapacity,
