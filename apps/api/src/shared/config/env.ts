@@ -25,9 +25,37 @@ const envSchema = z.object({
   FIREBASE_PROJECT_ID: z.string().default(""),
   FIREBASE_CLIENT_EMAIL: z.string().default(""),
   FIREBASE_PRIVATE_KEY: z.string().default(""),
+  // Base URLs for referral/setup links built in college-url.utils.ts. Optional
+  // here (so local dev keeps using the localhost fallback) but required
+  // below when NODE_ENV is production, so a missing value fails startup
+  // instead of silently shipping a localhost link.
+  COLLEGE_WEB_URL: z.string().url().optional(),
+  COLLEGE_ADMIN_URL: z.string().url().optional(),
+  APP_SHARE_URL: z.string().url().optional(),
+  WEB_URL: z.string().url().optional(),
 });
 
-const parsed = envSchema.safeParse(process.env);
+const parsed = envSchema
+  .refine((data) => data.NODE_ENV !== "production" || !!data.COLLEGE_WEB_URL, {
+    message: "COLLEGE_WEB_URL is required when NODE_ENV=production",
+    path: ["COLLEGE_WEB_URL"],
+  })
+  .refine(
+    (data) => data.NODE_ENV !== "production" || !!data.COLLEGE_ADMIN_URL,
+    {
+      message: "COLLEGE_ADMIN_URL is required when NODE_ENV=production",
+      path: ["COLLEGE_ADMIN_URL"],
+    },
+  )
+  .refine(
+    (data) =>
+      data.NODE_ENV !== "production" || !!data.APP_SHARE_URL || !!data.WEB_URL,
+    {
+      message: "APP_SHARE_URL or WEB_URL is required when NODE_ENV=production",
+      path: ["APP_SHARE_URL"],
+    },
+  )
+  .safeParse(process.env);
 
 if (!parsed.success) {
   const missing = parsed.error.issues.map(
