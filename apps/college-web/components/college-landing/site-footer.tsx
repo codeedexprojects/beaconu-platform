@@ -83,9 +83,19 @@ export async function SiteFooter({
                     target="_blank"
                     rel="noreferrer"
                     className="flex h-8 w-8 items-center justify-center rounded-full border border-border/60 text-muted-foreground hover:border-headerTeal hover:text-headerTeal"
-                    aria-label={link.platform}
+                    aria-label={link.platform || "Social link"}
                   >
-                    <ExternalLink className="h-3.5 w-3.5" />
+                    {link.icon ? (
+                      <Image
+                        src={link.icon}
+                        alt={link.platform ?? ""}
+                        width={14}
+                        height={14}
+                        className="h-3.5 w-3.5 object-contain"
+                      />
+                    ) : (
+                      <ExternalLink className="h-3.5 w-3.5" />
+                    )}
                   </a>
                 ))}
               </div>

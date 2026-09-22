@@ -393,7 +393,6 @@ export default function SetupProfilePage() {
       : getCollegeSlugFromPath(window.location.pathname, window.location.host);
 
   const [activeTab, setActiveTab] = useState<ProfileTabId>("basic");
-  const [uploadingField, setUploadingField] = useState<string | null>(null);
   // College Overview: which of the 6 sub-cards are expanded ("Basics" is
   // open by default; the rest start collapsed).
   const [openOverviewCards, setOpenOverviewCards] = useState<Set<string>>(
@@ -874,28 +873,6 @@ export default function SetupProfilePage() {
     );
   };
 
-  const handleImageUpload = async (
-    file: File | null,
-    fieldPath: string,
-    context: string,
-  ) => {
-    if (!file) return;
-
-    try {
-      setUploadingField(fieldPath);
-      const permanentUrl = await uploadCollegeAdminFile(file, context);
-      setValue(fieldPath as any, permanentUrl, {
-        shouldDirty: true,
-      });
-      toast.success("File uploaded to S3");
-    } catch (error) {
-      const message = error instanceof Error ? error.message : "Upload failed";
-      toast.error(message);
-    } finally {
-      setUploadingField(null);
-    }
-  };
-
   if (isLoading) {
     return (
       <div className="flex h-96 items-center justify-center">
@@ -1193,17 +1170,12 @@ export default function SetupProfilePage() {
                       >
                         Logo Image
                       </Label>
-                      <Input
-                        type="file"
-                        accept="image/jpeg,image/png,image/webp"
-                        disabled={uploadingField === "logoUrl"}
-                        onChange={(e) =>
-                          handleImageUpload(
-                            e.target.files?.[0] ?? null,
-                            "logoUrl",
-                            "registration/logo",
-                          )
+                      <ImageUpload
+                        value={watch("logoUrl") || ""}
+                        onChange={(url) =>
+                          setValue("logoUrl", url, { shouldDirty: true })
                         }
+                        context="registration/logo"
                       />
                     </div>
 
@@ -1214,17 +1186,12 @@ export default function SetupProfilePage() {
                       >
                         Cover Image
                       </Label>
-                      <Input
-                        type="file"
-                        accept="image/jpeg,image/png,image/webp"
-                        disabled={uploadingField === "coverImageUrl"}
-                        onChange={(e) =>
-                          handleImageUpload(
-                            e.target.files?.[0] ?? null,
-                            "coverImageUrl",
-                            "registration/cover",
-                          )
+                      <ImageUpload
+                        value={watch("coverImageUrl") || ""}
+                        onChange={(url) =>
+                          setValue("coverImageUrl", url, { shouldDirty: true })
                         }
+                        context="registration/cover"
                       />
                     </div>
 
@@ -2429,12 +2396,15 @@ export default function SetupProfilePage() {
                               `profileSections.college_overview.social.${idx}.platform`,
                             )}
                           />
-                          <Input
-                            placeholder="Icon"
-                            className="h-9"
-                            {...register(
-                              `profileSections.college_overview.social.${idx}.icon`,
-                            )}
+                          <IconPickerField
+                            value={overviewSocialWatch[idx]?.icon}
+                            onChange={(iconUrl) =>
+                              setValue(
+                                `profileSections.college_overview.social.${idx}.icon`,
+                                iconUrl,
+                                { shouldDirty: true },
+                              )
+                            }
                           />
                           <div>
                             <Input
