@@ -8,6 +8,7 @@ import {
   collegeListQuerySchema,
   streamListQuerySchema,
   createReferralCodeSchema,
+  performanceQuerySchema,
 } from "../validators/blink.validator";
 import { AssociateEmployeeController } from "../controllers/associate-employee.controller";
 
@@ -24,6 +25,7 @@ router.get(
   "/performance",
   authenticate,
   authorizeUserType("blink_employee"),
+  validate(performanceQuerySchema, "query"),
   AssociateEmployeeController.getPerformance,
 );
 

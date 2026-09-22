@@ -2177,6 +2177,9 @@ function transformPublicAllianceTab(raw: Record<string, unknown>): {
     const legalDocs = Array.isArray(details.legal_documents)
       ? (details.legal_documents as Record<string, unknown>[])
       : [];
+    const happenings = Array.isArray(details.happenings)
+      ? (details.happenings as Record<string, unknown>[])
+      : [];
 
     const category = asText(details.category) || asText(alliance.tag);
     const categoryLower = category.toLowerCase();
@@ -2217,6 +2220,16 @@ function transformPublicAllianceTab(raw: Record<string, unknown>): {
           title: asText(activity.title),
           thumbnail: asText(activity.image || activity.thumbnail),
           link: asText(activity.link),
+        })),
+      },
+      happenings: {
+        items: happenings.map((happening) => ({
+          category: asText(happening.category),
+          date: asText(happening.date),
+          title: asText(happening.title),
+          description: asText(happening.description),
+          image: asText(happening.image),
+          link: asText(happening.link),
         })),
       },
     };

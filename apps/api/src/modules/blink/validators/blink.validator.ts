@@ -92,6 +92,18 @@ export const dashboardSummaryQuerySchema = z
 
 export type DashboardSummaryQuery = z.infer<typeof dashboardSummaryQuerySchema>;
 
+export const performanceQuerySchema = z
+  .object({
+    from: z.coerce.date().optional(),
+    to: z.coerce.date().optional(),
+  })
+  .refine((d) => !d.from || !d.to || d.from <= d.to, {
+    message: "`from` must be before or equal to `to`",
+    path: ["from"],
+  });
+
+export type PerformanceQuery = z.infer<typeof performanceQuerySchema>;
+
 export const ambassadorReferralStatsQuerySchema = z
   .object({
     from: z.string().date("from must be YYYY-MM-DD").optional(),

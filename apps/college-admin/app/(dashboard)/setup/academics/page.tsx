@@ -238,6 +238,12 @@ export default function SetupAcademicsPage() {
           if (act.link && !isValidUrl(act.link))
             return `${label}: activity "${act.title || "untitled"}" link is invalid`;
         }
+        for (const happening of a.details?.happenings || []) {
+          if (!happening.title?.trim())
+            return `${label}: every happening needs a title`;
+          if (happening.link && !isValidUrl(happening.link))
+            return `${label}: happening "${happening.title || "untitled"}" link is invalid`;
+        }
       }
     }
 

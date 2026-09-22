@@ -2,7 +2,13 @@
 
 import { useState } from "react";
 import Image from "next/image";
-import { ChevronDown, ExternalLink, FileText, Handshake } from "lucide-react";
+import {
+  Calendar,
+  ChevronDown,
+  ExternalLink,
+  FileText,
+  Handshake,
+} from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import type { PublicAlliancePartner } from "@beaconu/types";
@@ -35,6 +41,7 @@ export function AllianceSection({ partners }: AllianceSectionProps) {
           const focusAreas = partner.key_focus_areas?.items ?? [];
           const docs = partner.legal_and_documentation?.items ?? [];
           const activities = partner.alliance_activities?.items ?? [];
+          const happenings = partner.happenings?.items ?? [];
 
           return (
             <div
@@ -178,6 +185,60 @@ export function AllianceSection({ partners }: AllianceSectionProps) {
                             <p className="p-2.5 text-xs font-medium">
                               {activity.title}
                             </p>
+                          </a>
+                        ))}
+                      </div>
+                    </div>
+                  ) : null}
+
+                  {happenings.length > 0 ? (
+                    <div>
+                      <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                        Happenings
+                      </p>
+                      <div className="mt-2 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                        {happenings.map((happening, i) => (
+                          <a
+                            key={i}
+                            href={happening.link || undefined}
+                            target={happening.link ? "_blank" : undefined}
+                            rel={happening.link ? "noreferrer" : undefined}
+                            className="overflow-hidden rounded-xl border border-border/60"
+                          >
+                            {happening.image ? (
+                              <div className="relative h-24 w-full bg-muted">
+                                <Image
+                                  src={happening.image}
+                                  alt={happening.title ?? "Happening"}
+                                  fill
+                                  sizes="200px"
+                                  className="object-cover"
+                                />
+                              </div>
+                            ) : null}
+                            <div className="space-y-1 p-2.5">
+                              <div className="flex items-center justify-between gap-2">
+                                {happening.category ? (
+                                  <span className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
+                                    {happening.category}
+                                  </span>
+                                ) : null}
+                                {happening.date ? (
+                                  <span className="flex items-center gap-1 text-[10px] text-muted-foreground">
+                                    <Calendar className="h-3 w-3" />
+                                    {happening.date}
+                                  </span>
+                                ) : null}
+                              </div>
+                              <p className="text-xs font-medium">
+                                {happening.title}
+                              </p>
+                              {happening.description ? (
+                                <p className="line-clamp-2 text-xs text-muted-foreground">
+                                  {happening.description}
+                                </p>
+                              ) : null}
+                            </div>
                           </a>
                         ))}
                       </div>
