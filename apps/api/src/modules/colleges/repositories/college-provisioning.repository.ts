@@ -190,12 +190,18 @@ export class CollegeProvisioningRepository {
     });
   }
 
-  static async findStaffByEmail(email: string) {
+  static async findStaffByEmail(email: string, collegeSlug: string) {
     return prisma.staffMember.findFirst({
       where: {
         email: {
           equals: email.trim(),
           mode: "insensitive",
+        },
+        college: {
+          slug: {
+            equals: collegeSlug.trim(),
+            mode: "insensitive",
+          },
         },
       },
       include: {
