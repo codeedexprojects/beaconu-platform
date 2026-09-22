@@ -331,8 +331,14 @@ export class BlinkService {
     };
   }
 
-  static async getOwnPerformance(employeeId: string) {
-    const employee = await BlinkRepository.findOwnPerformanceData(employeeId);
+  static async getOwnPerformance(
+    employeeId: string,
+    filters: { from?: Date; to?: Date },
+  ) {
+    const employee = await BlinkRepository.findOwnPerformanceData(
+      employeeId,
+      filters,
+    );
     if (!employee) throw new NotFoundError("User not found");
 
     const { referrals, commissions } = employee;

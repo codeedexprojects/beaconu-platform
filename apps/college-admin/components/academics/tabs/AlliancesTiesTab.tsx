@@ -31,6 +31,15 @@ const allianceActivitySchema = z.object({
   link: z.string().optional(),
 });
 
+const allianceHappeningSchema = z.object({
+  category: z.string().optional(),
+  date: z.string().optional(),
+  title: z.string().min(1, "Title is required"),
+  description: z.string().optional(),
+  image: z.string().optional(),
+  link: z.string().url("Enter a valid URL").optional().or(z.literal("")),
+});
+
 const allianceDetailsSchema = z.object({
   category: z.string().optional(),
   about: z.string().optional(),
@@ -43,6 +52,7 @@ const allianceDetailsSchema = z.object({
       activities: z.array(allianceActivitySchema).optional(),
     })
     .optional(),
+  happenings: z.array(allianceHappeningSchema).optional(),
 });
 
 const allianceSchema = z.object({
@@ -128,6 +138,9 @@ function AllianceFields({
   const [deleteActivityIdx, setDeleteActivityIdx] = useState<number | null>(
     null,
   );
+  const [deleteHappeningIdx, setDeleteHappeningIdx] = useState<number | null>(
+    null,
+  );
 
   const focusAreasArray = useFieldArray({
     control,
@@ -141,6 +154,10 @@ function AllianceFields({
     control,
     name: `alliances.${allianceIdx}.details.alliance_activities.activities`,
   });
+  const happeningsArray = useFieldArray({
+    control,
+    name: `alliances.${allianceIdx}.details.happenings`,
+  });
 
   const watchedFocusAreas: string[] =
     watch(`alliances.${allianceIdx}.details.key_focus_areas`) || [];
@@ -149,6 +166,8 @@ function AllianceFields({
   const watchedActivities: any[] =
     watch(`alliances.${allianceIdx}.details.alliance_activities.activities`) ||
     [];
+  const watchedHappenings: any[] =
+    watch(`alliances.${allianceIdx}.details.happenings`) || [];
   const allianceErrors = errors?.alliances?.[allianceIdx];
 
   return (
@@ -420,6 +439,111 @@ function AllianceFields({
         )}
       </div>
 
+      <div className="space-y-2">
+        <div className="flex justify-between items-center">
+          <Label className="text-sm font-semibold">Happenings</Label>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            disabled={isLastItemIncomplete(watchedHappenings, "title")}
+            onClick={() =>
+              happeningsArray.append({
+                category: "",
+                date: "",
+                title: "",
+                description: "",
+                image: "",
+                link: "",
+              })
+            }
+          >
+            <Plus className="h-4 w-4 mr-1" /> Add Happening
+          </Button>
+        </div>
+        {happeningsArray.fields.length === 0 ? (
+          <AlliancesEmptyState label="happenings" icon={CalendarDays} />
+        ) : (
+          happeningsArray.fields.map((field, hIdx) => (
+            <div
+              key={field.id}
+              className="space-y-2 border p-3 rounded-lg bg-background"
+            >
+              <div className="grid grid-cols-2 gap-2">
+                <Input
+                  placeholder="Category (e.g. Certification / Event)"
+                  {...register(
+                    `alliances.${allianceIdx}.details.happenings.${hIdx}.category`,
+                  )}
+                />
+                <Input
+                  placeholder="Date Label (e.g. Oct 12, 2023)"
+                  {...register(
+                    `alliances.${allianceIdx}.details.happenings.${hIdx}.date`,
+                  )}
+                />
+              </div>
+              <div className="space-y-1">
+                <Input
+                  placeholder="Happening Title"
+                  {...register(
+                    `alliances.${allianceIdx}.details.happenings.${hIdx}.title`,
+                  )}
+                />
+                {allianceErrors?.details?.happenings?.[hIdx]?.title && (
+                  <p className="text-xs text-destructive">
+                    {allianceErrors.details.happenings[hIdx]?.title?.message}
+                  </p>
+                )}
+              </div>
+              <Textarea
+                placeholder="Description..."
+                {...register(
+                  `alliances.${allianceIdx}.details.happenings.${hIdx}.description`,
+                )}
+              />
+              <div className="grid grid-cols-[1fr_2fr_auto] gap-2 items-center">
+                <ImageUpload
+                  value={
+                    watch(
+                      `alliances.${allianceIdx}.details.happenings.${hIdx}.image`,
+                    ) || ""
+                  }
+                  onChange={(url) =>
+                    setValue(
+                      `alliances.${allianceIdx}.details.happenings.${hIdx}.image`,
+                      url,
+                    )
+                  }
+                  context={`alliances-ties/happening-image-${allianceIdx}-${hIdx}`}
+                />
+                <div className="space-y-1">
+                  <Input
+                    placeholder="Read more link"
+                    {...register(
+                      `alliances.${allianceIdx}.details.happenings.${hIdx}.link`,
+                    )}
+                  />
+                  {allianceErrors?.details?.happenings?.[hIdx]?.link && (
+                    <p className="text-xs text-destructive">
+                      {allianceErrors.details.happenings[hIdx]?.link?.message}
+                    </p>
+                  )}
+                </div>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => setDeleteHappeningIdx(hIdx)}
+                >
+                  <Trash2 className="h-4 w-4 text-destructive" />
+                </Button>
+              </div>
+            </div>
+          ))
+        )}
+      </div>
+
       <ConfirmDialog
         open={deleteFocusAreaIdx !== null}
         title="Remove Focus Area"
@@ -459,6 +583,20 @@ function AllianceFields({
           if (deleteActivityIdx === null) return;
           activitiesArray.remove(deleteActivityIdx);
           setDeleteActivityIdx(null);
+        }}
+      />
+
+      <ConfirmDialog
+        open={deleteHappeningIdx !== null}
+        title="Remove Happening"
+        description="Remove this happening? This cannot be undone."
+        confirmLabel="Remove"
+        variant="destructive"
+        onCancel={() => setDeleteHappeningIdx(null)}
+        onConfirm={() => {
+          if (deleteHappeningIdx === null) return;
+          happeningsArray.remove(deleteHappeningIdx);
+          setDeleteHappeningIdx(null);
         }}
       />
     </div>
@@ -536,6 +674,7 @@ export function AlliancesTiesTab({
                   happenings_link: "",
                   activities: [],
                 },
+                happenings: [],
               },
             })
           }

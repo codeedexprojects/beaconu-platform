@@ -15,16 +15,27 @@ headers {
   Authorization: Bearer {{accessToken}}
 }
 
+params:query {
+  ~from:
+  ~to:
+}
+
 docs {
-  Returns the performance summary for the currently authenticated associate employee.
+  Returns the performance summary for the currently authenticated associate employee,
+  optionally scoped to a date range.
   Requires: blink_employee access token.
 
+  Query params:
+  - from (optional): ISO date/datetime — only referrals/commissions created on or after this date are counted
+  - to (optional): ISO date/datetime — only referrals/commissions created on or before this date are counted
+  Omit both for all time. 400 when from is after to or a date is malformed.
+
   Response includes:
-    referrals.total          — total referrals created by this employee
+    referrals.total          — total referrals created by this employee (in range)
     referrals.byStatus       — breakdown: registered | confirmed | rejected | dropped_out
     referrals.conversionRate — confirmed / total (4 decimal places, 0 if no referrals)
-    commission.earned        — sum of credited commissions (INR)
-    commission.pending       — sum of pending commissions (INR)
+    commission.earned        — sum of credited commissions in range (INR)
+    commission.pending       — sum of pending commissions in range (INR)
 
   Tables: blink_users, referrals, commissions
 }

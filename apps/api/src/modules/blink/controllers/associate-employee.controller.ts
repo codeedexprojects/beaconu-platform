@@ -9,6 +9,7 @@ import type {
   UniversityListQuery,
   StreamListQuery,
   CreateReferralCodeInput,
+  PerformanceQuery,
 } from "../validators/blink.validator";
 
 export class AssociateEmployeeController {
@@ -20,7 +21,11 @@ export class AssociateEmployeeController {
   }
 
   static async getPerformance(req: Request, res: Response) {
-    const result = await BlinkService.getOwnPerformance(req.userId!);
+    const { from, to } = req.query as unknown as PerformanceQuery;
+    const result = await BlinkService.getOwnPerformance(req.userId!, {
+      from,
+      to,
+    });
     return res
       .status(200)
       .json(ApiResponse.success("Performance fetched successfully", result));

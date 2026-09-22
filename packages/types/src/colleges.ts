@@ -1249,6 +1249,7 @@ export interface PublicAlliancePartner {
     view_all_cta?: { label?: string; link?: string };
     items?: PublicAllianceActivity[];
   };
+  happenings?: { items?: PublicHappeningItem[] };
 }
 
 export interface PublicOtherCourseItem {

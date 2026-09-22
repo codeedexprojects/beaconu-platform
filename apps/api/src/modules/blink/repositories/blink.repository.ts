@@ -206,13 +206,28 @@ export class BlinkRepository {
     });
   }
 
-  static async findOwnPerformanceData(employeeId: string) {
+  static async findOwnPerformanceData(
+    employeeId: string,
+    filters: { from?: Date; to?: Date } = {},
+  ) {
+    const { from, to } = filters;
+    const createdAt =
+      from || to
+        ? { ...(from ? { gte: from } : {}), ...(to ? { lte: to } : {}) }
+        : undefined;
+
     return prisma.blinkUser.findUnique({
       where: { id: employeeId },
       include: {
         blinkRole: { select: { slug: true } },
-        referrals: { select: { id: true, status: true } },
-        commissions: { select: { netPayout: true, status: true } },
+        referrals: {
+          where: createdAt ? { createdAt } : undefined,
+          select: { id: true, status: true },
+        },
+        commissions: {
+          where: createdAt ? { createdAt } : undefined,
+          select: { netPayout: true, status: true },
+        },
       },
     });
   }
