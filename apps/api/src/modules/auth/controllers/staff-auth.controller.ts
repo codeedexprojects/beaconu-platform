@@ -31,7 +31,10 @@ export class StaffAuthController {
       collegeSlug: string;
     };
 
-    const staff = await CollegeProvisioningRepository.findStaffByEmail(email);
+    const staff = await CollegeProvisioningRepository.findStaffByEmail(
+      email,
+      collegeSlug,
+    );
     if (!staff || !staff.passwordHash) {
       throw new UnauthorizedError("Invalid credentials");
     }
@@ -41,13 +44,6 @@ export class StaffAuthController {
 
     if (staff.status !== ACCOUNT_STATUS.ACTIVE) {
       throw new ForbiddenError(`Account is ${staff.status}`);
-    }
-
-    const normalizedRequestCollegeSlug = collegeSlug.trim().toLowerCase();
-    const normalizedStaffCollegeSlug = staff.college.slug.trim().toLowerCase();
-
-    if (normalizedStaffCollegeSlug !== normalizedRequestCollegeSlug) {
-      throw new UnauthorizedError("Invalid credentials");
     }
 
     const permissions = staff.collegeRole.permissions.map(
