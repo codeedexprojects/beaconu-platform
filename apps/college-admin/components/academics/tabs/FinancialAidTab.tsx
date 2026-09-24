@@ -164,6 +164,11 @@ function PortEntryFields({
             variant="outline"
             size="sm"
             disabled={isLastStringIncomplete(watchedTerms)}
+            title={
+              isLastStringIncomplete(watchedTerms)
+                ? "Fill in the previous entry before adding another"
+                : undefined
+            }
             onClick={() => termsArray.append("")}
           >
             <Plus className="h-4 w-4 mr-1" /> Add
@@ -203,6 +208,11 @@ function PortEntryFields({
             variant="outline"
             size="sm"
             disabled={isLastItemIncomplete(watchedRanges, "range_label")}
+            title={
+              isLastItemIncomplete(watchedRanges, "range_label")
+                ? "Fill in the previous entry before adding another"
+                : undefined
+            }
             onClick={() =>
               scoreRangesArray.append({
                 id: "",
@@ -428,6 +438,11 @@ function ConcessionItemFields({
             variant="outline"
             size="sm"
             disabled={isLastStringIncomplete(watchedCriteria)}
+            title={
+              isLastStringIncomplete(watchedCriteria)
+                ? "Fill in the previous entry before adding another"
+                : undefined
+            }
             onClick={() => criteriaArray.append("")}
           >
             <Plus className="h-4 w-4 mr-1" /> Add
@@ -550,6 +565,11 @@ export function FinancialAidTab({
               variant="outline"
               size="sm"
               disabled={isLastItemIncomplete(watchedPortEntries, "name")}
+              title={
+                isLastItemIncomplete(watchedPortEntries, "name")
+                  ? "Fill in the previous entry before adding another"
+                  : undefined
+              }
               onClick={() =>
                 portEntriesArray.append({
                   id: "",
@@ -589,6 +609,11 @@ export function FinancialAidTab({
             variant="outline"
             size="sm"
             disabled={isLastItemIncomplete(watchedConcessionItems, "name")}
+            title={
+              isLastItemIncomplete(watchedConcessionItems, "name")
+                ? "Fill in the previous entry before adding another"
+                : undefined
+            }
             onClick={() =>
               concessionItemsArray.append({
                 name: "",

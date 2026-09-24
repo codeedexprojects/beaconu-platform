@@ -194,6 +194,11 @@ function SemesterFields({
             variant="outline"
             size="sm"
             disabled={isLastItemIncomplete(watchedSpecializations, "title")}
+            title={
+              isLastItemIncomplete(watchedSpecializations, "title")
+                ? "Fill in the previous entry before adding another"
+                : undefined
+            }
             onClick={() =>
               specializationsArray.append({
                 title: "",
@@ -378,6 +383,11 @@ export function AcademicsCurriculumTab({
             variant="outline"
             size="sm"
             disabled={isLastItemIncomplete(watchedSemesters, "name")}
+            title={
+              isLastItemIncomplete(watchedSemesters, "name")
+                ? "Fill in the previous entry before adding another"
+                : undefined
+            }
             onClick={() => {
               const n = semestersArray.fields.length + 1;
               semestersArray.append({
@@ -420,6 +430,11 @@ export function AcademicsCurriculumTab({
             variant="outline"
             size="sm"
             disabled={isLastItemIncomplete(watchedCourseStructure, "title")}
+            title={
+              isLastItemIncomplete(watchedCourseStructure, "title")
+                ? "Fill in the previous entry before adding another"
+                : undefined
+            }
             onClick={() =>
               courseStructureArray.append({ title: "", credits: "" })
             }
@@ -478,6 +493,11 @@ export function AcademicsCurriculumTab({
             variant="outline"
             size="sm"
             disabled={isLastStringIncomplete(watchedValueAddedCourses)}
+            title={
+              isLastStringIncomplete(watchedValueAddedCourses)
+                ? "Fill in the previous entry before adding another"
+                : undefined
+            }
             onClick={() => valueAddedCoursesArray.append("")}
           >
             <Plus className="h-4 w-4 mr-1" /> Add Value Course
@@ -519,6 +539,11 @@ export function AcademicsCurriculumTab({
               variant="outline"
               size="sm"
               disabled={isLastStringIncomplete(watchedGlobalCertifications)}
+              title={
+                isLastStringIncomplete(watchedGlobalCertifications)
+                  ? "Fill in the previous entry before adding another"
+                  : undefined
+              }
               onClick={() => globalCertificationsArray.append("")}
             >
               <Plus className="h-3 w-3 mr-1" /> Add Certification
@@ -557,6 +582,11 @@ export function AcademicsCurriculumTab({
               variant="outline"
               size="sm"
               disabled={isLastStringIncomplete(watchedPostgraduation)}
+              title={
+                isLastStringIncomplete(watchedPostgraduation)
+                  ? "Fill in the previous entry before adding another"
+                  : undefined
+              }
               onClick={() => postgraduationArray.append("")}
             >
               <Plus className="h-3 w-3 mr-1" /> Add Postgrad Path
@@ -597,6 +627,11 @@ export function AcademicsCurriculumTab({
             variant="outline"
             size="sm"
             disabled={isLastItemIncomplete(watchedFlexibleExitOptions, "title")}
+            title={
+              isLastItemIncomplete(watchedFlexibleExitOptions, "title")
+                ? "Fill in the previous entry before adding another"
+                : undefined
+            }
             onClick={() =>
               flexibleExitOptionsArray.append({ title: "", description: "" })
             }

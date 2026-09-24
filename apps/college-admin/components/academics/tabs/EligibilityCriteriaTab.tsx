@@ -156,6 +156,11 @@ function QuotaFields({
           variant="outline"
           size="sm"
           disabled={isLastItemIncomplete(watchedCriteria, "heading")}
+          title={
+            isLastItemIncomplete(watchedCriteria, "heading")
+              ? "Fill in the previous entry before adding another"
+              : undefined
+          }
           onClick={() => criteriaArray.append({ heading: "", description: "" })}
         >
           <Plus className="h-4 w-4 mr-1" /> Add Criterion
@@ -236,6 +241,11 @@ export function EligibilityCriteriaTab({
             variant="outline"
             size="sm"
             disabled={isLastItemIncomplete(watchedQuotas, "label")}
+            title={
+              isLastItemIncomplete(watchedQuotas, "label")
+                ? "Fill in the previous entry before adding another"
+                : undefined
+            }
             onClick={() =>
               quotasArray.append({ id: "", label: "", criteria: [] })
             }
@@ -278,6 +288,11 @@ export function EligibilityCriteriaTab({
             variant="outline"
             size="sm"
             disabled={isLastItemIncomplete(watchedForeignCriteria, "heading")}
+            title={
+              isLastItemIncomplete(watchedForeignCriteria, "heading")
+                ? "Fill in the previous entry before adding another"
+                : undefined
+            }
             onClick={() =>
               foreignCriteriaArray.append({ heading: "", description: "" })
             }

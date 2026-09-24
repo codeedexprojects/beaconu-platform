@@ -121,6 +121,11 @@ export function AdmissionsTimelineTab({
             variant="outline"
             size="sm"
             disabled={isLastItemIncomplete(watchedBatches, "label")}
+            title={
+              isLastItemIncomplete(watchedBatches, "label")
+                ? "Fill in the previous entry before adding another"
+                : undefined
+            }
             onClick={() =>
               admissionBatchesArray.append({
                 label: "",
@@ -259,6 +264,11 @@ export function AdmissionsTimelineTab({
               variant="outline"
               size="sm"
               disabled={isLastItemIncomplete(watchedKeyDateItems, "label")}
+              title={
+                isLastItemIncomplete(watchedKeyDateItems, "label")
+                  ? "Fill in the previous entry before adding another"
+                  : undefined
+              }
               onClick={() =>
                 keyDateItemsArray.append({
                   date: "",

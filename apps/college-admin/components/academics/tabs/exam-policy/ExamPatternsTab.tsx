@@ -188,6 +188,11 @@ function ComponentFields({
             size="sm"
             className="h-6 text-xs"
             disabled={isLastItemIncomplete(watchedSubComponents, "name")}
+            title={
+              isLastItemIncomplete(watchedSubComponents, "name")
+                ? "Fill in the previous entry before adding another"
+                : undefined
+            }
             onClick={() =>
               subComponentsArray.append({ name: "", marks: undefined })
             }
@@ -319,6 +324,11 @@ function AssessmentSectionFields({
             variant="outline"
             size="sm"
             disabled={isLastItemIncomplete(watchedComponents, "name")}
+            title={
+              isLastItemIncomplete(watchedComponents, "name")
+                ? "Fill in the previous entry before adding another"
+                : undefined
+            }
             onClick={() =>
               componentsArray.append({
                 name: "",
@@ -452,6 +462,11 @@ function ExternalExamSectionFields({
             variant="outline"
             size="sm"
             disabled={isLastItemIncomplete(watchedRows, "section")}
+            title={
+              isLastItemIncomplete(watchedRows, "section")
+                ? "Fill in the previous entry before adding another"
+                : undefined
+            }
             onClick={() =>
               rowsArray.append({
                 section: "",
@@ -655,6 +670,11 @@ function PatternFields({
             variant="outline"
             size="sm"
             disabled={isLastItemIncomplete(watchedSegments, "label")}
+            title={
+              isLastItemIncomplete(watchedSegments, "label")
+                ? "Fill in the previous entry before adding another"
+                : undefined
+            }
             onClick={() =>
               segmentsArray.append({ label: "", percent: undefined })
             }
@@ -723,6 +743,11 @@ function PatternFields({
             variant="outline"
             size="sm"
             disabled={isLastItemIncomplete(watchedSubtotals, "label")}
+            title={
+              isLastItemIncomplete(watchedSubtotals, "label")
+                ? "Fill in the previous entry before adding another"
+                : undefined
+            }
             onClick={() =>
               subtotalsArray.append({ label: "", marks: undefined })
             }
@@ -774,6 +799,11 @@ function PatternFields({
             variant="outline"
             size="sm"
             disabled={isLastItemIncomplete(watchedSummaryCards, "label")}
+            title={
+              isLastItemIncomplete(watchedSummaryCards, "label")
+                ? "Fill in the previous entry before adding another"
+                : undefined
+            }
             onClick={() => summaryCardsArray.append({ label: "", value: "" })}
           >
             <Plus className="h-3 w-3 mr-1" /> Add Card
@@ -826,6 +856,11 @@ function PatternFields({
               watchedInternalAssessment,
               "section",
             )}
+            title={
+              isLastItemIncomplete(watchedInternalAssessment, "section")
+                ? "Fill in the previous entry before adding another"
+                : undefined
+            }
             onClick={() =>
               internalAssessmentArray.append({ section: "", components: [] })
             }
@@ -866,6 +901,11 @@ function PatternFields({
               watchedExternalExamination,
               "section",
             )}
+            title={
+              isLastItemIncomplete(watchedExternalExamination, "section")
+                ? "Fill in the previous entry before adding another"
+                : undefined
+            }
             onClick={() =>
               externalExaminationArray.append({
                 section: "",
@@ -1015,6 +1055,11 @@ export function ExamPatternsTab({
           variant="outline"
           size="sm"
           disabled={isLastItemIncomplete(watchedPatterns, "pattern_type")}
+          title={
+            isLastItemIncomplete(watchedPatterns, "pattern_type")
+              ? "Fill in the previous entry before adding another"
+              : undefined
+          }
           onClick={() => {
             const nextIdx = patternsArray.fields.length;
             patternsArray.append({

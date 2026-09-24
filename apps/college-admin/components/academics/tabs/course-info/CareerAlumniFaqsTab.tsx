@@ -207,6 +207,11 @@ function AlumnusFields({
             variant="outline"
             size="sm"
             disabled={isLastItemIncomplete(watchedProgression, "year")}
+            title={
+              isLastItemIncomplete(watchedProgression, "year")
+                ? "Fill in the previous entry before adding another"
+                : undefined
+            }
             onClick={() =>
               progressionArray.append({ year: "", description: "" })
             }
@@ -348,6 +353,11 @@ export function CareerAlumniFaqsTab({
             variant="outline"
             size="sm"
             disabled={isLastItemIncomplete(watchedOpportunities, "role")}
+            title={
+              isLastItemIncomplete(watchedOpportunities, "role")
+                ? "Fill in the previous entry before adding another"
+                : undefined
+            }
             onClick={() =>
               opportunitiesArray.append({ role: "", salary_range: "" })
             }
@@ -401,6 +411,11 @@ export function CareerAlumniFaqsTab({
             variant="outline"
             size="sm"
             disabled={isLastItemIncomplete(watchedAlumni, "name")}
+            title={
+              isLastItemIncomplete(watchedAlumni, "name")
+                ? "Fill in the previous entry before adding another"
+                : undefined
+            }
             onClick={() =>
               alumniArray.append({
                 name: "",
@@ -451,6 +466,11 @@ export function CareerAlumniFaqsTab({
             variant="outline"
             size="sm"
             disabled={isLastItemIncomplete(watchedFaqItems, "question")}
+            title={
+              isLastItemIncomplete(watchedFaqItems, "question")
+                ? "Fill in the previous entry before adding another"
+                : undefined
+            }
             onClick={() => faqItemsArray.append({ question: "", answer: "" })}
           >
             <Plus className="h-4 w-4 mr-1" /> Add FAQ

@@ -98,6 +98,11 @@ export function AccreditationsTab({
             variant="outline"
             size="sm"
             disabled={isLastItemIncomplete(watchedItems, "name")}
+            title={
+              isLastItemIncomplete(watchedItems, "name")
+                ? "Fill in the previous entry before adding another"
+                : undefined
+            }
             onClick={() =>
               itemsArray.append({ name: "", year: "", description: "" })
             }

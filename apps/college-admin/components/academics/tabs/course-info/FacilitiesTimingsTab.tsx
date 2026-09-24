@@ -188,6 +188,11 @@ export function FacilitiesTimingsTab({
             variant="outline"
             size="sm"
             disabled={isLastStringIncomplete(watchedIndustryTools)}
+            title={
+              isLastStringIncomplete(watchedIndustryTools)
+                ? "Fill in the previous entry before adding another"
+                : undefined
+            }
             onClick={() => industryToolsArray.append("")}
           >
             <Plus className="h-4 w-4 mr-1" /> Add Industry Tool
@@ -223,6 +228,11 @@ export function FacilitiesTimingsTab({
             variant="outline"
             size="sm"
             disabled={isLastStringIncomplete(watchedLabFacilities)}
+            title={
+              isLastStringIncomplete(watchedLabFacilities)
+                ? "Fill in the previous entry before adding another"
+                : undefined
+            }
             onClick={() => labFacilitiesArray.append("")}
           >
             <Plus className="h-4 w-4 mr-1" /> Add Lab Facility
@@ -258,6 +268,11 @@ export function FacilitiesTimingsTab({
             variant="outline"
             size="sm"
             disabled={isLastStringIncomplete(watchedClassroomFacilities)}
+            title={
+              isLastStringIncomplete(watchedClassroomFacilities)
+                ? "Fill in the previous entry before adding another"
+                : undefined
+            }
             onClick={() => classroomFacilitiesArray.append("")}
           >
             <Plus className="h-4 w-4 mr-1" /> Add Classroom Facility

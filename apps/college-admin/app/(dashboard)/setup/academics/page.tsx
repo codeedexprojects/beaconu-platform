@@ -131,6 +131,8 @@ export default function SetupAcademicsPage() {
   // character. Nothing on this page renders from these edits — they are read
   // in the save/validate handlers — so a ref is enough.
   const localTabStateRef = useRef<any>({});
+  // Tabs with unsaved edits — navigation only calls the save API for these.
+  const dirtyTabsRef = useRef<Set<string>>(new Set());
   // What the tab forms are seeded from (defaultValues at mount) — only ever
   // the server payload, never the in-progress edits above. Bumping the
   // version remounts the tabs so freshly loaded data reaches them.
@@ -141,9 +143,44 @@ export default function SetupAcademicsPage() {
   useEffect(() => {
     const serverTabData = tabDataResponse?.tabData ?? {};
     localTabStateRef.current = serverTabData;
+    dirtyTabsRef.current.clear();
     setSeedTabState(serverTabData);
     setTabSeedVersion((version) => version + 1);
   }, [tabDataResponse]);
+
+  // Keep the open course + tab in the URL so a refresh lands back on the
+  // same tab. Restore once, after the course list has loaded.
+  const [urlRestored, setUrlRestored] = useState(false);
+
+  useEffect(() => {
+    if (urlRestored || isLoadingCourses) return;
+    const params = new URLSearchParams(window.location.search);
+    const courseId = params.get("course");
+    const tab = params.get("tab");
+    const course = courseId
+      ? courses.find((c: any) => c.id === courseId)
+      : null;
+    if (course) {
+      setEditingCourse(course);
+      if (COURSE_TABS.some((t) => t.id === tab)) {
+        setActiveTab(tab as CourseTabId);
+      }
+    }
+    setUrlRestored(true);
+  }, [urlRestored, isLoadingCourses, courses]);
+
+  useEffect(() => {
+    if (!urlRestored) return;
+    const url = new URL(window.location.href);
+    if (editingCourse?.id) {
+      url.searchParams.set("course", editingCourse.id);
+      url.searchParams.set("tab", activeTab);
+    } else {
+      url.searchParams.delete("course");
+      url.searchParams.delete("tab");
+    }
+    window.history.replaceState(window.history.state, "", url);
+  }, [urlRestored, editingCourse?.id, activeTab]);
 
   const handleBasicSubmit = (data: CourseFormData) => {
     if (editingCourse) {
@@ -327,6 +364,7 @@ export default function SetupAcademicsPage() {
       },
       {
         onSuccess: () => {
+          dirtyTabsRef.current.delete(activeTab);
           toast.success(
             `${COURSE_TABS.find((t) => t.id === activeTab)?.label} tab saved!`,
           );
@@ -366,6 +404,7 @@ export default function SetupAcademicsPage() {
   };
 
   const updateActiveTabPayload = (updates: any) => {
+    dirtyTabsRef.current.add(activeTab);
     localTabStateRef.current = {
       ...localTabStateRef.current,
       [activeTab]: {
@@ -389,7 +428,7 @@ export default function SetupAcademicsPage() {
       return;
     }
 
-    if (editingCourse?.id) {
+    if (editingCourse?.id && dirtyTabsRef.current.has(activeTab)) {
       const tabPayload = getActiveTabPayload();
       const dataWithId = { id: activeTab, ...tabPayload };
       updateTab(
@@ -400,6 +439,7 @@ export default function SetupAcademicsPage() {
         },
         {
           onSuccess: () => {
+            dirtyTabsRef.current.delete(activeTab);
             toast.success(
               `${COURSE_TABS.find((t) => t.id === activeTab)?.label} tab saved!`,
             );
@@ -423,7 +463,7 @@ export default function SetupAcademicsPage() {
       return;
     }
 
-    if (editingCourse?.id) {
+    if (editingCourse?.id && dirtyTabsRef.current.has(activeTab)) {
       const tabPayload = getActiveTabPayload();
       const dataWithId = { id: activeTab, ...tabPayload };
       updateTab(
@@ -434,6 +474,7 @@ export default function SetupAcademicsPage() {
         },
         {
           onSuccess: () => {
+            dirtyTabsRef.current.delete(activeTab);
             toast.success(
               `${COURSE_TABS.find((t) => t.id === activeTab)?.label} tab saved!`,
             );

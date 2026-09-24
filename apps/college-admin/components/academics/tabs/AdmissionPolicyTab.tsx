@@ -118,6 +118,11 @@ function LevelFields({
           variant="outline"
           size="sm"
           disabled={isLastItemIncomplete(watchedExams, "name")}
+          title={
+            isLastItemIncomplete(watchedExams, "name")
+              ? "Fill in the previous entry before adding another"
+              : undefined
+          }
           onClick={() =>
             examsArray.append({
               name: "",
@@ -303,6 +308,11 @@ export function AdmissionPolicyTab({
             variant="outline"
             size="sm"
             disabled={isLastItemIncomplete(watchedRows, "quota_category")}
+            title={
+              isLastItemIncomplete(watchedRows, "quota_category")
+                ? "Fill in the previous entry before adding another"
+                : undefined
+            }
             onClick={() =>
               rowsArray.append({
                 quota_category: "",
@@ -406,6 +416,11 @@ export function AdmissionPolicyTab({
             variant="outline"
             size="sm"
             disabled={isLastItemIncomplete(watchedLevels, "level_label")}
+            title={
+              isLastItemIncomplete(watchedLevels, "level_label")
+                ? "Fill in the previous entry before adding another"
+                : undefined
+            }
             onClick={() => levelsArray.append({ level_label: "", exams: [] })}
           >
             <Plus className="h-4 w-4 mr-1" /> Add Level

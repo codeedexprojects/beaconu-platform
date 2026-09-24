@@ -141,6 +141,11 @@ export function GuidelinesTab({
             variant="outline"
             size="sm"
             disabled={isLastItemIncomplete(watchedPolicies, "title")}
+            title={
+              isLastItemIncomplete(watchedPolicies, "title")
+                ? "Fill in the previous entry before adding another"
+                : undefined
+            }
             onClick={() =>
               policiesArray.append({
                 badge: "",

@@ -294,7 +294,9 @@ export class CollegeRolesController {
       throw new NotFoundError("Role not found");
     }
 
-    if (role.isSystemRole && body.name) {
+    const isRenaming = !!body.name && body.name !== role.name;
+
+    if (role.isSystemRole && isRenaming) {
       throw new ForbiddenError("Cannot rename system-defined roles");
     }
 
@@ -314,7 +316,7 @@ export class CollegeRolesController {
       const r = await tx.collegeRole.update({
         where: { id },
         data: {
-          ...(body.name
+          ...(isRenaming && body.name
             ? { name: body.name, slug: generateSlug(body.name) }
             : {}),
           ...(body.isActive !== undefined ? { isActive: body.isActive } : {}),
