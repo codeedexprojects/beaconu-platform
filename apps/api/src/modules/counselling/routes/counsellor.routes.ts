@@ -114,6 +114,14 @@ router.get(
   CounsellorSessionController.getWallet,
 );
 
+router.get(
+  "/wallet/transactions/:transactionId/invoice",
+  authenticate,
+  authorizeUserType("counsellor"),
+  authorizeCounsellorType("academic"),
+  CounsellorSessionController.downloadWithdrawalInvoice,
+);
+
 router.post(
   "/wallet/withdraw",
   authenticate,

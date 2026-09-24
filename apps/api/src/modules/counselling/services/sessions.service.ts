@@ -19,6 +19,7 @@ import {
 import { PushService } from "@/modules/notifications/services/push.service";
 import { EnrollmentService } from "@/modules/admissions/services/enrollment.service";
 import { SessionRepository } from "../repositories/session.repository";
+import { buildPayoutStatementPdf } from "../lib/payout-statement-template";
 import { CounsellingRepository } from "../repositories/counselling.repository";
 import { RefundRepository } from "../repositories/refund.repository";
 import {
@@ -250,6 +251,10 @@ function formatWallet(wallet: any) {
           session_id: txn.sessionId,
           student_name: txn.session?.student?.fullName ?? null,
           withdrawal_status: txn.withdrawalStatus,
+          invoice_url:
+            txn.withdrawalStatus === "approved"
+              ? `/api/v1/counsellor/wallet/transactions/${txn.id}/invoice`
+              : null,
           payout_details: txn.payoutDetails,
           balance_after: Number(txn.balanceAfter ?? 0),
           created_at: txn.createdAt,
@@ -1412,6 +1417,28 @@ export class SessionService {
         query.limit,
       ),
     };
+  }
+
+  static async getWithdrawalInvoice(
+    counsellorId: string,
+    transactionId: string,
+  ) {
+    const txn = await SessionRepository.findApprovedWithdrawalForCounsellor(
+      counsellorId,
+      transactionId,
+    );
+    if (!txn) throw new NotFoundError("Approved withdrawal not found");
+
+    const pdf = await buildPayoutStatementPdf({
+      transactionId: txn.id,
+      counsellor: txn.counsellor,
+      amount: Number(txn.amount),
+      approvedAt: txn.updatedAt,
+      requestedAt: txn.createdAt,
+      payoutDetails: (txn.payoutDetails ?? {}) as Record<string, string>,
+      reviewRemarks: txn.reviewRemarks,
+    });
+    return { pdf, filename: `payout-statement-${txn.id}.pdf` };
   }
 
   static async requestWithdrawal(

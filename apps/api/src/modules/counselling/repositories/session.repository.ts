@@ -787,6 +787,30 @@ export class SessionRepository {
     return { ...wallet, transactions, transactionsTotal: total };
   }
 
+  static async findApprovedWithdrawalForCounsellor(
+    counsellorId: string,
+    transactionId: string,
+  ) {
+    return prisma.counsellorWalletTransaction.findFirst({
+      where: {
+        id: transactionId,
+        counsellorId,
+        type: "debit",
+        withdrawalStatus: "approved",
+      },
+      include: {
+        counsellor: {
+          select: {
+            fullName: true,
+            email: true,
+            phoneNumber: true,
+            counsellorCode: true,
+          },
+        },
+      },
+    });
+  }
+
   /**
    * Request a withdrawal: decrements balance immediately and records a
    * pending withdrawal transaction. Balance is refunded if rejected later.

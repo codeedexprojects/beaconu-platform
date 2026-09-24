@@ -7,6 +7,7 @@ import {
   ambassadorProfileUpdateSchema,
   ambassadorReferralStatsQuerySchema,
   type CollegeListQuery,
+  type CourseListQuery,
   type CreateReferralCodeInput,
   type WalletTransactionQuery,
 } from "../validators/blink.validator";
@@ -59,11 +60,23 @@ export class AmbassadorController {
 
   static async listCoursesByCollege(req: Request, res: Response) {
     const collegeId = req.params["collegeId"] as string;
-    const result = await BlinkQuery.listCoursesForEmployee(collegeId);
+    const result = await BlinkQuery.listCoursesForEmployee(
+      collegeId,
+      req.query as CourseListQuery,
+    );
     if (!result) throw new NotFoundError("College not found");
     return res
       .status(200)
       .json(ApiResponse.success("Courses fetched successfully", result));
+  }
+
+  static async getCourseFilters(req: Request, res: Response) {
+    const collegeId = req.params["collegeId"] as string;
+    const result = await BlinkQuery.getCourseFilterOptions(collegeId);
+    if (!result) throw new NotFoundError("College not found");
+    return res
+      .status(200)
+      .json(ApiResponse.success("Course filters fetched successfully", result));
   }
 
   static async getCourseDetail(req: Request, res: Response) {

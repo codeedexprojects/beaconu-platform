@@ -114,6 +114,16 @@ export class CounsellorSessionController {
       .json(ApiResponse.success("Wallet retrieved", wallet));
   }
 
+  static async downloadWithdrawalInvoice(req: Request, res: Response) {
+    const { pdf, filename } = await SessionService.getWithdrawalInvoice(
+      req.userId!,
+      req.params["transactionId"] as string,
+    );
+    res.setHeader("Content-Type", "application/pdf");
+    res.setHeader("Content-Disposition", `attachment; filename="${filename}"`);
+    return res.status(200).send(pdf);
+  }
+
   static async requestWithdrawal(req: Request, res: Response) {
     const result = await SessionService.requestWithdrawal(
       req.userId!,

@@ -1,0 +1,36 @@
+meta {
+  name: Get Course Filters
+  type: http
+  seq: 20
+}
+
+get {
+  url: {{baseUrl}}/api/v1/blink/ambassador/colleges/{{blinkAmbassadorCollegeId}}/courses/filters
+  body: none
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  Authorization: Bearer {{accessToken}}
+}
+
+script:post-response {
+  if (res.status === 200) {
+    const data = res.getBody();
+    if (data.data && data.data.studyLevels && data.data.studyLevels[0]) {
+      bru.setEnvVar("blinkStudyLevelId", data.data.studyLevels[0].id);
+    }
+  }
+}
+
+docs {
+  Returns filter options for the college's course list, derived from the
+  college's active courses (every option matches at least one course).
+  Requires: blink_ambassador access token.
+
+  Response: studyLevels [{id, name, slug}] (UG, PG, ...),
+  programTypes [{id, name}], studyModes [string].
+
+  Tables: courses, study_levels, program_types
+}
