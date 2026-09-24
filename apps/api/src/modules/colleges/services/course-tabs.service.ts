@@ -1534,8 +1534,16 @@ function assertValidPercent(value: unknown, context: string): number {
 function validatePercentTotal(
   items: Record<string, unknown>[],
   context: string,
+  labelField: string,
 ): void {
   if (items.length === 0) return;
+  items.forEach((item, idx) => {
+    if (!asText(item[labelField]).trim()) {
+      throw new ValidationError(
+        `${context} #${idx + 1}: ${labelField} is required`,
+      );
+    }
+  });
   const total = items.reduce(
     (sum, item, idx) =>
       sum + assertValidPercent(item.percent, `${context} #${idx + 1}`),
@@ -1556,6 +1564,7 @@ function validateDemoGraphicsTabData(data: unknown): void {
       unknown
     >[],
     "Age Distribution",
+    "label",
   );
   validatePercentTotal(
     asArray(asRecord(record.gender_diversity).segments) as Record<
@@ -1563,6 +1572,7 @@ function validateDemoGraphicsTabData(data: unknown): void {
       unknown
     >[],
     "Gender Diversity",
+    "label",
   );
   validatePercentTotal(
     asArray(asRecord(record.work_experience).items) as Record<
@@ -1570,6 +1580,7 @@ function validateDemoGraphicsTabData(data: unknown): void {
       unknown
     >[],
     "Work Experience",
+    "label",
   );
   validatePercentTotal(
     asArray(asRecord(record.international_presence).items) as Record<
@@ -1577,6 +1588,7 @@ function validateDemoGraphicsTabData(data: unknown): void {
       unknown
     >[],
     "International Presence",
+    "country",
   );
   validatePercentTotal(
     asArray(asRecord(record.national_presence).items) as Record<
@@ -1584,6 +1596,7 @@ function validateDemoGraphicsTabData(data: unknown): void {
       unknown
     >[],
     "National Presence",
+    "state",
   );
 }
 
@@ -2383,7 +2396,18 @@ export class CourseTabsService {
     if (!course) throw new NotFoundError("Course not found");
     const tabs = getCourseSetupTabsFromMetadata(course.metadata);
     const record = asRecord(course.metadata);
-    const tabData = asRecord(record.tabData);
+    const columnTabs = await CourseTabsRepository.findCourseColumnTabs(
+      courseId,
+      collegeId,
+    );
+    // These tabs are stored in dedicated Course columns, not metadata.tabData
+    const tabData: Record<string, unknown> = { ...asRecord(record.tabData) };
+    if (columnTabs?.eligibilityCriteria != null)
+      tabData.eligibility_criteria = columnTabs.eligibilityCriteria;
+    if (columnTabs?.accreditations != null)
+      tabData.accreditations = columnTabs.accreditations;
+    if (columnTabs?.entranceExamEligibility != null)
+      tabData.entrance_exam_eligibility = columnTabs.entranceExamEligibility;
 
     return {
       courseId: course.id,

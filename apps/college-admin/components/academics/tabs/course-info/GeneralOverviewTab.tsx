@@ -149,6 +149,11 @@ export function GeneralOverviewTab({
             variant="outline"
             size="sm"
             disabled={isLastItemIncomplete(watchedQuickInfo, "label")}
+            title={
+              isLastItemIncomplete(watchedQuickInfo, "label")
+                ? "Fill in the previous entry before adding another"
+                : undefined
+            }
             onClick={() => quickInfoArray.append({ label: "", value: "" })}
           >
             <Plus className="h-4 w-4 mr-1" /> Add
@@ -209,6 +214,11 @@ export function GeneralOverviewTab({
             variant="outline"
             size="sm"
             disabled={isLastItemIncomplete(watchedHighlightItems, "text")}
+            title={
+              isLastItemIncomplete(watchedHighlightItems, "text")
+                ? "Fill in the previous entry before adding another"
+                : undefined
+            }
             onClick={() => highlightItemsArray.append({ text: "" })}
           >
             <Plus className="h-4 w-4 mr-1" /> Add Highlight
@@ -263,6 +273,11 @@ export function GeneralOverviewTab({
             variant="outline"
             size="sm"
             disabled={isLastItemIncomplete(watchedAccreditationItems, "tag")}
+            title={
+              isLastItemIncomplete(watchedAccreditationItems, "tag")
+                ? "Fill in the previous entry before adding another"
+                : undefined
+            }
             onClick={() =>
               accreditationItemsArray.append({
                 tag: "",

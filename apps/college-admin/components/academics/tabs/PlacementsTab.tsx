@@ -259,6 +259,11 @@ export function PlacementsTab({
             variant="outline"
             size="sm"
             disabled={isLastItemIncomplete(watchedSummaryStats, "label")}
+            title={
+              isLastItemIncomplete(watchedSummaryStats, "label")
+                ? "Fill in the previous entry before adding another"
+                : undefined
+            }
             onClick={() =>
               summaryStatsArray.append({ label: "", value: "", unit: "" })
             }
@@ -342,6 +347,11 @@ export function PlacementsTab({
               watchedNotableOffers,
               "company_name",
             )}
+            title={
+              isLastItemIncomplete(watchedNotableOffers, "company_name")
+                ? "Fill in the previous entry before adding another"
+                : undefined
+            }
             onClick={() =>
               notableOffersArray.append({
                 id: `offer_${Date.now()}`,
@@ -504,6 +514,11 @@ export function PlacementsTab({
             variant="outline"
             size="sm"
             disabled={isLastItemIncomplete(watchedTrendPoints, "year")}
+            title={
+              isLastItemIncomplete(watchedTrendPoints, "year")
+                ? "Fill in the previous entry before adding another"
+                : undefined
+            }
             onClick={() =>
               trendPointsArray.append({
                 year: "",
@@ -629,6 +644,11 @@ export function PlacementsTab({
             variant="outline"
             size="sm"
             disabled={isLastItemIncomplete(watchedCompanyStats, "company_name")}
+            title={
+              isLastItemIncomplete(watchedCompanyStats, "company_name")
+                ? "Fill in the previous entry before adding another"
+                : undefined
+            }
             onClick={() =>
               companyStatsArray.append({
                 company_name: "",
@@ -783,6 +803,11 @@ export function PlacementsTab({
             variant="outline"
             size="sm"
             disabled={isLastItemIncomplete(watchedIndustryRows, "industry")}
+            title={
+              isLastItemIncomplete(watchedIndustryRows, "industry")
+                ? "Fill in the previous entry before adding another"
+                : undefined
+            }
             onClick={() =>
               industryRowsArray.append({
                 industry: "",
@@ -921,6 +946,11 @@ export function PlacementsTab({
               watchedSuccessStories,
               "student_name",
             )}
+            title={
+              isLastItemIncomplete(watchedSuccessStories, "student_name")
+                ? "Fill in the previous entry before adding another"
+                : undefined
+            }
             onClick={() =>
               successStoriesArray.append({
                 student_name: "",
@@ -1138,6 +1168,16 @@ export function PlacementsTab({
                 }
               />
             </div>
+            {watch("download_report.url") && (
+              <a
+                href={watch("download_report.url")}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-xs text-primary underline"
+              >
+                View uploaded report
+              </a>
+            )}
           </div>
           <div className="space-y-1">
             <Label className="text-xs">Button Label</Label>

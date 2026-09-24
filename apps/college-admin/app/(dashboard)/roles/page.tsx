@@ -135,7 +135,7 @@ export default function RolesBuilderPage() {
         {
           id: editingRole.id,
           data: {
-            name: data.name,
+            ...(editingRole.isSystemRole ? {} : { name: data.name }),
             permissionCodes: data.permissionCodes,
           },
         },

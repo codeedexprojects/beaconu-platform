@@ -187,6 +187,11 @@ function ClubFields({
             variant="outline"
             size="sm"
             disabled={isLastStringIncomplete(watchedActivities)}
+            title={
+              isLastStringIncomplete(watchedActivities)
+                ? "Fill in the previous entry before adding another"
+                : undefined
+            }
             onClick={() => activitiesArray.append("")}
           >
             <Plus className="h-4 w-4 mr-1" /> Add Activity
@@ -228,6 +233,11 @@ function ClubFields({
             variant="outline"
             size="sm"
             disabled={isLastItemIncomplete(watchedEvents, "title")}
+            title={
+              isLastItemIncomplete(watchedEvents, "title")
+                ? "Fill in the previous entry before adding another"
+                : undefined
+            }
             onClick={() =>
               eventsArray.append({ id: "", title: "", image: "", link: "" })
             }
@@ -371,6 +381,11 @@ export function ClubsGroupsTab({
           variant="outline"
           size="sm"
           disabled={isLastItemIncomplete(watchedClubs, "name")}
+          title={
+            isLastItemIncomplete(watchedClubs, "name")
+              ? "Fill in the previous entry before adding another"
+              : undefined
+          }
           onClick={() =>
             clubsArray.append({
               id: "",

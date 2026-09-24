@@ -80,6 +80,11 @@ export function OtherOptionsTab({
           variant="outline"
           size="sm"
           disabled={isLastItemIncomplete(watchedList, "courseName")}
+          title={
+            isLastItemIncomplete(watchedList, "courseName")
+              ? "Fill in the previous entry before adding another"
+              : undefined
+          }
           onClick={() => listArray.append({ courseName: "", duration: "" })}
         >
           <Plus className="h-4 w-4 mr-1" /> Add Course Lineage

@@ -263,6 +263,11 @@ function AllianceFields({
             variant="outline"
             size="sm"
             disabled={isLastStringIncomplete(watchedFocusAreas)}
+            title={
+              isLastStringIncomplete(watchedFocusAreas)
+                ? "Fill in the previous entry before adding another"
+                : undefined
+            }
             onClick={() => focusAreasArray.append("")}
           >
             <Plus className="h-4 w-4 mr-1" /> Add Focus Area
@@ -300,6 +305,11 @@ function AllianceFields({
             variant="outline"
             size="sm"
             disabled={isLastItemIncomplete(watchedDocuments, "title")}
+            title={
+              isLastItemIncomplete(watchedDocuments, "title")
+                ? "Fill in the previous entry before adding another"
+                : undefined
+            }
             onClick={() => legalDocumentsArray.append({ title: "", url: "" })}
           >
             <Plus className="h-4 w-4 mr-1" /> Add Document
@@ -372,6 +382,11 @@ function AllianceFields({
             variant="outline"
             size="sm"
             disabled={isLastItemIncomplete(watchedActivities, "title")}
+            title={
+              isLastItemIncomplete(watchedActivities, "title")
+                ? "Fill in the previous entry before adding another"
+                : undefined
+            }
             onClick={() =>
               activitiesArray.append({
                 id: "",
@@ -447,6 +462,11 @@ function AllianceFields({
             variant="outline"
             size="sm"
             disabled={isLastItemIncomplete(watchedHappenings, "title")}
+            title={
+              isLastItemIncomplete(watchedHappenings, "title")
+                ? "Fill in the previous entry before adding another"
+                : undefined
+            }
             onClick={() =>
               happeningsArray.append({
                 category: "",
@@ -658,6 +678,11 @@ export function AlliancesTiesTab({
           variant="outline"
           size="sm"
           disabled={isLastItemIncomplete(watchedAlliances, "name")}
+          title={
+            isLastItemIncomplete(watchedAlliances, "name")
+              ? "Fill in the previous entry before adding another"
+              : undefined
+          }
           onClick={() =>
             alliancesArray.append({
               id: "",

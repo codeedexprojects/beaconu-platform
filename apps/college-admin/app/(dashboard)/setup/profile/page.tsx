@@ -728,8 +728,7 @@ export default function SetupProfilePage() {
     if (document.querySelector("script[data-beaconu-gm]")) return;
     const script = document.createElement("script");
     script.setAttribute("data-beaconu-gm", "1");
-    script.src =
-      "https://maps.googleapis.com/maps/api/js?key=AIzaSyBk9DCaKvJp9IejQ9-MCs";
+    script.src = `https://maps.googleapis.com/maps/api/js?key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY ?? ""}`;
     script.async = true;
     script.onload = () => setMapScriptLoaded(true);
     document.head.appendChild(script);
@@ -1353,7 +1352,7 @@ export default function SetupProfilePage() {
                 <OverviewCard
                   id="recognition"
                   icon={Award}
-                  title="Recognition"
+                  title="Accreditation & Affiliations"
                   description="Accolades, ratings, and the university fact sheet."
                   badge={`${accoladesArray.fields.length} accolade${accoladesArray.fields.length === 1 ? "" : "s"}`}
                   open={openOverviewCards.has("recognition")}
@@ -1445,6 +1444,11 @@ export default function SetupProfilePage() {
                         overviewAccolades,
                         "title",
                       )}
+                      title={
+                        isLastItemIncomplete(overviewAccolades, "title")
+                          ? "Fill in the previous entry before adding another"
+                          : undefined
+                      }
                       onClick={() =>
                         accoladesArray.append({ tag: "", title: "", image: "" })
                       }
@@ -1612,6 +1616,15 @@ export default function SetupProfilePage() {
                           "value",
                           "label",
                         )}
+                        title={
+                          isLastItemIncomplete(
+                            overviewCampusStatsWatch,
+                            "value",
+                            "label",
+                          )
+                            ? "Fill in the previous entry before adding another"
+                            : undefined
+                        }
                         onClick={() =>
                           campusStatsArray.append({ value: "", label: "" })
                         }
@@ -1848,6 +1861,11 @@ export default function SetupProfilePage() {
                         overviewFacilitiesWatch,
                         "label",
                       )}
+                      title={
+                        isLastItemIncomplete(overviewFacilitiesWatch, "label")
+                          ? "Fill in the previous entry before adding another"
+                          : undefined
+                      }
                       onClick={() =>
                         facilitiesArray.append({
                           label: "",
@@ -1965,6 +1983,11 @@ export default function SetupProfilePage() {
                         overviewAchievements,
                         "title",
                       )}
+                      title={
+                        isLastItemIncomplete(overviewAchievements, "title")
+                          ? "Fill in the previous entry before adding another"
+                          : undefined
+                      }
                       onClick={() =>
                         achievementsArray.append({
                           title: "",
@@ -2015,6 +2038,11 @@ export default function SetupProfilePage() {
                         overviewTestimonials,
                         "quote",
                       )}
+                      title={
+                        isLastItemIncomplete(overviewTestimonials, "quote")
+                          ? "Fill in the previous entry before adding another"
+                          : undefined
+                      }
                       onClick={() =>
                         testimonialsArray.append({
                           quote: "",
@@ -2357,6 +2385,11 @@ export default function SetupProfilePage() {
                       variant="outline"
                       className="w-full border-2 border-dashed"
                       disabled={isLastItemIncomplete(overviewReels, "video")}
+                      title={
+                        isLastItemIncomplete(overviewReels, "video")
+                          ? "Fill in the previous entry before adding another"
+                          : undefined
+                      }
                       onClick={() =>
                         reelsArray.append({
                           title: "",
@@ -2450,6 +2483,11 @@ export default function SetupProfilePage() {
                         overviewSocialWatch,
                         "url",
                       )}
+                      title={
+                        isLastItemIncomplete(overviewSocialWatch, "url")
+                          ? "Fill in the previous entry before adding another"
+                          : undefined
+                      }
                       onClick={() =>
                         socialLinksArray.append({
                           platform: "",
@@ -2550,6 +2588,11 @@ export default function SetupProfilePage() {
                           conductRulesWatch,
                           "rule",
                         )}
+                        title={
+                          isLastItemIncomplete(conductRulesWatch, "rule")
+                            ? "Fill in the previous entry before adding another"
+                            : undefined
+                        }
                         onClick={() =>
                           conductRulesArray.append({
                             number: conductRulesArray.fields.length + 1,
@@ -2656,6 +2699,11 @@ export default function SetupProfilePage() {
                           happeningsWatch,
                           "title",
                         )}
+                        title={
+                          isLastItemIncomplete(happeningsWatch, "title")
+                            ? "Fill in the previous entry before adding another"
+                            : undefined
+                        }
                         onClick={() =>
                           happeningsArray.append({
                             category: "Certification",
@@ -2899,6 +2947,14 @@ export default function SetupProfilePage() {
                               globalInstitutionsWatch,
                               "name",
                             )}
+                            title={
+                              isLastItemIncomplete(
+                                globalInstitutionsWatch,
+                                "name",
+                              )
+                                ? "Fill in the previous entry before adding another"
+                                : undefined
+                            }
                             onClick={() =>
                               globalInstitutionsArray.append({
                                 name: "",
@@ -3022,6 +3078,11 @@ export default function SetupProfilePage() {
                           commuteRoutesWatch,
                           "route_name",
                         )}
+                        title={
+                          isLastItemIncomplete(commuteRoutesWatch, "route_name")
+                            ? "Fill in the previous entry before adding another"
+                            : undefined
+                        }
                         onClick={() =>
                           commuteRoutesArray.append(createEmptyCommuteRoute())
                         }
@@ -3116,6 +3177,11 @@ export default function SetupProfilePage() {
                           commuteRulesWatch,
                           "title",
                         )}
+                        title={
+                          isLastItemIncomplete(commuteRulesWatch, "title")
+                            ? "Fill in the previous entry before adding another"
+                            : undefined
+                        }
                         onClick={() =>
                           commuteRulesArray.append({
                             title: "",

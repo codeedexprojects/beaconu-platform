@@ -124,6 +124,11 @@ export function GradingTab({
             variant="outline"
             size="sm"
             disabled={isLastItemIncomplete(watchedRows, "grade")}
+            title={
+              isLastItemIncomplete(watchedRows, "grade")
+                ? "Fill in the previous entry before adding another"
+                : undefined
+            }
             onClick={() =>
               rowsArray.append({
                 percentage_range: "",

@@ -139,6 +139,17 @@ export class CourseTabsRepository {
     });
   }
 
+  static async findCourseColumnTabs(courseId: string, collegeId: string) {
+    return prisma.course.findFirst({
+      where: { id: courseId, collegeId, status: "active" },
+      select: {
+        eligibilityCriteria: true,
+        accreditations: true,
+        entranceExamEligibility: true,
+      },
+    });
+  }
+
   static async findPublicCourseMetadataByIdAndSlug(
     courseId: string,
     collegeSlug: string,

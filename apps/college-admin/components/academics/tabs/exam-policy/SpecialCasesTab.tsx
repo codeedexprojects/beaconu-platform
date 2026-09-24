@@ -192,6 +192,11 @@ export function SpecialCasesTab({
               variant="outline"
               size="sm"
               disabled={isLastItemIncomplete(watchedSegments, "label")}
+              title={
+                isLastItemIncomplete(watchedSegments, "label")
+                  ? "Fill in the previous entry before adding another"
+                  : undefined
+              }
               onClick={() =>
                 segmentsArray.append({
                   label: "",
@@ -264,6 +269,11 @@ export function SpecialCasesTab({
               variant="outline"
               size="sm"
               disabled={isLastItemIncomplete(watchedInternalComponents, "name")}
+              title={
+                isLastItemIncomplete(watchedInternalComponents, "name")
+                  ? "Fill in the previous entry before adding another"
+                  : undefined
+              }
               onClick={() => {
                 setValue(
                   "projects_dissertation.internal_assessment.0.section",
@@ -329,6 +339,11 @@ export function SpecialCasesTab({
               variant="outline"
               size="sm"
               disabled={isLastItemIncomplete(watchedExternalComponents, "name")}
+              title={
+                isLastItemIncomplete(watchedExternalComponents, "name")
+                  ? "Fill in the previous entry before adding another"
+                  : undefined
+              }
               onClick={() => {
                 setValue(
                   "projects_dissertation.external_examination.0.section",
@@ -392,6 +407,11 @@ export function SpecialCasesTab({
               variant="outline"
               size="sm"
               disabled={isLastItemIncomplete(watchedSummaryCards, "label")}
+              title={
+                isLastItemIncomplete(watchedSummaryCards, "label")
+                  ? "Fill in the previous entry before adding another"
+                  : undefined
+              }
               onClick={() => summaryCardsArray.append({ label: "", value: "" })}
             >
               <Plus className="h-3 w-3 mr-1" /> Add
@@ -495,6 +515,11 @@ export function SpecialCasesTab({
               variant="outline"
               size="sm"
               disabled={isLastItemIncomplete(watchedOjtComponents, "name")}
+              title={
+                isLastItemIncomplete(watchedOjtComponents, "name")
+                  ? "Fill in the previous entry before adding another"
+                  : undefined
+              }
               onClick={() =>
                 ojtComponentsArray.append({ name: "", marks: undefined })
               }
@@ -598,6 +623,11 @@ export function SpecialCasesTab({
                 watchedInternshipComponents,
                 "name",
               )}
+              title={
+                isLastItemIncomplete(watchedInternshipComponents, "name")
+                  ? "Fill in the previous entry before adding another"
+                  : undefined
+              }
               onClick={() =>
                 internshipComponentsArray.append({
                   name: "",

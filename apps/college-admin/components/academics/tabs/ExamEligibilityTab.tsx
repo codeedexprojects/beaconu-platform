@@ -98,6 +98,11 @@ export function ExamEligibilityTab({
             variant="outline"
             size="sm"
             disabled={isLastItemIncomplete(watchedExams, "name")}
+            title={
+              isLastItemIncomplete(watchedExams, "name")
+                ? "Fill in the previous entry before adding another"
+                : undefined
+            }
             onClick={() =>
               examsArray.append({
                 name: "",

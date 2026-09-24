@@ -142,6 +142,11 @@ export function DemographicsTab({
             variant="outline"
             size="sm"
             disabled={isLastItemIncomplete(watchedAge, "label")}
+            title={
+              isLastItemIncomplete(watchedAge, "label")
+                ? "Fill in the previous entry before adding another"
+                : undefined
+            }
             onClick={() => ageArray.append({ label: "", percent: undefined })}
           >
             <Plus className="h-4 w-4 mr-1" /> Add
@@ -193,6 +198,11 @@ export function DemographicsTab({
             variant="outline"
             size="sm"
             disabled={isLastItemIncomplete(watchedGender, "label")}
+            title={
+              isLastItemIncomplete(watchedGender, "label")
+                ? "Fill in the previous entry before adding another"
+                : undefined
+            }
             onClick={() =>
               genderArray.append({ label: "", percent: undefined })
             }
@@ -248,6 +258,11 @@ export function DemographicsTab({
             variant="outline"
             size="sm"
             disabled={isLastItemIncomplete(watchedWork, "label")}
+            title={
+              isLastItemIncomplete(watchedWork, "label")
+                ? "Fill in the previous entry before adding another"
+                : undefined
+            }
             onClick={() =>
               workArray.append({
                 icon: "",
@@ -320,6 +335,11 @@ export function DemographicsTab({
             variant="outline"
             size="sm"
             disabled={isLastItemIncomplete(watchedIntl, "country")}
+            title={
+              isLastItemIncomplete(watchedIntl, "country")
+                ? "Fill in the previous entry before adding another"
+                : undefined
+            }
             onClick={() =>
               intlArray.append({ flag: "", country: "", percent: undefined })
             }
@@ -381,6 +401,11 @@ export function DemographicsTab({
             variant="outline"
             size="sm"
             disabled={isLastItemIncomplete(watchedNational, "state")}
+            title={
+              isLastItemIncomplete(watchedNational, "state")
+                ? "Fill in the previous entry before adding another"
+                : undefined
+            }
             onClick={() =>
               nationalArray.append({ state: "", percent: undefined })
             }

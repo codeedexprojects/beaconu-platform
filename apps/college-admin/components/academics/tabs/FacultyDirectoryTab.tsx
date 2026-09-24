@@ -176,6 +176,11 @@ function FacultyMemberFields({
             variant="outline"
             size="sm"
             disabled={isLastItemIncomplete(watchedEducation, "degree")}
+            title={
+              isLastItemIncomplete(watchedEducation, "degree")
+                ? "Fill in the previous entry before adding another"
+                : undefined
+            }
             onClick={() =>
               educationArray.append({
                 degree: "",
@@ -236,6 +241,11 @@ function FacultyMemberFields({
             variant="outline"
             size="sm"
             disabled={isLastItemIncomplete(watchedExperience, "role")}
+            title={
+              isLastItemIncomplete(watchedExperience, "role")
+                ? "Fill in the previous entry before adding another"
+                : undefined
+            }
             onClick={() =>
               experienceArray.append({
                 role: "",
@@ -413,6 +423,11 @@ export function FacultyDirectoryTab({
           variant="outline"
           size="sm"
           disabled={isLastItemIncomplete(watchedList, "name")}
+          title={
+            isLastItemIncomplete(watchedList, "name")
+              ? "Fill in the previous entry before adding another"
+              : undefined
+          }
           onClick={() => {
             const nextIdx = facultyArray.fields.length;
             facultyArray.append({

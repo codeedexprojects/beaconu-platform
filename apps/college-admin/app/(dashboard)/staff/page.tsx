@@ -301,6 +301,13 @@ export default function StaffDirectoryPage() {
                             )
                           }
                         >
+                          {!roles.some(
+                            (r) => r.id === member.collegeRoleId,
+                          ) && (
+                            <option value={member.collegeRoleId} disabled>
+                              {member.collegeRole?.name ?? "Unknown role"}
+                            </option>
+                          )}
                           {roles.map((role) => (
                             <option key={role.id} value={role.id}>
                               {role.name}
