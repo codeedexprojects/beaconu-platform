@@ -18,6 +18,7 @@ import type {
   DeclarationInput,
   DiplomaDetailsInput,
   EntranceExamDetailsInput,
+  InterviewBookingItem,
   FamilyDetailsInput,
   PersonalDetailsInput,
   PgDetailsInput,
@@ -164,6 +165,14 @@ export async function getApplicationStatus(
 ): Promise<ApplicationStatusSummary[] | null> {
   return api.get(
     `/api/v1/student/application-forms/${cycleId}/application/status?application_id=${applicationId}`,
+  );
+}
+
+export async function getMyInterviewBooking(
+  applicationId: string,
+): Promise<InterviewBookingItem> {
+  return api.get(
+    `/api/v1/student/interviews/bookings/application/${applicationId}`,
   );
 }
 

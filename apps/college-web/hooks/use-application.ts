@@ -11,6 +11,7 @@ import {
   getCourseCatalogue,
   getFormDetails,
   getMyApplication,
+  getMyInterviewBooking,
   getPaymentSummary,
   initiateApplicationPayment,
   listAdmissionCycles,
@@ -92,6 +93,14 @@ export function useMyApplication(applicationId: string, enabled: boolean) {
   return useQuery({
     queryKey: QUERY_KEYS.myApplication(applicationId),
     queryFn: () => getMyApplication(applicationId),
+    enabled,
+  });
+}
+
+export function useMyInterviewBooking(applicationId: string, enabled: boolean) {
+  return useQuery({
+    queryKey: QUERY_KEYS.myInterviewBooking(applicationId),
+    queryFn: () => getMyInterviewBooking(applicationId),
     enabled,
   });
 }

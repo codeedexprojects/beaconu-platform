@@ -21,6 +21,7 @@ import { getErrorMessage } from "@/lib/api";
 import {
   useApplicationStatus,
   useMyApplication,
+  useMyInterviewBooking,
 } from "@/hooks/use-application";
 import { TokenPaymentPanel } from "@/components/applications/token-payment-panel";
 import { ScholarshipApplyDialog } from "@/components/applications/scholarship-apply-dialog";
@@ -145,6 +146,11 @@ export function ApplicationStatusTimeline({
     application?.admissionCycleId ?? "",
     applicationId,
     !!application,
+  );
+  const interviewScheduled = statusList?.[0]?.interview.status === "scheduled";
+  const { data: interviewBooking } = useMyInterviewBooking(
+    applicationId,
+    interviewScheduled,
   );
 
   if (isLoadingApplication || isLoadingStatus) {
@@ -324,7 +330,48 @@ export function ApplicationStatusTimeline({
                     ? "warning"
                     : "info"
           }
-        />
+        >
+          {interviewBooked && interviewBooking ? (
+            <div className="mt-2 space-y-2 text-sm">
+              {interviewBooking.startTime && interviewBooking.endTime ? (
+                <p className="text-muted-foreground">
+                  {interviewBooking.startTime} – {interviewBooking.endTime}
+                  {interviewBooking.panelMemberName
+                    ? ` · ${interviewBooking.panelMemberName}`
+                    : ""}
+                </p>
+              ) : null}
+              {interviewBooking.mode === "gmeet" ? (
+                interviewBooking.meetingUrl ? (
+                  <Button asChild size="sm">
+                    <a
+                      href={interviewBooking.meetingUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      Join Google Meet
+                    </a>
+                  </Button>
+                ) : (
+                  <p className="text-muted-foreground">
+                    Meeting link will be shared shortly.
+                  </p>
+                )
+              ) : null}
+              {interviewBooking.mode === "on_campus" &&
+              interviewBooking.venue ? (
+                <p className="text-muted-foreground">
+                  Venue: {interviewBooking.venue}
+                </p>
+              ) : null}
+              {interviewBooking.mode === "telephonic" ? (
+                <p className="text-muted-foreground">
+                  The panel will call you on your registered phone number.
+                </p>
+              ) : null}
+            </div>
+          ) : null}
+        </TimelineStep>
         {/* No self-service action here anymore — the college schedules the
             interview (date/time/panel/mode) once the candidate is eligible;
             the student sees status/date via the subtitle above only. */}
