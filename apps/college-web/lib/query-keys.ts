@@ -21,6 +21,8 @@ export const QUERY_KEYS = {
   myApplications: ["my-applications"] as const,
   applicationStatus: (applicationId: string) =>
     ["application-status", applicationId] as const,
+  myInterviewBooking: (applicationId: string) =>
+    ["my-interview-booking", applicationId] as const,
   applicationPaymentSummary: (applicationId: string) =>
     ["application-payment-summary", applicationId] as const,
   applicationFormDetails: (applicationId: string, section: string) =>
