@@ -5,9 +5,16 @@ meta {
 }
 
 get {
-  url: {{baseUrl}}/api/v1/blink/colleges/{{blinkCollegeId}}/courses
+  url: {{baseUrl}}/api/v1/blink/colleges/{{blinkCollegeId}}/courses?search=
   body: none
   auth: none
+}
+
+params:query {
+  search:
+  ~study_level_id: {{blinkStudyLevelId}}
+  ~program_type_id:
+  ~study_mode:
 }
 
 headers {
@@ -25,7 +32,9 @@ script:post-response {
 }
 
 docs {
-  Returns all active courses for a college.
+  Returns active courses for a college. Optional query filters:
+  search (name/code), study_level_id, program_type_id, study_mode.
+  Get valid filter values from the "Get Course Filters" request.
   Requires: blink_employee access token.
 
   Returns 404 if the college does not exist.

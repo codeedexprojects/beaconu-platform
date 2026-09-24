@@ -231,6 +231,15 @@ export const collegeListQuerySchema = z.object({
 
 export type CollegeListQuery = z.infer<typeof collegeListQuerySchema>;
 
+export const courseListQuerySchema = z.object({
+  search: z.string().trim().optional(),
+  study_level_id: z.string().trim().min(1).optional(),
+  program_type_id: z.string().trim().min(1).optional(),
+  study_mode: z.string().trim().min(1).max(20).optional(),
+});
+
+export type CourseListQuery = z.infer<typeof courseListQuerySchema>;
+
 export const universityListQuerySchema = z.object({
   search: z.string().trim().optional(),
   page: z.coerce.number().int().min(1).default(1),

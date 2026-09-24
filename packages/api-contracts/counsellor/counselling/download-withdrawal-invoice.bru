@@ -1,0 +1,27 @@
+meta {
+  name: Download Withdrawal Invoice
+  type: http
+  seq: 10
+}
+
+get {
+  url: {{baseUrl}}/api/v1/counsellor/wallet/transactions/{{counsellorWalletTxnId}}/invoice
+  body: none
+  auth: none
+}
+
+headers {
+  Authorization: Bearer {{accessToken}}
+}
+
+docs {
+  Downloads the payout statement PDF for an approved withdrawal.
+  Requires: academic counsellor access token.
+
+  Response: application/pdf (Content-Disposition: attachment).
+  Returns 404 if the transaction is not the caller's, is not a withdrawal,
+  or is not in "approved" status.
+
+  The PDF is generated on each request; nothing is stored.
+  Tables: counsellor_wallet_transactions, counsellors
+}

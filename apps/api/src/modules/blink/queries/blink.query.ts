@@ -12,6 +12,7 @@ import type {
 import type {
   ServiceChargeQuery,
   CollegeListQuery,
+  CourseListQuery,
   UniversityListQuery,
   StreamListQuery,
   EmployeeListQuery,
@@ -793,7 +794,10 @@ export class BlinkQuery {
     };
   }
 
-  static async listCoursesForEmployee(collegeId: string) {
+  static async listCoursesForEmployee(
+    collegeId: string,
+    filters: CourseListQuery = {},
+  ) {
     const college = await prisma.college.findUnique({
       where: { id: collegeId },
       select: { id: true, name: true },
@@ -801,7 +805,21 @@ export class BlinkQuery {
     if (!college) return null;
 
     const courses = await prisma.course.findMany({
-      where: { collegeId, status: "active" },
+      where: {
+        collegeId,
+        status: "active",
+        ...(filters.study_level_id && { studyLevelId: filters.study_level_id }),
+        ...(filters.program_type_id && {
+          programTypeId: filters.program_type_id,
+        }),
+        ...(filters.study_mode && { studyMode: filters.study_mode }),
+        ...(filters.search && {
+          OR: [
+            { name: { contains: filters.search, mode: "insensitive" } },
+            { code: { contains: filters.search, mode: "insensitive" } },
+          ],
+        }),
+      },
       orderBy: { name: "asc" },
       select: {
         id: true,
@@ -824,6 +842,42 @@ export class BlinkQuery {
     });
 
     return { college: { id: college.id, name: college.name }, courses };
+  }
+
+  /** Filter options derived from the college's own active courses, so every
+   * option returned is guaranteed to match at least one course. */
+  static async getCourseFilterOptions(collegeId: string) {
+    const college = await prisma.college.findUnique({
+      where: { id: collegeId },
+      select: { id: true },
+    });
+    if (!college) return null;
+
+    const where = { collegeId, status: "active" };
+    const [studyLevels, programTypes, modes] = await Promise.all([
+      prisma.studyLevel.findMany({
+        where: { isActive: true, courses: { some: where } },
+        orderBy: [{ sortOrder: "asc" }, { name: "asc" }],
+        select: { id: true, name: true, slug: true },
+      }),
+      prisma.programType.findMany({
+        where: { courses: { some: where } },
+        orderBy: { name: "asc" },
+        select: { id: true, name: true },
+      }),
+      prisma.course.findMany({
+        where,
+        distinct: ["studyMode"],
+        orderBy: { studyMode: "asc" },
+        select: { studyMode: true },
+      }),
+    ]);
+
+    return {
+      studyLevels,
+      programTypes,
+      studyModes: modes.map((m) => m.studyMode),
+    };
   }
 
   static async getCourseDetailForEmployee(collegeId: string, courseId: string) {

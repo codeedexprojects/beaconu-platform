@@ -23,14 +23,29 @@ headers {
   Authorization: Bearer {{accessToken}}
 }
 
+script:post-response {
+  if (res.status === 200) {
+    const data = res.getBody();
+    const txns = (data.data && data.data.transactions) || [];
+    const approved = txns.find((t) => t.withdrawal_status === "approved");
+    if (approved) {
+      bru.setEnvVar("counsellorWalletTxnId", approved.id);
+    }
+  }
+}
+
 docs {
   Returns counsellor wallet summary and paginated/filterable transactions.
   Requires: counsellor access token.
 
   ## Response keys are snake_case
   - counsellor_id, total_earned, total_withdrawn, created_at, updated_at
-  - transactions[].wallet_id, session_id, student_name, withdrawal_status, balance_after
+  - transactions[].wallet_id, session_id, student_name, withdrawal_status, invoice_url, balance_after
   - transactions_meta: page, limit, total, totalPages, hasNextPage, hasPreviousPage
+
+  ## invoice_url
+  Set only when withdrawal_status is "approved" (null otherwise). It is a path
+  relative to the API base URL; GET it with the same Authorization header.
 
   ## Query params (apply to `transactions` only)
   - type: credit | debit

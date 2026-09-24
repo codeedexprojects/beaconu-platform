@@ -5,6 +5,7 @@ import { validate } from "@/shared/middleware/validate";
 import {
   registerAmbassadorSchema,
   collegeListQuerySchema,
+  courseListQuerySchema,
   createReferralCodeSchema,
   bankDetailsSchema,
   withdrawalSchema,
@@ -46,9 +47,17 @@ router.get(
 );
 
 router.get(
+  "/colleges/:collegeId/courses/filters",
+  authenticate,
+  authorizeUserType("blink_ambassador"),
+  AmbassadorController.getCourseFilters,
+);
+
+router.get(
   "/colleges/:collegeId/courses",
   authenticate,
   authorizeUserType("blink_ambassador"),
+  validate(courseListQuerySchema, "query"),
   AmbassadorController.listCoursesByCollege,
 );
 
