@@ -7,8 +7,12 @@ import { NextResponse } from "next/server";
 export const dynamic = "force-dynamic";
 
 export function GET() {
-  const packageName = process.env.ANDROID_PACKAGE_NAME;
-  const fingerprints = (process.env.ANDROID_SHA256_FINGERPRINTS ?? "")
+  const packageName =
+    process.env.ANDROID_PACKAGE_NAME ?? "com.beaconu.launchpad";
+  const fingerprints = (
+    process.env.ANDROID_SHA256_FINGERPRINTS ??
+    "02:68:D1:83:2F:FE:4C:60:B9:D4:EE:83:7D:4B:2A:7C:B3:29:D8:0D:C8:48:44:F0:5F:80:6A:B0:AD:8D:DA:F6"
+  )
     .split(",")
     .map((f) => f.trim())
     .filter(Boolean);
