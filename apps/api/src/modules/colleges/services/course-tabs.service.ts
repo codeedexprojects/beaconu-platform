@@ -1177,7 +1177,8 @@ function transformPublicReviewTab(raw: Record<string, unknown>) {
     return {
       icon: asText(item.icon) || categoryIcons[label] || "",
       label,
-      rating: asNumber(item.rating) || asNumber(item.average_rating) || 4,
+      rating:
+        asNumber(item.rating) || asNumber(item.average_rating) || undefined,
     };
   });
 
@@ -1190,7 +1191,7 @@ function transformPublicReviewTab(raw: Record<string, unknown>) {
     reviewer_name: asText(r.reviewer_name) || asText(r.name) || "Anonymous",
     reviewer_avatar: asText(r.avatar) || asText(r.reviewer_avatar) || "",
     date: asText(r.date),
-    rating: r.rating != null ? Number(r.rating) : averageRating || 4.5,
+    rating: r.rating != null && r.rating !== "" ? Number(r.rating) : undefined,
     comment: asText(r.comment),
   }));
 
@@ -3013,7 +3014,8 @@ export class CourseTabsService {
       reviewer_name: asText(r.reviewer_name) || asText(r.name) || "Anonymous",
       reviewer_avatar: asText(r.avatar) || asText(r.reviewer_avatar) || "",
       date: asText(r.date),
-      rating: r.rating != null ? Number(r.rating) : averageRating || 4.5,
+      rating:
+        r.rating != null && r.rating !== "" ? Number(r.rating) : undefined,
       comment: asText(r.comment),
     }));
 
