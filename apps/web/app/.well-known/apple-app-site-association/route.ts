@@ -6,9 +6,25 @@ import { NextResponse } from "next/server";
 
 export const dynamic = "force-dynamic";
 
+const LINK_PATHS = [
+  "/r/*",
+  "/invite/*",
+  "/college/*",
+  "/university/*",
+  "/club/*",
+  "/hostel/*",
+  "/alliance/*",
+  "/event/*",
+  "/article/*",
+  "/news/*",
+  "/counsellor/*",
+  "/exam/*",
+  "/community/*",
+];
+
 export function GET() {
-  const teamId = process.env.IOS_TEAM_ID;
-  const bundleId = process.env.IOS_BUNDLE_ID;
+  const teamId = process.env.IOS_TEAM_ID ?? "Y25S43RGY6";
+  const bundleId = process.env.IOS_BUNDLE_ID ?? "com.beaconu.launchpad";
 
   // Absent beats wrong — links fall back to the web page.
   if (!teamId || !bundleId) {
@@ -25,7 +41,7 @@ export function GET() {
         details: [
           {
             appIDs: [appId],
-            components: [{ "/": "/r/*", comment: "Referral invite links" }],
+            components: LINK_PATHS.map((path) => ({ "/": path })),
           },
         ],
       },
