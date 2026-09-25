@@ -4,11 +4,15 @@ import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/api";
 import { QUERY_KEYS } from "@/lib/query-keys";
 import {
+  forgotCollegeAdminPassword,
   loginCollegeAdmin,
   logoutCollegeAdmin,
+  resetCollegeAdminPassword,
   setupCollegeAccount,
   verifyCollegeSetupToken,
+  type ForgotPasswordInput,
   type LoginInput,
+  type ResetPasswordInput,
   type SetupAccountInput,
 } from "@/lib/services/auth.service";
 
@@ -42,5 +46,23 @@ export function useVerifyCollegeSetupToken(token: string | null) {
 export function useLogoutCollegeAdmin() {
   return useMutation({
     mutationFn: logoutCollegeAdmin,
+  });
+}
+
+export function useForgotPassword() {
+  return useMutation({
+    mutationFn: (data: ForgotPasswordInput) => forgotCollegeAdminPassword(data),
+    onError: (error) => {
+      toast.error(getErrorMessage(error));
+    },
+  });
+}
+
+export function useResetPassword() {
+  return useMutation({
+    mutationFn: (data: ResetPasswordInput) => resetCollegeAdminPassword(data),
+    onError: (error) => {
+      toast.error(getErrorMessage(error));
+    },
   });
 }

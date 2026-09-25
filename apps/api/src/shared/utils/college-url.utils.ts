@@ -1,4 +1,9 @@
-export function buildCollegeSetupUrl(slug: string, token: string): string {
+/** Builds a URL on a college's admin portal: `{slug}.{admin-host}/{slug}{path}`. */
+export function buildCollegeAdminUrl(
+  slug: string,
+  path: string,
+  params: Record<string, string> = {},
+): string {
   let base = process.env.COLLEGE_ADMIN_URL ?? "http://localhost:3002";
   if (!base.startsWith("http://") && !base.startsWith("https://")) {
     base = `https://${base}`;
@@ -8,9 +13,15 @@ export function buildCollegeSetupUrl(slug: string, token: string): string {
   url.hostname = isLocal
     ? `${slug}.admin.localhost`
     : `${slug}.${url.hostname}`;
-  url.pathname = `/${slug}/login`;
-  url.searchParams.set("token", token);
+  url.pathname = `/${slug}${path.startsWith("/") ? path : `/${path}`}`;
+  for (const [key, value] of Object.entries(params)) {
+    url.searchParams.set(key, value);
+  }
   return url.toString();
+}
+
+export function buildCollegeSetupUrl(slug: string, token: string): string {
+  return buildCollegeAdminUrl(slug, "/login", { token });
 }
 
 /// Share link for a student's app-invite referral code.

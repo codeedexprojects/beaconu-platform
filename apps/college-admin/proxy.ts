@@ -5,6 +5,8 @@ import { extractCollegeSlugFromHost } from "@/lib/host-routing";
 const RESERVED_ROOT_ROUTES = new Set([
   "login",
   "setup-account",
+  "forgot-password",
+  "reset-password",
   "setup",
   "api",
   "_next",

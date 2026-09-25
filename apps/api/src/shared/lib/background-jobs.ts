@@ -23,6 +23,7 @@ import {
   startInvoiceGenerationWorker,
   stopInvoiceGenerationWorker,
 } from "@/modules/payments/jobs/invoice-generation.job";
+import { startEmailWorker, stopEmailWorker } from "@/shared/lib/email";
 import {
   startMaterializedViewRefreshJob,
   stopMaterializedViewRefreshJob,
@@ -58,6 +59,11 @@ const JOBS = [
     name: "Invoice generation",
     start: startInvoiceGenerationWorker,
     stop: stopInvoiceGenerationWorker,
+  },
+  {
+    name: "Email delivery",
+    start: startEmailWorker,
+    stop: stopEmailWorker,
   },
   {
     name: "Materialized view refresh",

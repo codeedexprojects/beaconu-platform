@@ -73,3 +73,31 @@ export async function setupCollegeAccount(
 export async function logoutCollegeAdmin(): Promise<unknown> {
   return api.post("/api/v1/college-admin/auth/logout");
 }
+
+export interface ForgotPasswordInput {
+  email: string;
+  collegeSlug: string;
+}
+
+export interface ResetPasswordInput {
+  token: string;
+  password: string;
+}
+
+export async function forgotCollegeAdminPassword(
+  data: ForgotPasswordInput,
+): Promise<void> {
+  await api.post("/api/v1/college-admin/auth/forgot-password", data, {
+    skipAuth: true,
+    suppress401Redirect: true,
+  });
+}
+
+export async function resetCollegeAdminPassword(
+  data: ResetPasswordInput,
+): Promise<void> {
+  await api.post("/api/v1/college-admin/auth/reset-password", data, {
+    skipAuth: true,
+    suppress401Redirect: true,
+  });
+}

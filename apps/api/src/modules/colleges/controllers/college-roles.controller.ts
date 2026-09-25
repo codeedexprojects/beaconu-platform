@@ -11,6 +11,8 @@ import {
 import { generateSlug, CryptoUtils } from "@/shared/utils";
 import { AuthService } from "@/modules/auth/services/auth.service";
 import type { UserType } from "@/modules/auth/auth.types";
+import { StaffPasswordResetService } from "@/modules/auth/services/staff-password-reset.service";
+import { logger } from "@/shared/lib/logger";
 
 const COLLEGE_PERMISSIONS = [
   {
@@ -499,9 +501,36 @@ export class CollegeRolesController {
       },
     });
 
-    return res
-      .status(201)
-      .json(ApiResponse.success("Staff member created successfully", staff));
+    const college = await prisma.college.findUnique({
+      where: { id: collegeId },
+      select: { name: true, slug: true },
+    });
+    let inviteEmailQueued = false;
+    if (college) {
+      try {
+        await StaffPasswordResetService.sendInvite({
+          id: staff.id,
+          email: staff.email,
+          fullName: staff.fullName,
+          college,
+        });
+        inviteEmailQueued = true;
+      } catch (error) {
+        // The account exists either way; the admin can share the password
+        // directly or the invitee can use "Forgot password".
+        logger.error(
+          { err: error, staffId: staff.id },
+          "Failed to queue staff invite email",
+        );
+      }
+    }
+
+    return res.status(201).json(
+      ApiResponse.success("Staff member created successfully", {
+        ...staff,
+        inviteEmailQueued,
+      }),
+    );
   }
 
   static async updateStaff(req: Request, res: Response) {
