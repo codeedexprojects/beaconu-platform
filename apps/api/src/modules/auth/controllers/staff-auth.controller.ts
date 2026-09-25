@@ -16,6 +16,7 @@ import {
   ForbiddenError,
 } from "@/shared/errors";
 import { z } from "zod";
+import { StaffPasswordResetService } from "../services/staff-password-reset.service";
 
 const setupAccountSchema = z.object({
   token: z.string().uuid(),
@@ -91,6 +92,34 @@ export class StaffAuthController {
         tokens: { accessToken, refreshToken: session.refreshToken },
       }),
     );
+  }
+
+  static async forgotPassword(req: Request, res: Response) {
+    const { email, collegeSlug } = req.body as {
+      email: string;
+      collegeSlug: string;
+    };
+    await StaffPasswordResetService.requestReset(email, collegeSlug);
+    // Same response whether or not the account exists (no user enumeration).
+    return res
+      .status(200)
+      .json(
+        ApiResponse.success(
+          "If an account exists for this email, a reset link has been sent",
+          null,
+        ),
+      );
+  }
+
+  static async resetPassword(req: Request, res: Response) {
+    const { token, password } = req.body as {
+      token: string;
+      password: string;
+    };
+    await StaffPasswordResetService.resetPassword(token, password);
+    return res
+      .status(200)
+      .json(ApiResponse.success("Password updated. Please sign in.", null));
   }
 
   // ── Verify Setup Token ────────────────────────────────────────────────────

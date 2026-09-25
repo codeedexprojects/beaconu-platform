@@ -17,6 +17,16 @@ export const staffLoginSchema = z.object({
   collegeSlug: z.string().trim().min(1).toLowerCase(),
 });
 
+export const staffForgotPasswordSchema = z.object({
+  email: z.string().trim().toLowerCase().email(),
+  collegeSlug: z.string().trim().min(1).toLowerCase(),
+});
+
+export const staffResetPasswordSchema = z.object({
+  token: z.string().trim().min(20).max(200),
+  password: z.string().min(8).max(100),
+});
+
 export const platformLoginSchema = z.object({
   email: z.string().trim().toLowerCase().email(),
   password: z.string().min(6),

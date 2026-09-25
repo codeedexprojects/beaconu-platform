@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, Suspense } from "react";
+import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@/lib/zod-resolver";
@@ -421,6 +422,14 @@ function LoginPageContent() {
                     {loginForm.formState.errors.password.message}
                   </p>
                 )}
+                <div className="text-right">
+                  <Link
+                    href={getPortalPath(collegeSlug, "/forgot-password")}
+                    className="text-sm text-primary hover:underline"
+                  >
+                    Forgot password?
+                  </Link>
+                </div>
               </div>
 
               <Button

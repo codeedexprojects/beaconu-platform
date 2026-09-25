@@ -5,6 +5,7 @@ import {
   ListOnboardingRequestsData,
 } from "../validators/college-onboarding.validator";
 import { ConflictError, NotFoundError } from "@/shared/errors";
+import { enqueueEmailSafe } from "@/shared/lib/email";
 import { buildCollegeSetupUrl } from "@/shared/utils/college-url.utils";
 import { CollegeProvisioningService } from "@/modules/colleges/services/college-provisioning.service";
 import { InstitutionGroupService } from "@/modules/colleges/services/institution-group.service";
@@ -211,6 +212,21 @@ export class CollegeOnboardingService {
       data,
       reviewedBy,
     );
+
+    if (provisionedCollege) {
+      // Approval already succeeded; a queue outage must not undo it. The
+      // super-admin still gets `setupUrl` in the response as a fallback.
+      await enqueueEmailSafe(
+        "college-setup-invite",
+        provisionedCollege.staff.email,
+        {
+          contactName: provisionedCollege.staff.fullName,
+          collegeName: provisionedCollege.college.name,
+          setupUrl: provisionedCollege.setupUrl,
+          expiresInHours: 48,
+        },
+      );
+    }
 
     return {
       id: updated.id,

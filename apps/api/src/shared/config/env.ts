@@ -22,6 +22,15 @@ const envSchema = z.object({
   AWS_SECRET_ACCESS_KEY: z.string().default(""),
   AWS_S3_BUCKET: z.string().default(""),
   AWS_REGION: z.string().default(""),
+  // Amazon SES. Sending is disabled until SES_FROM_EMAIL is set (logged and
+  // skipped outside production, rejected in production). SES_REGION falls back
+  // to AWS_REGION; credentials fall back to the default AWS provider chain
+  // (e.g. an IAM role) when AWS_ACCESS_KEY_ID/SECRET are empty.
+  SES_FROM_EMAIL: z.string().email().optional(),
+  SES_FROM_NAME: z.string().trim().min(1).default("BeaconU"),
+  SES_REPLY_TO_EMAIL: z.string().email().optional(),
+  SES_REGION: z.string().optional(),
+  SES_CONFIGURATION_SET: z.string().optional(),
   FIREBASE_PROJECT_ID: z.string().default(""),
   FIREBASE_CLIENT_EMAIL: z.string().default(""),
   FIREBASE_PRIVATE_KEY: z.string().default(""),

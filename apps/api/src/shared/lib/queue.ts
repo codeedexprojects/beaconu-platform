@@ -1,5 +1,5 @@
 import Redis from "ioredis";
-import { Queue, Worker, Processor } from "bullmq";
+import { Queue, Worker, Processor, WorkerOptions } from "bullmq";
 import { env } from "@/shared/config/env";
 import { logger } from "@/shared/lib/logger";
 
@@ -17,8 +17,10 @@ export function createQueue(name: string): Queue {
 export function createWorker<T = unknown, R = unknown>(
   name: string,
   processor: Processor<T, R>,
+  options: Omit<WorkerOptions, "connection"> = {},
 ): Worker<T, R> {
   const worker = new Worker<T, R>(name, processor, {
+    ...options,
     connection: createBullConnection(),
   });
 
