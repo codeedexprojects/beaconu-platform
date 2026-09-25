@@ -46,6 +46,25 @@ export const registerCounsellorSchema = z
     path: ["confirm_password"],
   });
 
+export const counsellorForgotPasswordSchema = z.object({
+  email: z.string().trim().toLowerCase().email(),
+});
+
+export const counsellorResetPasswordSchema = z
+  .object({
+    email: z.string().trim().toLowerCase().email(),
+    otp: z
+      .string()
+      .trim()
+      .regex(/^\d{6}$/, "OTP must be 6 digits"),
+    password: z.string().min(6).max(100),
+    confirm_password: z.string().min(6).max(100),
+  })
+  .refine((data) => data.password === data.confirm_password, {
+    message: "Passwords don't match",
+    path: ["confirm_password"],
+  });
+
 export const registerAssociateAdminSchema = z
   .object({
     full_name: z.string().trim().min(1).max(255),

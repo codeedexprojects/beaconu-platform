@@ -24,10 +24,17 @@ export interface StaffPasswordResetData {
   expiresInMinutes: number;
 }
 
+export interface CounsellorPasswordResetOtpData {
+  fullName: string;
+  otp: string;
+  expiresInMinutes: number;
+}
+
 export interface EmailTemplateData {
   "college-setup-invite": CollegeSetupInviteData;
   "staff-invite": StaffInviteData;
   "staff-password-reset": StaffPasswordResetData;
+  "counsellor-password-reset-otp": CounsellorPasswordResetOtpData;
 }
 
 export type EmailTemplateName = keyof EmailTemplateData;
@@ -77,6 +84,19 @@ export const EMAIL_TEMPLATES: {
         bodyHtml: `<p>Hi ${escapeHtml(d.fullName)},</p>
           <p>We received a request to reset your password for <strong>${escapeHtml(d.collegeName)}</strong>. This link expires in ${d.expiresInMinutes} minutes and can be used once.</p>`,
         cta: { label: "Reset password", url: d.resetUrl },
+        footerNote:
+          "If you didn't request this, you can ignore this email — your password won't change.",
+      }),
+  },
+  "counsellor-password-reset-otp": {
+    subject: () => "Your BeaconU password reset code",
+    html: (d) =>
+      renderLayout({
+        preheader: "Use this code to reset your password.",
+        heading: "Reset your password",
+        bodyHtml: `<p>Hi ${escapeHtml(d.fullName)},</p>
+          <p>Enter this code in the BeaconU app to choose a new password. It expires in ${d.expiresInMinutes} minutes and can be used once.</p>
+          <p style="font-size:32px;font-weight:700;letter-spacing:8px;margin:24px 0;">${escapeHtml(d.otp)}</p>`,
         footerNote:
           "If you didn't request this, you can ignore this email — your password won't change.",
       }),

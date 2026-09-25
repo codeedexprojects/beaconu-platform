@@ -294,6 +294,13 @@ export class AuthRepository {
     });
   }
 
+  static async updateCounsellorPassword(
+    id: string,
+    passwordHash: string,
+  ): Promise<void> {
+    await prisma.counsellor.update({ where: { id }, data: { passwordHash } });
+  }
+
   static async createCounsellor(data: AuthCounsellorData) {
     return prisma.counsellor.create({
       data: {
