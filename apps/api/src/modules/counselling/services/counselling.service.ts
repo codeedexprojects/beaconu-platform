@@ -72,10 +72,14 @@ export class CounsellingService {
 
     const resolvedType = data.counsellor_type ?? counsellor.counsellorType;
     if (resolvedType === "mindcare") {
+      // Clients send empty defaults (e.g. session_fee: 0) for MindCare; only real values are invalid
+      const hasBankDetails =
+        data.bank_details != null &&
+        Object.keys(data.bank_details as Record<string, unknown>).length > 0;
       if (
-        data.session_fee !== undefined ||
-        data.upi_id !== undefined ||
-        data.bank_details !== undefined
+        (data.session_fee != null && Number(data.session_fee) !== 0) ||
+        Boolean(data.upi_id) ||
+        hasBankDetails
       ) {
         throw new ValidationError(
           "session_fee, upi_id, and bank_details are not applicable to MindCare counsellors",
