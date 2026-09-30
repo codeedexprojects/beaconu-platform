@@ -257,7 +257,7 @@ export function GeneralOverviewTab({
       <div className="border p-4 rounded-xl space-y-4 bg-muted/10">
         <div className="flex justify-between items-center">
           <div>
-            <Label className="font-bold text-sm">Accreditations</Label>
+            <Label className="font-bold text-sm">Accolades</Label>
             <p className="text-xs text-muted-foreground">Title</p>
           </div>
           <Input
@@ -392,8 +392,8 @@ export function GeneralOverviewTab({
 
       <ConfirmDialog
         open={deleteAccreditationIdx !== null}
-        title="Remove Accreditation"
-        description="Remove this accreditation? This cannot be undone."
+        title="Remove Accolade"
+        description="Remove this accolade? This cannot be undone."
         confirmLabel="Remove"
         variant="destructive"
         onCancel={() => setDeleteAccreditationIdx(null)}

@@ -30,7 +30,12 @@ export function IndiaDistrictSelect({
   return (
     <Select
       value={value}
-      onValueChange={onChange}
+      // Radix's hidden native <select> reports "" when the value is set
+      // programmatically before the new state's options have registered
+      // (e.g. form reset on load), which would wipe the saved district.
+      onValueChange={(next) => {
+        if (next) onChange(next);
+      }}
       disabled={disabled || !stateName}
     >
       <SelectTrigger>

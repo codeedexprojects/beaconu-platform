@@ -144,6 +144,10 @@ export function BasicDetailsTab({
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
+  // Radix Select's hidden native <select> reports "" when a value is set
+  // (by reset below) before that list's options have loaded — e.g. after a
+  // page refresh — so every Select here ignores "" in onValueChange;
+  // otherwise the saved discipline/level/type would be wiped on load.
   useEffect(() => {
     if (editingCourse) {
       reset({
@@ -299,6 +303,7 @@ export function BasicDetailsTab({
               <Select
                 value={watchedDisciplineId || undefined}
                 onValueChange={(val) => {
+                  if (!val) return;
                   setValue("disciplineId", val);
                   trigger("disciplineId");
                 }}
@@ -335,6 +340,7 @@ export function BasicDetailsTab({
               <Select
                 value={watchedStudyLevelId || undefined}
                 onValueChange={(val) => {
+                  if (!val) return;
                   setValue("studyLevelId", val);
                   trigger("studyLevelId");
                 }}
@@ -370,6 +376,7 @@ export function BasicDetailsTab({
               <Select
                 value={watchedProgramTypeId || undefined}
                 onValueChange={(val) => {
+                  if (!val) return;
                   setValue("programTypeId", val);
                   trigger("programTypeId");
                 }}
@@ -396,6 +403,7 @@ export function BasicDetailsTab({
               <Label className="font-semibold text-foreground">Campus</Label>
               <Select
                 onValueChange={(val) => {
+                  if (!val) return;
                   setValue("campusId", val);
                   trigger("campusId");
                 }}
@@ -420,6 +428,7 @@ export function BasicDetailsTab({
               </Label>
               <Select
                 onValueChange={(val) => {
+                  if (!val) return;
                   setValue("studyMode", val);
                   trigger("studyMode");
                 }}

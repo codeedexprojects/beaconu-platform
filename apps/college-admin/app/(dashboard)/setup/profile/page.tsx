@@ -947,6 +947,7 @@ export default function SetupProfilePage() {
                           <IndiaStateSelect
                             value={field.value ?? ""}
                             onChange={(value) => {
+                              if (value === field.value) return;
                               field.onChange(value);
                               setValue("district", "", { shouldDirty: true });
                             }}

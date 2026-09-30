@@ -122,9 +122,9 @@ export const COURSE_TABS = [
   },
   {
     id: "accreditations",
-    label: "Accreditations",
+    label: "Accolades",
     icon: Award,
-    desc: "Accreditations, ranking approvals, and year details",
+    desc: "Accolades, ranking approvals, and year details",
   },
   {
     id: "entrance_exam_eligibility",

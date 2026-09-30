@@ -1,4 +1,5 @@
-import { ConflictError, NotFoundError } from "@/shared/errors";
+import { ConflictError, NotFoundError, ValidationError } from "@/shared/errors";
+import { istToday } from "@/shared/utils/ist-time.utils";
 import { logger } from "@/shared/lib/logger";
 import { PushService } from "@/modules/notifications/services/push.service";
 import { OfferLetterRepository } from "../repositories/offer-letter.repository";
@@ -59,6 +60,12 @@ export class OfferLetterService {
     applicationCourseId: string,
     data: { documentUrl: string; validUntil: Date },
   ) {
+    if (data.validUntil < istToday()) {
+      throw new ValidationError(
+        "Offer validity date can't be in the past — pick today or a later date",
+      );
+    }
+
     const course =
       await ApplicationCourseService.getForOfferIssuance(applicationCourseId);
     if (course.collegeId !== collegeId) {
