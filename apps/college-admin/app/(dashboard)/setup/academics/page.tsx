@@ -30,7 +30,11 @@ import {
   useStreams,
   useStudyLevels,
 } from "@/hooks/use-lookups";
-import { useCollegeHostels, useCollegeLibraries } from "@/hooks/use-facilities";
+import {
+  useCollegeCommutes,
+  useCollegeHostels,
+  useCollegeLibraries,
+} from "@/hooks/use-facilities";
 import { getCollegeSlugFromPath, getPortalPath } from "@/lib/portal-path";
 import {
   COURSE_TABS,
@@ -50,13 +54,13 @@ import { PlacementsTab } from "@/components/academics/tabs/PlacementsTab";
 import { FeeStructureTab } from "@/components/academics/tabs/FeeStructureTab";
 import { FinancialAidTab } from "@/components/academics/tabs/FinancialAidTab";
 import { StudentHousingTab } from "@/components/academics/tabs/StudentHousingTab";
+import { CommuteTab } from "@/components/academics/tabs/CommuteTab";
 import { ExamPolicyTab } from "@/components/academics/tabs/ExamPolicyTab";
 import { FacultyDirectoryTab } from "@/components/academics/tabs/FacultyDirectoryTab";
 import { StudentReviewsTab } from "@/components/academics/tabs/StudentReviewsTab";
 import { LibraryAssetsTab } from "@/components/academics/tabs/LibraryAssetsTab";
 import { ClubsGroupsTab } from "@/components/academics/tabs/ClubsGroupsTab";
 import { AlliancesTiesTab } from "@/components/academics/tabs/AlliancesTiesTab";
-import { OtherOptionsTab } from "@/components/academics/tabs/OtherOptionsTab";
 import { DemographicsTab } from "@/components/academics/tabs/DemographicsTab";
 import { AccreditationsTab } from "@/components/academics/tabs/AccreditationsTab";
 import { ExamEligibilityTab } from "@/components/academics/tabs/ExamEligibilityTab";
@@ -110,6 +114,7 @@ export default function SetupAcademicsPage() {
   const { data: campuses = [] } = useCollegeCampuses();
   const { data: hostels = [] } = useCollegeHostels();
   const { data: libraries = [] } = useCollegeLibraries();
+  const { data: commuteRoutes = [] } = useCollegeCommutes();
 
   const { mutate: createCourse, isPending: isCreating } =
     useCreateCollegeCourse();
@@ -663,6 +668,14 @@ export default function SetupAcademicsPage() {
                         />
                       )}
 
+                      {activeTab === "commute" && (
+                        <CommuteTab
+                          payload={getSeedTabPayload()}
+                          onChange={updateActiveTabPayload}
+                          routes={commuteRoutes}
+                        />
+                      )}
+
                       {/* EXAM POLICY */}
                       {activeTab === "exam_policy" && (
                         <ExamPolicyTab
@@ -714,13 +727,6 @@ export default function SetupAcademicsPage() {
                           onChange={updateActiveTabPayload}
                           uploadingField={uploadingField}
                           onFieldUpload={handleCourseFieldUpload}
-                        />
-                      )}
-
-                      {activeTab === "other_courses_offered" && (
-                        <OtherOptionsTab
-                          payload={getSeedTabPayload()}
-                          onChange={updateActiveTabPayload}
                         />
                       )}
 

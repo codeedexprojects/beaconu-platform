@@ -1191,6 +1191,12 @@ export interface PublicStudentHousingTab {
   hostels?: PublicHostelListItemFromCourseTab[];
 }
 
+export interface PublicCourseCommuteTab {
+  tab?: string;
+  summary?: string;
+  routes?: PublicCommuteRoute[];
+}
+
 export interface PublicClubPreview {
   id: string;
   name?: string;
@@ -1250,23 +1256,6 @@ export interface PublicAlliancePartner {
     items?: PublicAllianceActivity[];
   };
   happenings?: { items?: PublicHappeningItem[] };
-}
-
-export interface PublicOtherCourseItem {
-  id: string;
-  name?: string;
-  duration?: string;
-  fee?: string;
-}
-
-export interface PublicOtherCoursesGroup {
-  studyLevel?: { id?: string; name?: string; slug?: string };
-  courses?: PublicOtherCourseItem[];
-}
-
-export interface PublicOtherCoursesPage {
-  list?: PublicOtherCoursesGroup[];
-  pagination?: PublicPaginationMeta;
 }
 
 export interface PublicEligibilityOption {

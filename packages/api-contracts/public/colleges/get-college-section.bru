@@ -25,7 +25,7 @@ docs {
   college_overview, course_info, placements, fees,
   financial_aid, student_housing, exam_policy, faculty, review, commute,
   library, clubs_associations, student_code_of_conduct, happenings,
-  institutions_across_world, alliance, other_courses_offered, demo_graphics
+  institutions_across_world, alliance, demo_graphics
 
   Note: admission_policy is course-level only (see Get Course Tab /
   Get Course Eligibility Criteria) — not a valid college-level sectionName.
@@ -57,6 +57,37 @@ docs {
   }
 
   Table: blink_users (role = campus_ambassador, status = active)
+
+  ## commute (live, computed — profileSections.commute is ignored)
+  Built entirely from the college-admin Commute page data (active routes,
+  their stops and active buses). 404 when the college has no active routes;
+  the `commute` tab in Get College By Id/Slug only appears when it has one.
+
+  {
+    "data": {
+      "id": "commute", "tab": "commute", "title": "Commute",
+      "route_count": number,
+      "pickup_points": string[],          // unique pickup stop names
+      "routes": [
+        {
+          "route_name", "via",             // route name / description
+          "pickup_point",                  // first pickup stop
+          "status": "VERIFIED" | "UNVERIFIED",
+          "timings": [{ "label": "Morning" | "Evening", "time": "7:30 AM" }],
+          "transport_fee": { "amount": "₹1,500" | "From ₹1,200" | "Free", "payment_structure": "month" },
+          "bus_information": { "registration_number", "seats", "model" },  // first bus
+          "morning_pickup_points": [{ "point", "landmark", "time" }],
+          "evening_dropoff_points": [{ "point", "landmark", "time" }]     // reverse stop order
+        }
+      ],
+      "rules_and_code_of_conduct": {
+        "title", "subtitle", "intro",
+        "rules": [{ "title", "description" }]   // all routes' conduct policies, deduped by title
+      }
+    }
+  }
+
+  Table: commute_routes, commute_route_stops, commute_buses
 
   ## institutions_across_world (live, computed — not the stored static content)
   Like `commute`, this section is always computed live from the college's

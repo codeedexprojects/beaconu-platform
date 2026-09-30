@@ -20,7 +20,6 @@ const DEFAULT_COURSE_CREATE_TABS = [
   "library",
   "clubs_associations",
   "alliance",
-  "other_courses_offered",
   "demo_graphics",
 ] as const;
 

@@ -31,6 +31,14 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { useAuthStore } from "@/store";
 
 import {
@@ -126,7 +134,7 @@ export default function CommutePage() {
   });
 
   const addStop = () => {
-    if (newStopName.trim()) {
+    if (newStopName.trim().length >= 2) {
       setStops([
         ...stops,
         {
@@ -144,40 +152,48 @@ export default function CommutePage() {
       setNewStopEveningTime("");
       setNewStopIsPickupPoint(true);
     } else {
-      toast.error("Please fill in stop name");
+      toast.error("Stop name must be at least 2 characters");
     }
   };
 
   const addBus = () => {
-    if (newBusNumber.trim() && newBusSeats.trim()) {
-      setBuses([
-        ...buses,
-        {
-          busNumber: newBusNumber.trim(),
-          busName: newBusName.trim() || null,
-          busType: newBusType.trim() || null,
-          busModel: newBusModel.trim() || null,
-          totalSeats: parseInt(newBusSeats) || 0,
-          driverName: newBusDriver.trim() || null,
-          driverPhone: newBusPhone.trim() || null,
-          driverStatus: newBusDriverStatus,
-          monthlyFee: parseFloat(newBusFee) || 0,
-          paymentStructureNotes: newBusPaymentNotes.trim() || null,
-        },
-      ]);
-      setNewBusNumber("");
-      setNewBusName("");
-      setNewBusType("");
-      setNewBusModel("");
-      setNewBusSeats("");
-      setNewBusDriver("");
-      setNewBusPhone("");
-      setNewBusDriverStatus("off_duty");
-      setNewBusFee("");
-      setNewBusPaymentNotes("");
-    } else {
-      toast.error("Please fill in bus license number and seat capacity");
+    if (newBusNumber.trim().length < 2) {
+      toast.error("Bus number must be at least 2 characters");
+      return;
     }
+    if ((parseInt(newBusSeats) || 0) < 1) {
+      toast.error("Seat capacity must be at least 1");
+      return;
+    }
+    if ((parseFloat(newBusFee) || 0) < 0) {
+      toast.error("Monthly fee cannot be negative");
+      return;
+    }
+    setBuses([
+      ...buses,
+      {
+        busNumber: newBusNumber.trim(),
+        busName: newBusName.trim() || null,
+        busType: newBusType.trim() || null,
+        busModel: newBusModel.trim() || null,
+        totalSeats: parseInt(newBusSeats),
+        driverName: newBusDriver.trim() || null,
+        driverPhone: newBusPhone.trim() || null,
+        driverStatus: newBusDriverStatus,
+        monthlyFee: parseFloat(newBusFee) || 0,
+        paymentStructureNotes: newBusPaymentNotes.trim() || null,
+      },
+    ]);
+    setNewBusNumber("");
+    setNewBusName("");
+    setNewBusType("");
+    setNewBusModel("");
+    setNewBusSeats("");
+    setNewBusDriver("");
+    setNewBusPhone("");
+    setNewBusDriverStatus("off_duty");
+    setNewBusFee("");
+    setNewBusPaymentNotes("");
   };
 
   const addPolicy = () => {
@@ -500,7 +516,7 @@ export default function CommutePage() {
                                   </div>
                                   <div className="text-right shrink-0">
                                     <span className="font-mono text-primary font-bold block">
-                                      ${bus.monthlyFee}/mo
+                                      ₹{bus.monthlyFee}/mo
                                     </span>
                                     {bus.driverStatus && (
                                       <span className="text-[9px] text-muted-foreground capitalize">
@@ -553,405 +569,401 @@ export default function CommutePage() {
         </div>
       )}
 
-      {showAddModal && canManageCommute && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 overflow-y-auto">
-          <Card className="w-full max-w-lg shadow-2xl border-border bg-card/90 my-8">
-            <CardHeader>
-              <CardTitle>Configure Transit Route</CardTitle>
-              <CardDescription>
-                Define chronologies of pick-up points and allocate fleet
-                schedules.
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-                <div className="space-y-1.5">
-                  <Label htmlFor="route-name">Transit Route Name</Label>
-                  <Input
-                    id="route-name"
-                    placeholder="e.g. Route 42 - South Delhi"
-                    {...register("name")}
-                  />
-                  {errors.name && (
-                    <p className="text-xs text-destructive">
-                      {errors.name.message}
-                    </p>
-                  )}
-                </div>
+      <Dialog
+        open={showAddModal && canManageCommute}
+        onOpenChange={(open) => {
+          if (!open) setShowAddModal(false);
+        }}
+      >
+        <DialogContent
+          className="max-w-4xl max-h-[90vh] overflow-y-auto"
+          onPointerDownOutside={(e) => e.preventDefault()}
+        >
+          <DialogHeader>
+            <DialogTitle>Configure Transit Route</DialogTitle>
+            <DialogDescription>
+              Define chronologies of pick-up points and allocate fleet
+              schedules.
+            </DialogDescription>
+          </DialogHeader>
+          <form onSubmit={handleSubmit(onSubmit)} className="min-w-0 space-y-4">
+            <div className="space-y-1.5">
+              <Label htmlFor="route-name">Transit Route Name</Label>
+              <Input
+                id="route-name"
+                placeholder="e.g. Route 42 - South Delhi"
+                {...register("name")}
+              />
+              {errors.name && (
+                <p className="text-xs text-destructive">
+                  {errors.name.message}
+                </p>
+              )}
+            </div>
 
-                <div className="space-y-1.5">
-                  <Label htmlFor="route-desc">Route Path Summary</Label>
-                  <Textarea
-                    id="route-desc"
-                    placeholder="Details of highways, traffic timeline..."
-                    {...register("description")}
-                  />
-                </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="route-desc">Route Path Summary</Label>
+              <Textarea
+                id="route-desc"
+                placeholder="Details of highways, traffic timeline..."
+                {...register("description")}
+              />
+            </div>
 
-                <div className="flex items-center gap-2">
-                  <input
-                    id="route-verified"
-                    type="checkbox"
-                    className="h-4 w-4 rounded border-input"
-                    checked={isVerified}
-                    onChange={(e) => setIsVerified(e.target.checked)}
-                  />
-                  <Label htmlFor="route-verified" className="text-sm">
-                    Route verified
-                  </Label>
-                </div>
+            <div className="flex items-center gap-2">
+              <input
+                id="route-verified"
+                type="checkbox"
+                className="h-4 w-4 rounded border-input"
+                checked={isVerified}
+                onChange={(e) => setIsVerified(e.target.checked)}
+              />
+              <Label htmlFor="route-verified" className="text-sm">
+                Route verified
+              </Label>
+            </div>
 
-                <div className="border-t pt-4 border-border/40 space-y-3">
-                  <div className="flex justify-between items-center">
-                    <Label className="text-sm font-semibold">
-                      Conduct Policy
-                    </Label>
-                    <span className="text-[11px] font-bold text-muted-foreground">
-                      {conductPolicy.length} configured
-                    </span>
-                  </div>
+            <div className="border-t pt-4 border-border/40 space-y-3">
+              <div className="flex justify-between items-center">
+                <Label className="text-sm font-semibold">Conduct Policy</Label>
+                <span className="text-[11px] font-bold text-muted-foreground">
+                  {conductPolicy.length} configured
+                </span>
+              </div>
 
-                  <div className="space-y-2">
-                    {conductPolicy.map((policy, idx) => (
-                      <div
-                        key={idx}
-                        className="flex justify-between items-start p-2 rounded bg-muted/30 border border-border/40 text-xs"
-                      >
-                        <div>
-                          <p className="font-bold">{policy.title}</p>
-                          <p className="text-[10px] text-muted-foreground">
-                            {policy.description}
-                          </p>
-                        </div>
-                        <button
-                          type="button"
-                          className="text-destructive hover:scale-105 shrink-0"
-                          onClick={() =>
-                            setConductPolicy(
-                              conductPolicy.filter((_, i) => i !== idx),
-                            )
-                          }
-                        >
-                          <Trash2 className="h-3.5 w-3.5" />
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-
-                  <div className="flex gap-2 p-2 border rounded-lg bg-muted/10 border-border/30">
-                    <Input
-                      placeholder="Policy title (e.g. No smoking)"
-                      className="h-8 text-xs flex-1"
-                      value={newPolicyTitle}
-                      onChange={(e) => setNewPolicyTitle(e.target.value)}
-                    />
-                    <Input
-                      placeholder="Description"
-                      className="h-8 text-xs flex-1"
-                      value={newPolicyDescription}
-                      onChange={(e) => setNewPolicyDescription(e.target.value)}
-                    />
-                    <Button
-                      type="button"
-                      variant="secondary"
-                      size="sm"
-                      className="h-8 text-xs"
-                      onClick={addPolicy}
-                    >
-                      Add
-                    </Button>
-                  </div>
-                </div>
-
-                <div className="border-t pt-4 border-border/40 space-y-3">
-                  <div className="flex justify-between items-center">
-                    <Label className="text-sm font-semibold">
-                      Chronological Pick-up Stops
-                    </Label>
-                    <span className="text-[11px] font-bold text-muted-foreground">
-                      {stops.length} configured
-                    </span>
-                  </div>
-
-                  <div className="space-y-2">
-                    {stops.map((stop, idx) => (
-                      <div
-                        key={idx}
-                        className="flex justify-between items-center p-2 rounded bg-muted/30 border border-border/40 text-xs"
-                      >
-                        <div>
-                          <Badge
-                            variant="secondary"
-                            className="mr-2 h-4 px-1 rounded-sm text-[9px]"
-                          >
-                            {stop.stopOrder}
-                          </Badge>
-                          <span className="font-bold">{stop.stopName}</span>
-                          {stop.landmark && (
-                            <span className="text-[10px] text-muted-foreground ml-2">
-                              ({stop.landmark})
-                            </span>
-                          )}
-                          {!stop.isPickupPoint && (
-                            <Badge
-                              variant="outline"
-                              className="ml-2 h-4 px-1 text-[9px]"
-                            >
-                              Waypoint only
-                            </Badge>
-                          )}
-                          {(stop.morningTime || stop.eveningTime) && (
-                            <p className="text-[10px] text-muted-foreground mt-0.5">
-                              {stop.morningTime && `AM ${stop.morningTime}`}
-                              {stop.morningTime && stop.eveningTime && " · "}
-                              {stop.eveningTime && `PM ${stop.eveningTime}`}
-                            </p>
-                          )}
-                        </div>
-                        <button
-                          type="button"
-                          className="text-destructive hover:scale-105"
-                          onClick={() =>
-                            setStops(
-                              stops
-                                .filter((_, i) => i !== idx)
-                                .map((s, i) => ({ ...s, stopOrder: i + 1 })),
-                            )
-                          }
-                        >
-                          <Trash2 className="h-3.5 w-3.5" />
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-
-                  <div className="space-y-2 p-2 border rounded-lg bg-muted/10 border-border/30">
-                    <div className="flex gap-2">
-                      <Input
-                        placeholder="Stop Name (e.g. Noida Sector 15)"
-                        className="h-8 text-xs flex-1"
-                        value={newStopName}
-                        onChange={(e) => setNewStopName(e.target.value)}
-                      />
-                      <Input
-                        placeholder="Landmark (e.g. Near Metro Station)"
-                        className="h-8 text-xs flex-1"
-                        value={newStopLandmark}
-                        onChange={(e) => setNewStopLandmark(e.target.value)}
-                      />
+              <div className="space-y-2">
+                {conductPolicy.map((policy, idx) => (
+                  <div
+                    key={idx}
+                    className="flex justify-between items-start gap-2 p-2 rounded bg-muted/30 border border-border/40 text-xs"
+                  >
+                    <div className="min-w-0 break-words">
+                      <p className="font-bold">{policy.title}</p>
+                      <p className="text-[10px] text-muted-foreground">
+                        {policy.description}
+                      </p>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <div className="flex-1 space-y-1">
-                        <Label className="text-[10px] text-muted-foreground">
-                          Morning time
-                        </Label>
-                        <Input
-                          type="time"
-                          className="h-8 text-xs"
-                          value={newStopMorningTime}
-                          onChange={(e) =>
-                            setNewStopMorningTime(e.target.value)
-                          }
-                        />
-                      </div>
-                      <div className="flex-1 space-y-1">
-                        <Label className="text-[10px] text-muted-foreground">
-                          Evening time
-                        </Label>
-                        <Input
-                          type="time"
-                          className="h-8 text-xs"
-                          value={newStopEveningTime}
-                          onChange={(e) =>
-                            setNewStopEveningTime(e.target.value)
-                          }
-                        />
-                      </div>
-                      <label className="flex items-center gap-1.5 text-[11px] text-muted-foreground pt-4">
-                        <input
-                          type="checkbox"
-                          className="h-3.5 w-3.5 rounded border-input"
-                          checked={newStopIsPickupPoint}
-                          onChange={(e) =>
-                            setNewStopIsPickupPoint(e.target.checked)
-                          }
-                        />
-                        Pickup point
-                      </label>
-                    </div>
-                    <Button
+                    <button
                       type="button"
-                      variant="secondary"
-                      size="sm"
-                      className="h-8 text-xs w-full"
-                      onClick={addStop}
-                    >
-                      Add Stop
-                    </Button>
-                  </div>
-                </div>
-
-                <div className="border-t pt-4 border-border/40 space-y-3">
-                  <div className="flex justify-between items-center">
-                    <Label className="text-sm font-semibold">
-                      Fleet Registrations & Drivers
-                    </Label>
-                    <span className="text-[11px] font-bold text-muted-foreground">
-                      {buses.length} configured
-                    </span>
-                  </div>
-
-                  <div className="space-y-2">
-                    {buses.map((bus, idx) => (
-                      <div
-                        key={idx}
-                        className="flex justify-between items-center p-2 rounded bg-muted/30 border border-border/40 text-xs"
-                      >
-                        <div>
-                          <span className="font-bold">{bus.busNumber}</span>
-                          {bus.busType && (
-                            <Badge
-                              variant="outline"
-                              className="ml-2 h-4 px-1 text-[9px]"
-                            >
-                              {bus.busType}
-                            </Badge>
-                          )}
-                          {bus.driverName && (
-                            <span className="text-[10px] text-muted-foreground ml-2">
-                              ({bus.driverName})
-                            </span>
-                          )}
-                          <p className="text-[10px] text-muted-foreground mt-0.5 capitalize">
-                            {bus.driverStatus?.replace("_", " ")}
-                          </p>
-                        </div>
-                        <div className="flex items-center gap-3">
-                          <span className="font-mono text-primary font-bold">
-                            ${bus.monthlyFee}/mo
-                          </span>
-                          <button
-                            type="button"
-                            className="text-destructive hover:scale-105"
-                            onClick={() =>
-                              setBuses(buses.filter((_, i) => i !== idx))
-                            }
-                          >
-                            <Trash2 className="h-3.5 w-3.5" />
-                          </button>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-
-                  <div className="grid gap-2 sm:grid-cols-2 p-3 border rounded-lg bg-muted/10 border-border/30">
-                    <Input
-                      placeholder="Bus Number (e.g. DL-1P-1234)"
-                      className="h-8 text-xs"
-                      value={newBusNumber}
-                      onChange={(e) => setNewBusNumber(e.target.value)}
-                    />
-                    <Input
-                      placeholder="Bus Label (e.g. Swaraj Mazda 32)"
-                      className="h-8 text-xs"
-                      value={newBusName}
-                      onChange={(e) => setNewBusName(e.target.value)}
-                    />
-                    <Input
-                      placeholder="Bus Type (e.g. AC / Non-AC)"
-                      className="h-8 text-xs"
-                      value={newBusType}
-                      onChange={(e) => setNewBusType(e.target.value)}
-                    />
-                    <Input
-                      placeholder="Bus Model"
-                      className="h-8 text-xs"
-                      value={newBusModel}
-                      onChange={(e) => setNewBusModel(e.target.value)}
-                    />
-                    <Input
-                      type="number"
-                      placeholder="Seat Capacity"
-                      className="h-8 text-xs"
-                      value={newBusSeats}
-                      onChange={(e) => setNewBusSeats(e.target.value)}
-                    />
-                    <Input
-                      type="number"
-                      placeholder="Monthly Fee ($)"
-                      className="h-8 text-xs"
-                      value={newBusFee}
-                      onChange={(e) => setNewBusFee(e.target.value)}
-                    />
-                    <Input
-                      placeholder="Driver Name"
-                      className="h-8 text-xs"
-                      value={newBusDriver}
-                      onChange={(e) => setNewBusDriver(e.target.value)}
-                    />
-                    <Input
-                      placeholder="Driver Phone"
-                      className="h-8 text-xs"
-                      value={newBusPhone}
-                      onChange={(e) => setNewBusPhone(e.target.value)}
-                    />
-                    <Select
-                      value={newBusDriverStatus}
-                      onValueChange={(v) =>
-                        setNewBusDriverStatus(
-                          v as (typeof DRIVER_STATUS_OPTIONS)[number],
+                      className="text-destructive hover:scale-105 shrink-0"
+                      onClick={() =>
+                        setConductPolicy(
+                          conductPolicy.filter((_, i) => i !== idx),
                         )
                       }
                     >
-                      <SelectTrigger className="h-8 text-xs">
-                        <SelectValue placeholder="Driver status" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {DRIVER_STATUS_OPTIONS.map((status) => (
-                          <SelectItem key={status} value={status}>
-                            {status.replace("_", " ")}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <Textarea
-                      placeholder="Payment structure notes"
-                      className="text-xs sm:col-span-2 min-h-16"
-                      value={newBusPaymentNotes}
-                      onChange={(e) => setNewBusPaymentNotes(e.target.value)}
-                    />
-                    <Button
-                      type="button"
-                      variant="secondary"
-                      size="sm"
-                      className="sm:col-span-2 h-8 text-xs"
-                      onClick={addBus}
-                    >
-                      Register Bus Fleet
-                    </Button>
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </button>
                   </div>
-                </div>
+                ))}
+              </div>
 
-                <div className="flex justify-end gap-3 pt-4 border-t">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => setShowAddModal(false)}
+              <div className="flex flex-col gap-2 p-2 border rounded-lg bg-muted/10 border-border/30 sm:flex-row">
+                <Input
+                  placeholder="Policy title (e.g. No smoking)"
+                  className="h-8 text-xs flex-1"
+                  value={newPolicyTitle}
+                  onChange={(e) => setNewPolicyTitle(e.target.value)}
+                />
+                <Input
+                  placeholder="Description"
+                  className="h-8 text-xs flex-1"
+                  value={newPolicyDescription}
+                  onChange={(e) => setNewPolicyDescription(e.target.value)}
+                />
+                <Button
+                  type="button"
+                  variant="secondary"
+                  size="sm"
+                  className="h-8 text-xs"
+                  onClick={addPolicy}
+                >
+                  Add
+                </Button>
+              </div>
+            </div>
+
+            <div className="border-t pt-4 border-border/40 space-y-3">
+              <div className="flex justify-between items-center">
+                <Label className="text-sm font-semibold">
+                  Chronological Pick-up Stops
+                </Label>
+                <span className="text-[11px] font-bold text-muted-foreground">
+                  {stops.length} configured
+                </span>
+              </div>
+
+              <div className="space-y-2">
+                {stops.map((stop, idx) => (
+                  <div
+                    key={idx}
+                    className="flex justify-between items-center gap-2 p-2 rounded bg-muted/30 border border-border/40 text-xs"
                   >
-                    Cancel
-                  </Button>
-                  <Button type="submit" disabled={creating}>
-                    {creating && (
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    )}
-                    Configure Route
-                  </Button>
+                    <div className="min-w-0 break-words">
+                      <Badge
+                        variant="secondary"
+                        className="mr-2 h-4 px-1 rounded-sm text-[9px]"
+                      >
+                        {stop.stopOrder}
+                      </Badge>
+                      <span className="font-bold">{stop.stopName}</span>
+                      {stop.landmark && (
+                        <span className="text-[10px] text-muted-foreground ml-2">
+                          ({stop.landmark})
+                        </span>
+                      )}
+                      {!stop.isPickupPoint && (
+                        <Badge
+                          variant="outline"
+                          className="ml-2 h-4 px-1 text-[9px]"
+                        >
+                          Waypoint only
+                        </Badge>
+                      )}
+                      {(stop.morningTime || stop.eveningTime) && (
+                        <p className="text-[10px] text-muted-foreground mt-0.5">
+                          {stop.morningTime && `AM ${stop.morningTime}`}
+                          {stop.morningTime && stop.eveningTime && " · "}
+                          {stop.eveningTime && `PM ${stop.eveningTime}`}
+                        </p>
+                      )}
+                    </div>
+                    <button
+                      type="button"
+                      className="text-destructive hover:scale-105"
+                      onClick={() =>
+                        setStops(
+                          stops
+                            .filter((_, i) => i !== idx)
+                            .map((s, i) => ({ ...s, stopOrder: i + 1 })),
+                        )
+                      }
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+
+              <div className="space-y-2 p-2 border rounded-lg bg-muted/10 border-border/30">
+                <div className="flex flex-col gap-2 sm:flex-row">
+                  <Input
+                    placeholder="Stop Name (e.g. Noida Sector 15)"
+                    className="h-8 text-xs flex-1"
+                    value={newStopName}
+                    onChange={(e) => setNewStopName(e.target.value)}
+                  />
+                  <Input
+                    placeholder="Landmark (e.g. Near Metro Station)"
+                    className="h-8 text-xs flex-1"
+                    value={newStopLandmark}
+                    onChange={(e) => setNewStopLandmark(e.target.value)}
+                  />
                 </div>
-              </form>
-            </CardContent>
-          </Card>
-        </div>
-      )}
+                <div className="grid gap-2 sm:grid-cols-[1fr_1fr_auto] sm:items-end">
+                  <div className="space-y-1">
+                    <Label className="text-[10px] text-muted-foreground">
+                      Morning time
+                    </Label>
+                    <Input
+                      type="time"
+                      className="h-8 text-xs"
+                      value={newStopMorningTime}
+                      onChange={(e) => setNewStopMorningTime(e.target.value)}
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-[10px] text-muted-foreground">
+                      Evening time
+                    </Label>
+                    <Input
+                      type="time"
+                      className="h-8 text-xs"
+                      value={newStopEveningTime}
+                      onChange={(e) => setNewStopEveningTime(e.target.value)}
+                    />
+                  </div>
+                  <label className="flex h-8 items-center gap-1.5 text-[11px] text-muted-foreground">
+                    <input
+                      type="checkbox"
+                      className="h-3.5 w-3.5 rounded border-input"
+                      checked={newStopIsPickupPoint}
+                      onChange={(e) =>
+                        setNewStopIsPickupPoint(e.target.checked)
+                      }
+                    />
+                    Pickup point
+                  </label>
+                </div>
+                <Button
+                  type="button"
+                  variant="secondary"
+                  size="sm"
+                  className="h-8 text-xs w-full"
+                  onClick={addStop}
+                >
+                  Add Stop
+                </Button>
+              </div>
+            </div>
+
+            <div className="border-t pt-4 border-border/40 space-y-3">
+              <div className="flex justify-between items-center">
+                <Label className="text-sm font-semibold">
+                  Fleet Registrations & Drivers
+                </Label>
+                <span className="text-[11px] font-bold text-muted-foreground">
+                  {buses.length} configured
+                </span>
+              </div>
+
+              <div className="space-y-2">
+                {buses.map((bus, idx) => (
+                  <div
+                    key={idx}
+                    className="flex justify-between items-center gap-2 p-2 rounded bg-muted/30 border border-border/40 text-xs"
+                  >
+                    <div className="min-w-0 break-words">
+                      <span className="font-bold">{bus.busNumber}</span>
+                      {bus.busType && (
+                        <Badge
+                          variant="outline"
+                          className="ml-2 h-4 px-1 text-[9px]"
+                        >
+                          {bus.busType}
+                        </Badge>
+                      )}
+                      {bus.driverName && (
+                        <span className="text-[10px] text-muted-foreground ml-2">
+                          ({bus.driverName})
+                        </span>
+                      )}
+                      <p className="text-[10px] text-muted-foreground mt-0.5 capitalize">
+                        {bus.driverStatus?.replace("_", " ")}
+                      </p>
+                    </div>
+                    <div className="flex shrink-0 items-center gap-3">
+                      <span className="font-mono text-primary font-bold">
+                        ₹{bus.monthlyFee}/mo
+                      </span>
+                      <button
+                        type="button"
+                        className="text-destructive hover:scale-105"
+                        onClick={() =>
+                          setBuses(buses.filter((_, i) => i !== idx))
+                        }
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              <div className="grid gap-2 sm:grid-cols-2 p-3 border rounded-lg bg-muted/10 border-border/30">
+                <Input
+                  placeholder="Bus Number (e.g. DL-1P-1234)"
+                  className="h-8 text-xs"
+                  value={newBusNumber}
+                  onChange={(e) => setNewBusNumber(e.target.value)}
+                />
+                <Input
+                  placeholder="Bus Label (e.g. Swaraj Mazda 32)"
+                  className="h-8 text-xs"
+                  value={newBusName}
+                  onChange={(e) => setNewBusName(e.target.value)}
+                />
+                <Input
+                  placeholder="Bus Type (e.g. AC / Non-AC)"
+                  className="h-8 text-xs"
+                  value={newBusType}
+                  onChange={(e) => setNewBusType(e.target.value)}
+                />
+                <Input
+                  placeholder="Bus Model"
+                  className="h-8 text-xs"
+                  value={newBusModel}
+                  onChange={(e) => setNewBusModel(e.target.value)}
+                />
+                <Input
+                  type="number"
+                  placeholder="Seat Capacity"
+                  className="h-8 text-xs"
+                  value={newBusSeats}
+                  onChange={(e) => setNewBusSeats(e.target.value)}
+                />
+                <Input
+                  type="number"
+                  placeholder="Monthly Fee (₹)"
+                  className="h-8 text-xs"
+                  value={newBusFee}
+                  onChange={(e) => setNewBusFee(e.target.value)}
+                />
+                <Input
+                  placeholder="Driver Name"
+                  className="h-8 text-xs"
+                  value={newBusDriver}
+                  onChange={(e) => setNewBusDriver(e.target.value)}
+                />
+                <Input
+                  placeholder="Driver Phone"
+                  className="h-8 text-xs"
+                  value={newBusPhone}
+                  onChange={(e) => setNewBusPhone(e.target.value)}
+                />
+                <Select
+                  value={newBusDriverStatus}
+                  onValueChange={(v) =>
+                    setNewBusDriverStatus(
+                      v as (typeof DRIVER_STATUS_OPTIONS)[number],
+                    )
+                  }
+                >
+                  <SelectTrigger className="h-8 text-xs">
+                    <SelectValue placeholder="Driver status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {DRIVER_STATUS_OPTIONS.map((status) => (
+                      <SelectItem key={status} value={status}>
+                        {status.replace("_", " ")}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Textarea
+                  placeholder="Payment structure notes"
+                  className="text-xs sm:col-span-2 min-h-16"
+                  value={newBusPaymentNotes}
+                  onChange={(e) => setNewBusPaymentNotes(e.target.value)}
+                />
+                <Button
+                  type="button"
+                  variant="secondary"
+                  size="sm"
+                  className="sm:col-span-2 h-8 text-xs"
+                  onClick={addBus}
+                >
+                  Register Bus Fleet
+                </Button>
+              </div>
+            </div>
+
+            <DialogFooter className="gap-2 pt-4 border-t">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setShowAddModal(false)}
+              >
+                Cancel
+              </Button>
+              <Button type="submit" disabled={creating}>
+                {creating && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                Configure Route
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
 
       <ConfirmDialog
         open={deleteTarget !== null}

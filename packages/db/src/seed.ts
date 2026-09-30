@@ -197,7 +197,6 @@ const COURSE_SETUP_TAB_IDS = [
   "library",
   "clubs_associations",
   "alliance",
-  "other_courses_offered",
   "demo_graphics",
 ] as const;
 
@@ -1699,18 +1698,6 @@ function buildCourseSetupTabData(
             ],
           },
         },
-      ],
-    },
-    other_courses_offered: {
-      id: "other_courses_offered",
-      enabled: true,
-      list: [
-        {
-          courseName: "Bachelor of Business Administration",
-          duration: "3 Years",
-        },
-        { courseName: "Master of Computer Applications", duration: "2 Years" },
-        { courseName: "Diploma in Pharmacy", duration: "2 Years" },
       ],
     },
     // Each distribution's percents must total 100 (validateDemoGraphicsTabData)

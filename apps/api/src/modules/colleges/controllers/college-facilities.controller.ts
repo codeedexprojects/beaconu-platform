@@ -2,7 +2,7 @@ import { Request, Response, NextFunction } from "express";
 import { z } from "zod";
 import { prisma } from "@beaconu/db";
 import { ApiResponse } from "@/shared/responses/api-response";
-import { NotFoundError, BadRequestError } from "@/shared/errors";
+import { NotFoundError, BadRequestError, ConflictError } from "@/shared/errors";
 import { generateSlug } from "@/shared/utils";
 import { HostelService, buildHostelGallery } from "../services/hostel.service";
 import { LibraryService } from "../services/library.service";
@@ -350,7 +350,7 @@ export class CollegeFacilitiesController {
   static async listRoutes(req: Request, res: Response) {
     const collegeId = req.collegeId!;
     const routes = await prisma.commuteRoute.findMany({
-      where: { collegeId },
+      where: { collegeId, isActive: true },
       include: { stops: true, buses: true },
       orderBy: { createdAt: "desc" },
     });
@@ -397,7 +397,7 @@ export class CollegeFacilitiesController {
             driverStatus: z
               .enum(["on_route", "off_duty", "on_leave"])
               .optional(),
-            monthlyFee: z.number().positive().optional(),
+            monthlyFee: z.number().nonnegative().optional(),
             busModel: z.string().optional().nullable(),
             paymentStructureNotes: z.string().optional().nullable(),
           }),
@@ -470,10 +470,19 @@ export class CollegeFacilitiesController {
     const id = Array.isArray(idParam) ? idParam[0] : idParam;
 
     const route = await prisma.commuteRoute.findFirst({
-      where: { id, collegeId },
+      where: { id, collegeId, isActive: true },
     });
     if (!route) {
       throw new NotFoundError("Commuter transit route not found");
+    }
+
+    const activeRiders = await prisma.commuteEnrollment.count({
+      where: { routeId: id, status: "active" },
+    });
+    if (activeRiders > 0) {
+      throw new ConflictError(
+        `${activeRiders} student${activeRiders > 1 ? "s are" : " is"} still enrolled on this route. They must switch routes before it can be removed.`,
+      );
     }
 
     await prisma.commuteRoute.update({

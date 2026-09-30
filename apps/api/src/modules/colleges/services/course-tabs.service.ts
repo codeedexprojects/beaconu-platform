@@ -3,6 +3,7 @@ import { CourseTabsRepository } from "../repositories/course-tabs.repository";
 import { FeeStructureRepository } from "../repositories/fee-structure.repository";
 import { HostelService } from "./hostel.service";
 import { LibraryService } from "./library.service";
+import { CommuteService } from "@/modules/commute/services/commute.service";
 import {
   COURSE_SETUP_TAB_IDS,
   TAB_FIELD_MAP,
@@ -170,15 +171,21 @@ const DEFAULT_PUBLIC_COURSE_INFO_TABS = [
   "fees",
   "financial_aid",
   "student_housing",
+  "commute",
   "exam_policy",
   "faculty",
   "review",
   "library",
   "clubs_associations",
   "alliance",
-  "other_courses_offered",
   "demo_graphics",
 ];
+
+function getLinkedRouteIds(metadata: unknown): string[] {
+  return asStringArray(
+    asRecord(getSetupTabDataFromMetadata(metadata, "commute")).routeIds,
+  );
+}
 
 function asBoolean(value: unknown, fallback = false): boolean {
   return typeof value === "boolean" ? value : fallback;
@@ -2333,56 +2340,6 @@ function transformPublicDemoGraphicsTab(raw: Record<string, unknown>) {
   };
 }
 
-type OtherCollegeCourse = {
-  id: string;
-  name: string;
-  duration: string | null;
-  metadata: unknown;
-  studyLevel: { id: string; name: string; slug: string };
-};
-
-function extractCourseFee(metadata: unknown): string {
-  const tabData = asRecord(asRecord(metadata).tabData);
-  const fees = asRecord(tabData.fees);
-  const feeDetails = Array.isArray(fees.fee_details)
-    ? (fees.fee_details as Record<string, unknown>[])
-    : [];
-  const summary = asRecord(feeDetails[0]?.fees_summary);
-  return asText(summary.full_course_fee);
-}
-
-function buildOtherCoursesOfferedTree(courses: OtherCollegeCourse[]) {
-  const studyLevelMap = new Map<
-    string,
-    {
-      studyLevel: { id: string; name: string; slug: string };
-      courses: {
-        id: string;
-        name: string;
-        duration: string | null;
-        fee: string;
-      }[];
-    }
-  >();
-
-  for (const course of courses) {
-    let level = studyLevelMap.get(course.studyLevel.id);
-    if (!level) {
-      level = { studyLevel: course.studyLevel, courses: [] };
-      studyLevelMap.set(course.studyLevel.id, level);
-    }
-
-    level.courses.push({
-      id: course.id,
-      name: course.name,
-      duration: course.duration,
-      fee: extractCourseFee(course.metadata),
-    });
-  }
-
-  return Array.from(studyLevelMap.values());
-}
-
 export class CourseTabsService {
   // ── College-Admin Endpoints ──────────────────────────────────────────────
 
@@ -2573,16 +2530,19 @@ export class CourseTabsService {
 
     const courseInfo = normalizeCourseInfoData(merged);
 
+    const infoTabs = asStringArray(courseInfo.tabs);
+    const baseTabs = infoTabs.length > 0 ? infoTabs : tabs;
+    const hasCommute = await CommuteService.hasPublicRoutes(
+      course.collegeId,
+      getLinkedRouteIds(course.metadata),
+    );
+
     return {
       id: course.id,
       name: course.name,
       admission_batches: courseInfo.admission_batches ?? [],
       quick_info: courseInfo.quick_info ?? [],
-      tabs:
-        Array.isArray(courseInfo.tabs) &&
-        (courseInfo.tabs as unknown[]).length > 0
-          ? courseInfo.tabs
-          : tabs,
+      tabs: hasCommute ? baseTabs : baseTabs.filter((tab) => tab !== "commute"),
       highlights: courseInfo.highlights ?? {},
       accreditations: courseInfo.accreditations ?? {},
       keyDates: courseInfo.keyDates ?? {},
@@ -2853,6 +2813,26 @@ export class CourseTabsService {
         };
       }
 
+      if (tabName === "commute") {
+        const routes = await CommuteService.getPublicRoutesByIds(
+          course.collegeId,
+          getLinkedRouteIds(course.metadata),
+        );
+        if (routes.length === 0) {
+          throw new NotFoundError("Commute is not offered for this course");
+        }
+        return {
+          sectionName: tabName,
+          sectionId: tabName,
+          sectionKey: tabName,
+          data: {
+            tab: "commute",
+            summary: asText(asRecord(rawData).summary),
+            routes,
+          },
+        };
+      }
+
       if (tabName === "financial_aid") {
         return {
           sectionName: tabName,
@@ -2914,19 +2894,6 @@ export class CourseTabsService {
           sectionId: tabName,
           sectionKey: tabName,
           data: transformed.data,
-        };
-      }
-
-      if (tabName === "other_courses_offered") {
-        const otherCourses = await CourseTabsRepository.findOtherCollegeCourses(
-          course.collegeId,
-          courseId,
-        );
-        return {
-          sectionName: tabName,
-          sectionId: tabName,
-          sectionKey: tabName,
-          list: buildOtherCoursesOfferedTree(otherCourses),
         };
       }
 
@@ -3025,49 +2992,6 @@ export class CourseTabsService {
         current_page: page,
         per_page: perPage,
         total_items: totalItems,
-        total_pages: totalPages,
-        has_next_page: page < totalPages,
-        has_previous_page: page > 1,
-      },
-    };
-  }
-
-  /**
-   * Paginated + searchable list of "other courses offered" by the same
-   * college, grouped by study level.
-   * GET /public/colleges/by-slug/:slug/courses/:courseId/other-courses-offered
-   */
-  static async listPublicOtherCoursesOffered(
-    courseId: string,
-    collegeSlug: string,
-    page: number,
-    perPage: number,
-    search: string | undefined,
-  ) {
-    const course =
-      await CourseTabsRepository.findPublicCourseMetadataByIdAndSlug(
-        courseId,
-        collegeSlug,
-      );
-    if (!course) throw new NotFoundError("Course not found");
-
-    const { data, total } =
-      await CourseTabsRepository.findOtherCollegeCoursesPaginated(
-        course.collegeId,
-        courseId,
-        search,
-        (page - 1) * perPage,
-        perPage,
-      );
-
-    const totalPages = Math.max(1, Math.ceil(total / perPage));
-
-    return {
-      list: buildOtherCoursesOfferedTree(data as OtherCollegeCourse[]),
-      pagination: {
-        current_page: page,
-        per_page: perPage,
-        total_items: total,
         total_pages: totalPages,
         has_next_page: page < totalPages,
         has_previous_page: page > 1,

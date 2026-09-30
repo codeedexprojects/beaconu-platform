@@ -33,13 +33,13 @@ export const COURSE_CREATE_TAB_IDS = [
   "fees",
   "financial_aid",
   "student_housing",
+  "commute",
   "exam_policy",
   "faculty",
   "review",
   "library",
   "clubs_associations",
   "alliance",
-  "other_courses_offered",
   "demo_graphics",
 ] as const;
 
@@ -74,13 +74,13 @@ const courseCreateTabDataSchema = z
     fees: z.unknown().optional(),
     financial_aid: z.unknown().optional(),
     student_housing: z.unknown().optional(),
+    commute: z.unknown().optional(),
     exam_policy: z.unknown().optional(),
     faculty: z.unknown().optional(),
     review: z.unknown().optional(),
     library: z.unknown().optional(),
     clubs_associations: z.unknown().optional(),
     alliance: z.unknown().optional(),
-    other_courses_offered: z.unknown().optional(),
     demo_graphics: z.unknown().optional(),
   })
   .partial();

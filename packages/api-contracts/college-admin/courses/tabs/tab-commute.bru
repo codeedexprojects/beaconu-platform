@@ -1,0 +1,20 @@
+meta {
+  name: Tab - Commute
+  type: http
+  seq: 7
+}
+
+get {
+  url: {{baseUrl}}/api/v1/college-admin/courses/{{courseId}}/tabs/commute
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{staffToken}}
+}
+
+docs {
+  Optional tab. Returns the stored link data:
+  { "summary": string, "routeIds": string[] }
+}

@@ -9,12 +9,12 @@ import {
   Award,
   Globe,
   Star,
-  Layers,
   DollarSign,
   Check,
   ShieldCheck,
   Sparkles,
   Percent,
+  Bus,
 } from "lucide-react";
 
 export const COURSE_TABS = [
@@ -73,6 +73,12 @@ export const COURSE_TABS = [
     desc: "Hostel rooms, mess details, and housing rules",
   },
   {
+    id: "commute",
+    label: "Commute",
+    icon: Bus,
+    desc: "Optional — bus routes offered to students of this course",
+  },
+  {
     id: "exam_policy",
     label: "Exam Policy",
     icon: FileText,
@@ -107,12 +113,6 @@ export const COURSE_TABS = [
     label: "Alliances & Ties",
     icon: Globe,
     desc: "Industrial and global academic partnerships",
-  },
-  {
-    id: "other_courses_offered",
-    label: "Other Options",
-    icon: Layers,
-    desc: "Alternate pathways and related course linkages",
   },
   {
     id: "demo_graphics",
