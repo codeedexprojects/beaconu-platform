@@ -1,5 +1,6 @@
 "use client";
 
+import { istDateString } from "@/lib/utils";
 import { useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
@@ -789,6 +790,10 @@ export default function ApplicationDetailPage() {
   async function confirmShortlist() {
     if (!shortlistTarget || !shortlistFile || !shortlistValidUntil) {
       toast.error("Select the offer letter document and its valid-until date");
+      return;
+    }
+    if (shortlistValidUntil < istDateString()) {
+      toast.error("Offer validity date can't be in the past");
       return;
     }
     setIsUploadingOffer(true);
@@ -2069,6 +2074,7 @@ export default function ApplicationDetailPage() {
               <Label>Offer Valid Until</Label>
               <Input
                 type="date"
+                min={istDateString()}
                 value={shortlistValidUntil}
                 onChange={(e) => setShortlistValidUntil(e.target.value)}
               />

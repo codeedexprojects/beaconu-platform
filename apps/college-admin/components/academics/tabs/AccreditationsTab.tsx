@@ -42,7 +42,7 @@ function AccreditationsEmptyState() {
     <div className="flex flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed border-border/60 bg-muted/20 py-8 text-center">
       <Award className="h-6 w-6 text-muted-foreground/40" />
       <span className="text-xs text-muted-foreground max-w-xs">
-        No accreditations yet — click below to add your first one.
+        No accolades yet — click below to add your first one.
       </span>
     </div>
   );
@@ -86,7 +86,7 @@ export function AccreditationsTab({
         <CardHeader className="pb-3 flex flex-row items-center justify-between">
           <div>
             <CardTitle className="text-lg font-bold">
-              Accreditations & Approvals
+              Accolades & Approvals
             </CardTitle>
             <CardDescription>
               Ranking bodies, accreditation grades, and approval years for this
@@ -107,7 +107,7 @@ export function AccreditationsTab({
               itemsArray.append({ name: "", year: "", description: "" })
             }
           >
-            <Plus className="h-4 w-4 mr-1" /> Add Accreditation
+            <Plus className="h-4 w-4 mr-1" /> Add Accolade
           </Button>
         </CardHeader>
         <CardContent className="space-y-3">
@@ -163,8 +163,8 @@ export function AccreditationsTab({
 
       <ConfirmDialog
         open={deleteIndex !== null}
-        title="Remove Accreditation"
-        description="Remove this accreditation? This cannot be undone."
+        title="Remove Accolade"
+        description="Remove this accolade? This cannot be undone."
         confirmLabel="Remove"
         variant="destructive"
         onCancel={() => setDeleteIndex(null)}

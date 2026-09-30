@@ -473,6 +473,7 @@ export default function SettingsPage() {
                         <IndiaStateSelect
                           value={field.value ?? ""}
                           onChange={(value) => {
+                            if (value === field.value) return;
                             field.onChange(value);
                             setValue("district", "");
                           }}

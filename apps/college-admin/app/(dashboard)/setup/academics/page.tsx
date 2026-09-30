@@ -65,6 +65,34 @@ import { DemographicsTab } from "@/components/academics/tabs/DemographicsTab";
 import { AccreditationsTab } from "@/components/academics/tabs/AccreditationsTab";
 import { ExamEligibilityTab } from "@/components/academics/tabs/ExamEligibilityTab";
 
+// Shape-insensitive view of a tab payload for change detection: drops empty
+// values (undefined / null / "" / false / [] / {}) and treats 5 and "5" alike,
+// since tab forms report those on mount without any user edit.
+function normalizeTabPayload(value: unknown): unknown {
+  if (value === undefined || value === null || value === "" || value === false)
+    return undefined;
+  if (typeof value === "number") return String(value);
+  if (Array.isArray(value)) {
+    return value.length > 0 ? value.map(normalizeTabPayload) : undefined;
+  }
+  if (typeof value === "object") {
+    const out: Record<string, unknown> = {};
+    for (const key of Object.keys(value).sort()) {
+      const next = normalizeTabPayload((value as Record<string, unknown>)[key]);
+      if (next !== undefined) out[key] = next;
+    }
+    return Object.keys(out).length > 0 ? out : undefined;
+  }
+  return value;
+}
+
+function isSameTabPayload(a: unknown, b: unknown): boolean {
+  return (
+    JSON.stringify(normalizeTabPayload(a)) ===
+    JSON.stringify(normalizeTabPayload(b))
+  );
+}
+
 export default function SetupAcademicsPage() {
   const router = useRouter();
   const collegeSlug =
@@ -136,8 +164,11 @@ export default function SetupAcademicsPage() {
   // character. Nothing on this page renders from these edits — they are read
   // in the save/validate handlers — so a ref is enough.
   const localTabStateRef = useRef<any>({});
-  // Tabs with unsaved edits — navigation only calls the save API for these.
+  // Tabs a form reported a change for. Forms also report on mount/remount
+  // without user edits, so hasUnsavedChanges() confirms against the baseline.
   const dirtyTabsRef = useRef<Set<string>>(new Set());
+  // Last loaded/saved server data per tab — the baseline for change checks.
+  const savedTabStateRef = useRef<any>({});
   // What the tab forms are seeded from (defaultValues at mount) — only ever
   // the server payload, never the in-progress edits above. Bumping the
   // version remounts the tabs so freshly loaded data reaches them.
@@ -148,6 +179,7 @@ export default function SetupAcademicsPage() {
   useEffect(() => {
     const serverTabData = tabDataResponse?.tabData ?? {};
     localTabStateRef.current = serverTabData;
+    savedTabStateRef.current = serverTabData;
     dirtyTabsRef.current.clear();
     setSeedTabState(serverTabData);
     setTabSeedVersion((version) => version + 1);
@@ -321,17 +353,16 @@ export default function SetupAcademicsPage() {
           item.document?.trim() ||
           item.title?.trim();
         if (hasAny) {
-          if (!item.tag?.trim())
-            return `Accreditation #${i + 1}: Tag is required`;
+          if (!item.tag?.trim()) return `Accolade #${i + 1}: Tag is required`;
           if (!item.title?.trim())
-            return `Accreditation #${i + 1}: Title is required`;
+            return `Accolade #${i + 1}: Title is required`;
           if (!item.image?.trim() && !item.document?.trim())
-            return `Accreditation #${i + 1}: Image or PDF document is required`;
+            return `Accolade #${i + 1}: Image or PDF document is required`;
         }
         if (item.image && !isValidUrl(item.image))
-          return `Accreditation #${i + 1}: Image must be a valid URL`;
+          return `Accolade #${i + 1}: Image must be a valid URL`;
         if (item.document && !isValidUrl(item.document))
-          return `Accreditation #${i + 1}: Document must be a valid URL`;
+          return `Accolade #${i + 1}: Document must be a valid URL`;
       }
     }
 
@@ -352,6 +383,11 @@ export default function SetupAcademicsPage() {
     )
       return;
 
+    if (!hasUnsavedChanges(activeTab)) {
+      toast.info("No changes to save");
+      return;
+    }
+
     const validationError = validateActiveTabPayload();
     if (validationError) {
       toast.error(validationError);
@@ -369,7 +405,7 @@ export default function SetupAcademicsPage() {
       },
       {
         onSuccess: () => {
-          dirtyTabsRef.current.delete(activeTab);
+          markTabSaved(activeTab);
           toast.success(
             `${COURSE_TABS.find((t) => t.id === activeTab)?.label} tab saved!`,
           );
@@ -419,6 +455,28 @@ export default function SetupAcademicsPage() {
     };
   };
 
+  const hasUnsavedChanges = (tabId: string) => {
+    if (!dirtyTabsRef.current.has(tabId)) return false;
+    if (
+      isSameTabPayload(
+        localTabStateRef.current[tabId],
+        savedTabStateRef.current[tabId],
+      )
+    ) {
+      dirtyTabsRef.current.delete(tabId);
+      return false;
+    }
+    return true;
+  };
+
+  const markTabSaved = (tabId: string) => {
+    dirtyTabsRef.current.delete(tabId);
+    savedTabStateRef.current = {
+      ...savedTabStateRef.current,
+      [tabId]: localTabStateRef.current[tabId],
+    };
+  };
+
   const saveAndGoToTab = (nextTabId: CourseTabId) => {
     // Quotas and Fee Structure have no draft JSON — each add/update/delete
     // action saves immediately, so Back/Next just navigates. "basic" isn't a
@@ -433,7 +491,7 @@ export default function SetupAcademicsPage() {
       return;
     }
 
-    if (editingCourse?.id && dirtyTabsRef.current.has(activeTab)) {
+    if (editingCourse?.id && hasUnsavedChanges(activeTab)) {
       const tabPayload = getActiveTabPayload();
       const dataWithId = { id: activeTab, ...tabPayload };
       updateTab(
@@ -444,7 +502,7 @@ export default function SetupAcademicsPage() {
         },
         {
           onSuccess: () => {
-            dirtyTabsRef.current.delete(activeTab);
+            markTabSaved(activeTab);
             toast.success(
               `${COURSE_TABS.find((t) => t.id === activeTab)?.label} tab saved!`,
             );
@@ -468,7 +526,7 @@ export default function SetupAcademicsPage() {
       return;
     }
 
-    if (editingCourse?.id && dirtyTabsRef.current.has(activeTab)) {
+    if (editingCourse?.id && hasUnsavedChanges(activeTab)) {
       const tabPayload = getActiveTabPayload();
       const dataWithId = { id: activeTab, ...tabPayload };
       updateTab(
@@ -479,7 +537,7 @@ export default function SetupAcademicsPage() {
         },
         {
           onSuccess: () => {
-            dirtyTabsRef.current.delete(activeTab);
+            markTabSaved(activeTab);
             toast.success(
               `${COURSE_TABS.find((t) => t.id === activeTab)?.label} tab saved!`,
             );

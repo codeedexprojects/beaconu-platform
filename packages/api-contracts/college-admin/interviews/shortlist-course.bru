@@ -17,7 +17,7 @@ auth:bearer {
 body:json {
   {
     "document_url": "https://cdn.example.com/offer-letters/OFR-ABC12345.pdf",
-    "valid_until": "2026-09-15"
+    "valid_until": "2026-12-31"
   }
 }
 
@@ -38,8 +38,11 @@ docs {
   Body (both required):
   - document_url: URL of the uploaded offer letter document (upload via
     college-admin's generic presign/verify flow first)
-  - valid_until: ISO date (YYYY-MM-DD) the offer expires on
+  - valid_until: ISO date (YYYY-MM-DD) the offer expires on — must be
+    today (IST) or later
 
+  422 ValidationError "Offer validity date can't be in the past — pick
+  today or a later date" if valid_until is before today (IST).
   409 ConflictError "This course's interview hasn't been completed yet" if
   the course isn't at that stage. 409 ConflictError "Set a token amount for
   this course on the admission cycle before shortlisting" if

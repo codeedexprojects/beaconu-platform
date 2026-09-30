@@ -1,5 +1,6 @@
 "use client";
 
+import { istDateString } from "@/lib/utils";
 import { useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { toast } from "sonner";
@@ -60,6 +61,10 @@ export default function PendingShortlistDetailPage() {
   async function handleShortlist() {
     if (!item || !file || !validUntil) {
       toast.error("Select the offer letter document and its valid-until date");
+      return;
+    }
+    if (validUntil < istDateString()) {
+      toast.error("Offer validity date can't be in the past");
       return;
     }
     setIsUploading(true);
@@ -151,6 +156,7 @@ export default function PendingShortlistDetailPage() {
             <Label>Offer Valid Until</Label>
             <Input
               type="date"
+              min={istDateString()}
               value={validUntil}
               onChange={(e) => setValidUntil(e.target.value)}
             />

@@ -58,7 +58,11 @@ export function IndiaStateSelect({
   return (
     <Select
       value={canonicalIndiaState(value) ?? (value || undefined)}
-      onValueChange={onChange}
+      // Ignore the "" Radix's hidden native <select> can report when the value
+      // is set programmatically (see IndiaDistrictSelect).
+      onValueChange={(next) => {
+        if (next) onChange(next);
+      }}
       disabled={disabled}
       onOpenChange={(open) => {
         if (open) setTimeout(() => searchRef.current?.focus(), 0);
