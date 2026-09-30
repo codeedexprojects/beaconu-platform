@@ -6,13 +6,13 @@ export const COURSE_SETUP_TAB_IDS = [
   "placements",
   "financial_aid",
   "student_housing",
+  "commute",
   "exam_policy",
   "faculty",
   "review",
   "library",
   "clubs_associations",
   "alliance",
-  "other_courses_offered",
   "demo_graphics",
 ] as const;
 
@@ -20,6 +20,10 @@ export const COURSE_SETUP_TAB_IDS = [
 // JSON blob) — public read only via this generic tabs system. Writes go
 // through their own dedicated CRUD (e.g. /courses/:id/fee-structures).
 export const RELATIONAL_TAB_IDS = ["fees"] as const;
+
+// Setup tabs a course may leave empty — excluded from the setup-completion
+// percentage and only shown publicly when they have linked data.
+export const OPTIONAL_SETUP_TAB_IDS = ["commute"] as const;
 
 export const TAB_FIELD_MAP: Record<string, string> = {
   highlights: "highlights",
@@ -100,18 +104,6 @@ export const reviewsQuerySchema = z.object({
     .transform((v) => (v ? Math.min(50, Math.max(1, parseInt(v, 10))) : 10)),
 });
 
-export const otherCoursesOfferedQuerySchema = z.object({
-  page: z
-    .string()
-    .optional()
-    .transform((v) => (v ? Math.max(1, parseInt(v, 10)) : 1)),
-  per_page: z
-    .string()
-    .optional()
-    .transform((v) => (v ? Math.min(50, Math.max(1, parseInt(v, 10))) : 10)),
-  search: z.string().trim().optional(),
-});
-
 export const clubsAssociationsQuerySchema = z.object({
   page: z
     .string()
@@ -150,9 +142,6 @@ export type EligibilityCriteriaQuery = z.infer<
 >;
 export type ScholarshipDetailsQuery = z.infer<
   typeof scholarshipDetailsQuerySchema
->;
-export type OtherCoursesOfferedQuery = z.infer<
-  typeof otherCoursesOfferedQuerySchema
 >;
 export type ClubsAssociationsQuery = z.infer<
   typeof clubsAssociationsQuerySchema

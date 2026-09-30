@@ -1,0 +1,32 @@
+meta {
+  name: Tab - Commute (Update)
+  type: http
+  seq: 8
+}
+
+patch {
+  url: {{baseUrl}}/api/v1/college-admin/courses/{{courseId}}/tabs/commute
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{staffToken}}
+}
+
+body:json {
+  {
+    "data": {
+      "summary": "Buses cover the south and east city zones.",
+      "routeIds": ["{{commuteRouteId}}"]
+    }
+  }
+}
+
+docs {
+  Optional tab. Links the college's commute routes (managed on College
+  Admin > Commute) to this course — only IDs are stored. The public Get
+  Course Tab response resolves them into live route objects at read time.
+  With no linked active routes the course's public Commute tab is hidden.
+  Not counted in the course setup-completion percentage.
+}

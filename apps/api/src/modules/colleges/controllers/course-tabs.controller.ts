@@ -10,7 +10,6 @@ import {
   eligibilityCriteriaQuerySchema,
   scholarshipDetailsQuerySchema,
   reviewsQuerySchema,
-  otherCoursesOfferedQuerySchema,
   clubsAssociationsQuerySchema,
   clubDetailParamSchema,
 } from "../validators/course-tabs.validator";
@@ -366,24 +365,6 @@ export class CourseTabsController {
     return res
       .status(200)
       .json(ApiResponse.success("Reviews fetched successfully", result));
-  }
-
-  static async listPublicOtherCoursesOffered(req: Request, res: Response) {
-    const { slug, courseId } = publicCourseDetailParamSchema.parse(req.params);
-    const { page, per_page, search } = otherCoursesOfferedQuerySchema.parse(
-      req.query,
-    );
-
-    const result = await CourseTabsService.listPublicOtherCoursesOffered(
-      courseId,
-      slug,
-      page,
-      per_page,
-      search,
-    );
-    return res
-      .status(200)
-      .json(ApiResponse.success("Other courses offered fetched", result));
   }
 
   static async listPublicClubsAssociations(req: Request, res: Response) {

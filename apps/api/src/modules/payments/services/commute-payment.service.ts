@@ -59,7 +59,9 @@ export class CommutePaymentService {
       amount: ledgerEntry ? ledgerEntry.netAmount.toString() : monthlyFee,
       status: ledgerEntry
         ? (ledgerEntry.status as "unpaid" | "pending" | "paid")
-        : ("unpaid" as const),
+        : Number(monthlyFee) === 0
+          ? ("paid" as const)
+          : ("unpaid" as const),
     };
   }
 
@@ -67,6 +69,9 @@ export class CommutePaymentService {
     const enrollment = await CommuteRepository.findActiveEnrollment(studentId);
     if (!enrollment) {
       throw new ConflictError("Set up commute before paying");
+    }
+    if (enrollment.bus.monthlyFee.isZero()) {
+      throw new ConflictError("No commute fee is due for this bus");
     }
 
     const period = currentPeriod();

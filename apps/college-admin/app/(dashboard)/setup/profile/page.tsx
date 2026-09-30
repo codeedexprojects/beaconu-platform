@@ -115,12 +115,6 @@ const PROFILE_TABS = [
     desc: "International partner colleges and exchange networks",
   },
   {
-    id: "commute",
-    label: "Commute & Access",
-    icon: MapPin,
-    desc: "Nearby transit hubs and regional accessibility mappings",
-  },
-  {
     id: "gallery",
     label: "Gallery",
     icon: ImageIcon,
@@ -301,65 +295,6 @@ const institutionsAcrossWorldSchema = z
   })
   .passthrough();
 
-// Commute & Access
-const commuteStopSchema = z.object({
-  point: z.string().min(1, "Pickup point is required").max(150),
-  landmark: z.string().max(150).optional(),
-  time: z.string().max(60).optional(),
-});
-
-const commuteRouteSchema = z
-  .object({
-    pickup_point: z.string().max(150).optional(),
-    route_name: z.string().min(1, "Route name is required").max(150),
-    via: z.string().max(200).optional(),
-    status: z.enum(["VERIFIED", "UNVERIFIED"]).optional(),
-    timings: z
-      .array(z.object({ time: z.string().max(60).optional() }))
-      .optional(),
-    transport_fee: z
-      .object({
-        amount: z.string().max(60).optional(),
-        payment_structure: z.string().max(200).optional(),
-      })
-      .optional(),
-    bus_information: z
-      .object({
-        registration_number: z.string().max(40).optional(),
-        seats: z.coerce.number().int().min(0).optional(),
-        model: z.string().max(100).optional(),
-      })
-      .optional(),
-    morning_pickup_points: z.array(commuteStopSchema).optional(),
-    evening_dropoff_points: z.array(commuteStopSchema).optional(),
-  })
-  .passthrough();
-
-const commuteRuleSchema = z.object({
-  title: z.string().min(1, "Title is required").max(150),
-  description: z.string().max(500).optional(),
-});
-
-const commuteRulesAndCodeOfConductSchema = z.object({
-  title: z.string().max(150).optional(),
-  subtitle: z.string().max(200).optional(),
-  intro: z.string().max(500).optional(),
-  rules: z.array(commuteRuleSchema).optional(),
-});
-
-const commuteSchema = z
-  .object({
-    id: z.string().optional(),
-    enabled: z.boolean().optional(),
-    tab: z.string().optional(),
-    title: z.string().max(150).optional(),
-    pickup_points: z.array(z.unknown()).optional(),
-    selected_pickup_point: z.string().optional(),
-    routes: z.array(commuteRouteSchema).optional(),
-    rules_and_code_of_conduct: commuteRulesAndCodeOfConductSchema.optional(),
-  })
-  .passthrough();
-
 const profileSchema = z.object({
   name: z.string().min(2, "College name must be at least 2 characters"),
   code: z.string().min(2, "College code must be at least 2 characters"),
@@ -379,7 +314,6 @@ const profileSchema = z.object({
     student_code_of_conduct: studentCodeOfConductSchema.optional(),
     happenings: happeningsSchema.optional(),
     institutions_across_world: institutionsAcrossWorldSchema.optional(),
-    commute: commuteSchema.optional(),
   }),
 });
 
@@ -412,20 +346,14 @@ export default function SetupProfilePage() {
     section: string;
     index: number;
   } | null>(null);
-  // Shared delete-confirmation target for the four remaining tabs (Student
-  // Conduct, Happenings, Global Presence, Commute). `routeIndex` is only set
-  // for Commute's nested morning/evening stop deletes.
+  // Shared delete-confirmation target for the remaining tabs (Student
+  // Conduct, Happenings, Global Presence).
   const [otherTabsDeleteTarget, setOtherTabsDeleteTarget] = useState<{
     section:
       | "student_code_of_conduct.rules"
       | "happenings.happenings"
-      | "institutions_across_world.institutions"
-      | "commute.routes"
-      | "commute.rules_and_code_of_conduct.rules"
-      | "commute.routes.morning_pickup_points"
-      | "commute.routes.evening_dropoff_points";
+      | "institutions_across_world.institutions";
     index: number;
-    routeIndex?: number;
   } | null>(null);
   const {
     data: profile,
@@ -444,7 +372,6 @@ export default function SetupProfilePage() {
     handleSubmit,
     setValue,
     watch,
-    getValues,
     reset,
     control,
     formState: { errors, isDirty },
@@ -459,7 +386,6 @@ export default function SetupProfilePage() {
   useEffect(() => {
     if (profile && !hasHydratedFormRef.current) {
       hasHydratedFormRef.current = true;
-      const commuteSection = (profile.profileSections?.commute as any) || {};
       const existingOverview =
         (profile.profileSections?.college_overview as Record<string, any>) ||
         undefined;
@@ -555,35 +481,6 @@ export default function SetupProfilePage() {
             title: "Institution Across the World",
             institutions: [],
           },
-          commute: {
-            id: "commute",
-            enabled: true,
-            tab: "commute",
-            title: commuteSection.title || "Commute",
-            pickup_points: Array.isArray(commuteSection.pickup_points)
-              ? commuteSection.pickup_points
-              : [],
-            selected_pickup_point: commuteSection.selected_pickup_point || "",
-            routes: Array.isArray(commuteSection.routes)
-              ? commuteSection.routes
-              : [],
-            rules_and_code_of_conduct: {
-              title:
-                commuteSection.rules_and_code_of_conduct?.title ||
-                "Rules & Code of Conduct",
-              subtitle:
-                commuteSection.rules_and_code_of_conduct?.subtitle ||
-                "Detailed guidelines for student commuters",
-              intro:
-                commuteSection.rules_and_code_of_conduct?.intro ||
-                "To ensure a safe and punctual commute for everyone, all students utilizing the transport facility must strictly adhere to the following code of conduct.",
-              rules: Array.isArray(
-                commuteSection.rules_and_code_of_conduct?.rules,
-              )
-                ? commuteSection.rules_and_code_of_conduct.rules
-                : [],
-            },
-          },
           college_overview: collegeOverviewSection,
         },
       } as ProfileFormData);
@@ -594,12 +491,11 @@ export default function SetupProfilePage() {
   // array on its own useFieldArray (mirrors College Overview's pattern).
   // `control` is cast to `any` at every `useFieldArray` call in this
   // component (matching the escape hatch `NearbyAccessGroup`/
-  // `TestimonialFields` already use below) — once `profileSections` grew to
-  // include the fully-typed `commuteSchema`, RHF's `FieldArrayPath<T>`
-  // template-literal type collapsed to `never` for ALL `useFieldArray` calls
-  // sharing this form (a known RHF/TS recursion-depth limitation), not just
-  // commute's own. This is compile-time only — runtime validation still goes
-  // through the real per-section Zod schemas via the resolver.
+  // `TestimonialFields` already use below) — the deeply nested
+  // `profileSections` type makes RHF's `FieldArrayPath<T>` collapse to
+  // `never` (a known RHF/TS recursion-depth limitation). This is
+  // compile-time only — runtime validation still goes through the real
+  // per-section Zod schemas via the resolver.
   const conductRulesArray = useFieldArray({
     control: control as any,
     name: "profileSections.student_code_of_conduct.rules",
@@ -695,9 +591,6 @@ export default function SetupProfilePage() {
     watch("profileSections.college_overview.social") || [];
   const conductRulesWatch =
     watch("profileSections.student_code_of_conduct.rules") || [];
-  const commuteRoutesWatch = watch("profileSections.commute.routes") || [];
-  const commuteRulesWatch =
-    watch("profileSections.commute.rules_and_code_of_conduct.rules") || [];
 
   // Guard against stacking up empty array items: disable an "Add" button
   // until every already-added item has its required field(s) filled in.
@@ -781,44 +674,6 @@ export default function SetupProfilePage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [mapScriptLoaded, activeTab]);
 
-  // Commute arrays (see `control as any` note above).
-  const commuteRoutesArray = useFieldArray({
-    control: control as any,
-    name: "profileSections.commute.routes",
-  });
-  const commuteRulesArray = useFieldArray({
-    control: control as any,
-    name: "profileSections.commute.rules_and_code_of_conduct.rules",
-  });
-
-  const createEmptyCommuteStop = () => ({
-    point: "",
-    landmark: "",
-    time: "",
-  });
-
-  const createEmptyCommuteRoute = () => ({
-    pickup_point: "",
-    route_name: "",
-    via: "",
-    status: "UNVERIFIED",
-    timings: [
-      { label: "Morning", time: "" },
-      { label: "Evening", time: "" },
-    ],
-    transport_fee: {
-      amount: "",
-      payment_structure: "",
-    },
-    bus_information: {
-      registration_number: "",
-      seats: null,
-      model: "",
-    },
-    morning_pickup_points: [],
-    evening_dropoff_points: [],
-  });
-
   const onSubmit = (data: ProfileFormData) => {
     updateProfile(
       {
@@ -840,7 +695,6 @@ export default function SetupProfilePage() {
           "student_code_of_conduct",
           "happenings",
           "institutions_across_world",
-          "commute",
           "college_overview",
         ],
       },
@@ -900,7 +754,7 @@ export default function SetupProfilePage() {
             College Profile Configuration
           </h2>
           <p className="text-muted-foreground mt-1 text-sm md:text-base">
-            Set up details, discipline rules, commuting info, and global ties.
+            Set up details, discipline rules, and global ties.
           </p>
         </div>
 
@@ -3050,206 +2904,8 @@ export default function SetupProfilePage() {
               </Card>
             )}
 
-            {/* 6. COMMUTE TAB */}
-            {activeTab === "commute" && (
-              <Card className="border border-border/80 shadow-md bg-card/60 backdrop-blur-md">
-                <CardHeader>
-                  <CardTitle className="text-xl font-bold flex items-center gap-2">
-                    <MapPin className="h-5 w-5 text-primary" /> Commute &
-                    Accessibility
-                  </CardTitle>
-                  <CardDescription>
-                    Configure pickup points, route timings, bus details, and
-                    commuter conduct policy.
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-8">
-                  {/* Routes */}
-                  <div className="space-y-4 pt-4 border-t border-border/40">
-                    <div className="flex items-center justify-between">
-                      <h4 className="text-sm font-bold uppercase tracking-wider text-muted-foreground">
-                        Routes
-                      </h4>
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        disabled={isLastItemIncomplete(
-                          commuteRoutesWatch,
-                          "route_name",
-                        )}
-                        title={
-                          isLastItemIncomplete(commuteRoutesWatch, "route_name")
-                            ? "Fill in the previous entry before adding another"
-                            : undefined
-                        }
-                        onClick={() =>
-                          commuteRoutesArray.append(createEmptyCommuteRoute())
-                        }
-                      >
-                        <Plus className="h-4 w-4 mr-2" /> Add Route
-                      </Button>
-                    </div>
-                    {commuteRoutesArray.fields.length === 0 ? (
-                      <p className="text-sm text-muted-foreground border border-dashed rounded-lg p-4">
-                        No commute route configured yet.
-                      </p>
-                    ) : (
-                      <div className="space-y-4">
-                        {commuteRoutesArray.fields.map((field, routeIdx) => (
-                          <CommuteRouteFields
-                            key={field.id}
-                            routeIdx={routeIdx}
-                            control={control}
-                            register={register}
-                            errors={errors}
-                            onRemoveRoute={() =>
-                              setOtherTabsDeleteTarget({
-                                section: "commute.routes",
-                                index: routeIdx,
-                              })
-                            }
-                            onRemoveMorningStop={(stopIdx) =>
-                              setOtherTabsDeleteTarget({
-                                section: "commute.routes.morning_pickup_points",
-                                index: stopIdx,
-                                routeIndex: routeIdx,
-                              })
-                            }
-                            onRemoveEveningStop={(stopIdx) =>
-                              setOtherTabsDeleteTarget({
-                                section:
-                                  "commute.routes.evening_dropoff_points",
-                                index: stopIdx,
-                                routeIndex: routeIdx,
-                              })
-                            }
-                            createEmptyCommuteStop={createEmptyCommuteStop}
-                          />
-                        ))}
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Rules and code of conduct */}
-                  <div className="space-y-4 pt-4 border-t border-border/40">
-                    <h4 className="text-sm font-bold uppercase tracking-wider text-muted-foreground">
-                      Rules & Code Of Conduct
-                    </h4>
-                    <div className="grid gap-3 md:grid-cols-2">
-                      <div className="space-y-1">
-                        <Label className="text-xs">Title</Label>
-                        <Input
-                          placeholder="Rules & Code of Conduct"
-                          {...register(
-                            "profileSections.commute.rules_and_code_of_conduct.title",
-                          )}
-                        />
-                      </div>
-                      <div className="space-y-1">
-                        <Label className="text-xs">Subtitle</Label>
-                        <Input
-                          placeholder="Detailed guidelines for student commuters"
-                          {...register(
-                            "profileSections.commute.rules_and_code_of_conduct.subtitle",
-                          )}
-                        />
-                      </div>
-                      <div className="space-y-1 md:col-span-2">
-                        <Label className="text-xs">Intro</Label>
-                        <Textarea
-                          rows={2}
-                          placeholder="Intro text shown above rules"
-                          {...register(
-                            "profileSections.commute.rules_and_code_of_conduct.intro",
-                          )}
-                        />
-                      </div>
-                    </div>
-
-                    <div className="flex items-center justify-between">
-                      <Label className="font-semibold">Rule Items</Label>
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        disabled={isLastItemIncomplete(
-                          commuteRulesWatch,
-                          "title",
-                        )}
-                        title={
-                          isLastItemIncomplete(commuteRulesWatch, "title")
-                            ? "Fill in the previous entry before adding another"
-                            : undefined
-                        }
-                        onClick={() =>
-                          commuteRulesArray.append({
-                            title: "",
-                            description: "",
-                          })
-                        }
-                      >
-                        <Plus className="h-4 w-4 mr-2" /> Add Rule
-                      </Button>
-                    </div>
-
-                    {commuteRulesArray.fields.map((field, idx) => (
-                      <div
-                        key={field.id}
-                        className="border rounded-lg p-3 bg-muted/10 space-y-2"
-                      >
-                        <div className="flex gap-2 items-start">
-                          <div className="flex-1">
-                            <Input
-                              placeholder="Rule title"
-                              {...register(
-                                `profileSections.commute.rules_and_code_of_conduct.rules.${idx}.title`,
-                              )}
-                            />
-                            {(errors.profileSections?.commute as any)
-                              ?.rules_and_code_of_conduct?.rules?.[idx]
-                              ?.title && (
-                              <p className="text-xs text-destructive">
-                                {
-                                  (errors.profileSections?.commute as any)
-                                    .rules_and_code_of_conduct.rules[idx]?.title
-                                    ?.message
-                                }
-                              </p>
-                            )}
-                          </div>
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="icon"
-                            onClick={() =>
-                              setOtherTabsDeleteTarget({
-                                section:
-                                  "commute.rules_and_code_of_conduct.rules",
-                                index: idx,
-                              })
-                            }
-                          >
-                            <Trash2 className="h-4 w-4 text-destructive" />
-                          </Button>
-                        </div>
-                        <Textarea
-                          rows={2}
-                          placeholder="Rule description"
-                          {...register(
-                            `profileSections.commute.rules_and_code_of_conduct.rules.${idx}.description`,
-                          )}
-                        />
-                      </div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-            )}
-
             {/* Shared delete-confirmation dialog for Student Conduct,
-                Happenings, Global Presence, and Commute (routes + nested
-                stops + rules). */}
+                Happenings, and Global Presence. */}
             <ConfirmDialog
               open={otherTabsDeleteTarget !== null}
               title="Remove Item"
@@ -3259,7 +2915,7 @@ export default function SetupProfilePage() {
               onCancel={() => setOtherTabsDeleteTarget(null)}
               onConfirm={() => {
                 if (!otherTabsDeleteTarget) return;
-                const { section, index, routeIndex } = otherTabsDeleteTarget;
+                const { section, index } = otherTabsDeleteTarget;
                 switch (section) {
                   case "student_code_of_conduct.rules":
                     conductRulesArray.remove(index);
@@ -3270,32 +2926,6 @@ export default function SetupProfilePage() {
                   case "institutions_across_world.institutions":
                     globalInstitutionsArray.remove(index);
                     break;
-                  case "commute.routes":
-                    commuteRoutesArray.remove(index);
-                    break;
-                  case "commute.rules_and_code_of_conduct.rules":
-                    commuteRulesArray.remove(index);
-                    break;
-                  case "commute.routes.morning_pickup_points":
-                  case "commute.routes.evening_dropoff_points": {
-                    if (routeIndex === undefined) break;
-                    const fieldName =
-                      section === "commute.routes.morning_pickup_points"
-                        ? "morning_pickup_points"
-                        : "evening_dropoff_points";
-                    const currentRoutes =
-                      getValues("profileSections.commute.routes") || [];
-                    const next = [...currentRoutes];
-                    const currentStops = next[routeIndex]?.[fieldName] || [];
-                    next[routeIndex] = {
-                      ...next[routeIndex],
-                      [fieldName]: currentStops.filter(
-                        (_: any, i: number) => i !== index,
-                      ),
-                    };
-                    setValue("profileSections.commute.routes", next);
-                    break;
-                  }
                   default:
                     break;
                 }
@@ -3636,327 +3266,6 @@ function NearbyAccessGroup({
             >
               <Trash2 className="h-3.5 w-3.5 text-destructive" />
             </Button>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-// One commute route, rendered by the Commute tab's outer `useFieldArray`.
-// Mirrors `NearbyAccessGroup`'s pattern: this sub-component owns its own
-// nested `useFieldArray`s (morning/evening stop lists) scoped to this route's
-// index in the outer array.
-function CommuteRouteFields({
-  routeIdx,
-  control,
-  register,
-  errors,
-  onRemoveRoute,
-  onRemoveMorningStop,
-  onRemoveEveningStop,
-  createEmptyCommuteStop,
-}: {
-  routeIdx: number;
-  control: any;
-  register: any;
-  errors: any;
-  onRemoveRoute: () => void;
-  onRemoveMorningStop: (stopIdx: number) => void;
-  onRemoveEveningStop: (stopIdx: number) => void;
-  createEmptyCommuteStop: () => {
-    point: string;
-    landmark: string;
-    time: string;
-  };
-}) {
-  const morningStopsArray = useFieldArray({
-    control,
-    name: `profileSections.commute.routes.${routeIdx}.morning_pickup_points`,
-  });
-  const eveningStopsArray = useFieldArray({
-    control,
-    name: `profileSections.commute.routes.${routeIdx}.evening_dropoff_points`,
-  });
-  const routeErrors = errors?.profileSections?.commute?.routes?.[routeIdx];
-  const morningStopsWatch: any[] =
-    useWatch({
-      control,
-      name: `profileSections.commute.routes.${routeIdx}.morning_pickup_points`,
-    }) || [];
-  const eveningStopsWatch: any[] =
-    useWatch({
-      control,
-      name: `profileSections.commute.routes.${routeIdx}.evening_dropoff_points`,
-    }) || [];
-  const isMorningAddDisabled =
-    morningStopsWatch.length > 0 &&
-    !String(
-      morningStopsWatch[morningStopsWatch.length - 1]?.point ?? "",
-    ).trim();
-  const isEveningAddDisabled =
-    eveningStopsWatch.length > 0 &&
-    !String(
-      eveningStopsWatch[eveningStopsWatch.length - 1]?.point ?? "",
-    ).trim();
-
-  return (
-    <div className="border rounded-xl p-4 space-y-4 bg-muted/15">
-      <div className="flex items-center justify-between gap-2">
-        <h5 className="font-semibold text-muted-foreground">
-          Route #{routeIdx + 1}
-        </h5>
-        <Button
-          type="button"
-          variant="ghost"
-          size="sm"
-          className="text-destructive"
-          onClick={onRemoveRoute}
-        >
-          <Trash2 className="h-4 w-4 mr-1" /> Remove Route
-        </Button>
-      </div>
-
-      <div className="grid gap-3 md:grid-cols-2">
-        <div className="space-y-1">
-          <Label className="text-xs">Pickup Point</Label>
-          <Input
-            placeholder="HSR Layout"
-            {...register(
-              `profileSections.commute.routes.${routeIdx}.pickup_point`,
-            )}
-          />
-        </div>
-        <div className="space-y-1">
-          <Label className="text-xs">Route Name</Label>
-          <Input
-            placeholder="Route 12 - HSR Layout"
-            {...register(
-              `profileSections.commute.routes.${routeIdx}.route_name`,
-            )}
-          />
-          {routeErrors?.route_name && (
-            <p className="text-xs text-destructive">
-              {routeErrors.route_name.message}
-            </p>
-          )}
-        </div>
-        <div className="space-y-1">
-          <Label className="text-xs">Via</Label>
-          <Input
-            placeholder="Via BTM Layout, Madivala"
-            {...register(`profileSections.commute.routes.${routeIdx}.via`)}
-          />
-        </div>
-        <div className="space-y-1">
-          <Label className="text-xs">Status</Label>
-          <Controller
-            name={`profileSections.commute.routes.${routeIdx}.status`}
-            control={control}
-            render={({ field: statusField }) => (
-              <Select
-                value={statusField.value || "UNVERIFIED"}
-                onValueChange={(v) => statusField.onChange(v)}
-              >
-                <SelectTrigger className="h-9">
-                  <SelectValue placeholder="Select status" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="VERIFIED">VERIFIED</SelectItem>
-                  <SelectItem value="UNVERIFIED">UNVERIFIED</SelectItem>
-                </SelectContent>
-              </Select>
-            )}
-          />
-        </div>
-      </div>
-
-      <div className="grid gap-3 md:grid-cols-2">
-        <div className="space-y-1">
-          <Label className="text-xs">Morning Timing Window</Label>
-          <Input
-            placeholder="6:45 AM - 8:10 AM"
-            {...register(
-              `profileSections.commute.routes.${routeIdx}.timings.0.time`,
-            )}
-          />
-        </div>
-        <div className="space-y-1">
-          <Label className="text-xs">Evening Timing Window</Label>
-          <Input
-            placeholder="4:30 PM - 6:15 PM"
-            {...register(
-              `profileSections.commute.routes.${routeIdx}.timings.1.time`,
-            )}
-          />
-        </div>
-      </div>
-
-      <div className="grid gap-3 md:grid-cols-2">
-        <div className="space-y-1">
-          <Label className="text-xs">Transport Fee Amount</Label>
-          <Input
-            placeholder="₹25,000 / Year"
-            {...register(
-              `profileSections.commute.routes.${routeIdx}.transport_fee.amount`,
-            )}
-          />
-        </div>
-        <div className="space-y-1">
-          <Label className="text-xs">Payment Structure</Label>
-          <Input
-            placeholder="Installment details"
-            {...register(
-              `profileSections.commute.routes.${routeIdx}.transport_fee.payment_structure`,
-            )}
-          />
-        </div>
-      </div>
-
-      <div className="grid gap-3 md:grid-cols-3">
-        <div className="space-y-1">
-          <Label className="text-xs">Bus Registration</Label>
-          <Input
-            placeholder="KA-01-F-4829"
-            {...register(
-              `profileSections.commute.routes.${routeIdx}.bus_information.registration_number`,
-            )}
-          />
-        </div>
-        <div className="space-y-1">
-          <Label className="text-xs">Seats</Label>
-          <Input
-            type="number"
-            placeholder="42"
-            {...register(
-              `profileSections.commute.routes.${routeIdx}.bus_information.seats`,
-            )}
-          />
-          {routeErrors?.bus_information?.seats && (
-            <p className="text-xs text-destructive">
-              {routeErrors.bus_information.seats.message}
-            </p>
-          )}
-        </div>
-        <div className="space-y-1">
-          <Label className="text-xs">Model</Label>
-          <Input
-            placeholder="Tata Marcopolo (AC)"
-            {...register(
-              `profileSections.commute.routes.${routeIdx}.bus_information.model`,
-            )}
-          />
-        </div>
-      </div>
-
-      <div className="space-y-3 pt-2 border-t border-border/40">
-        <div className="flex items-center justify-between">
-          <h6 className="text-xs font-bold uppercase text-muted-foreground">
-            Morning Pickup Points
-          </h6>
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            disabled={isMorningAddDisabled}
-            onClick={() => morningStopsArray.append(createEmptyCommuteStop())}
-          >
-            <Plus className="h-3.5 w-3.5 mr-1" /> Add Morning Stop
-          </Button>
-        </div>
-        {morningStopsArray.fields.map((stopField, stopIdx) => (
-          <div key={stopField.id} className="grid gap-2 md:grid-cols-3">
-            <div>
-              <Input
-                placeholder="Point"
-                {...register(
-                  `profileSections.commute.routes.${routeIdx}.morning_pickup_points.${stopIdx}.point`,
-                )}
-              />
-              {routeErrors?.morning_pickup_points?.[stopIdx]?.point && (
-                <p className="text-xs text-destructive">
-                  {routeErrors.morning_pickup_points[stopIdx]?.point?.message}
-                </p>
-              )}
-            </div>
-            <Input
-              placeholder="Landmark"
-              {...register(
-                `profileSections.commute.routes.${routeIdx}.morning_pickup_points.${stopIdx}.landmark`,
-              )}
-            />
-            <div className="flex gap-2">
-              <Input
-                placeholder="Time"
-                {...register(
-                  `profileSections.commute.routes.${routeIdx}.morning_pickup_points.${stopIdx}.time`,
-                )}
-              />
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon"
-                onClick={() => onRemoveMorningStop(stopIdx)}
-              >
-                <Trash2 className="h-4 w-4 text-destructive" />
-              </Button>
-            </div>
-          </div>
-        ))}
-      </div>
-
-      <div className="space-y-3 pt-2 border-t border-border/40">
-        <div className="flex items-center justify-between">
-          <h6 className="text-xs font-bold uppercase text-muted-foreground">
-            Evening Dropoff Points
-          </h6>
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            disabled={isEveningAddDisabled}
-            onClick={() => eveningStopsArray.append(createEmptyCommuteStop())}
-          >
-            <Plus className="h-3.5 w-3.5 mr-1" /> Add Evening Stop
-          </Button>
-        </div>
-        {eveningStopsArray.fields.map((stopField, stopIdx) => (
-          <div key={stopField.id} className="grid gap-2 md:grid-cols-3">
-            <div>
-              <Input
-                placeholder="Point"
-                {...register(
-                  `profileSections.commute.routes.${routeIdx}.evening_dropoff_points.${stopIdx}.point`,
-                )}
-              />
-              {routeErrors?.evening_dropoff_points?.[stopIdx]?.point && (
-                <p className="text-xs text-destructive">
-                  {routeErrors.evening_dropoff_points[stopIdx]?.point?.message}
-                </p>
-              )}
-            </div>
-            <Input
-              placeholder="Landmark"
-              {...register(
-                `profileSections.commute.routes.${routeIdx}.evening_dropoff_points.${stopIdx}.landmark`,
-              )}
-            />
-            <div className="flex gap-2">
-              <Input
-                placeholder="Time"
-                {...register(
-                  `profileSections.commute.routes.${routeIdx}.evening_dropoff_points.${stopIdx}.time`,
-                )}
-              />
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon"
-                onClick={() => onRemoveEveningStop(stopIdx)}
-              >
-                <Trash2 className="h-4 w-4 text-destructive" />
-              </Button>
-            </div>
           </div>
         ))}
       </div>

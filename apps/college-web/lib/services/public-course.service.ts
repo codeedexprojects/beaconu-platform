@@ -13,11 +13,11 @@ import type {
   PublicReviewTab,
   PublicCourseReviewsPage,
   PublicStudentHousingTab,
+  PublicCourseCommuteTab,
   PublicLibraryTab,
   PublicClubsListPage,
   PublicClubDetail,
   PublicAlliancePartner,
-  PublicOtherCoursesPage,
   PublicEligibilityCriteria,
   PublicScholarshipDetailsResponse,
 } from "@beaconu/types";
@@ -118,6 +118,13 @@ export async function getStudentHousingTab(
   );
 }
 
+export async function getCourseCommuteTab(
+  slug: string,
+  courseId: string,
+): Promise<PublicCollegeSectionResponse<PublicCourseCommuteTab>> {
+  return getCourseTab<PublicCourseCommuteTab>(slug, courseId, "commute");
+}
+
 export async function getLibraryTab(
   slug: string,
   courseId: string,
@@ -159,19 +166,6 @@ export async function getEligibilityCriteria(
   const query = params.toString() ? `?${params.toString()}` : "";
   return api.get(
     `/api/v1/public/colleges/by-slug/${slug}/courses/${courseId}/eligibility-criteria${query}`,
-  );
-}
-
-export async function getOtherCoursesOffered(
-  slug: string,
-  courseId: string,
-  page = 1,
-  perPage = 10,
-  search?: string,
-): Promise<PublicOtherCoursesPage> {
-  const searchParam = search ? `&search=${encodeURIComponent(search)}` : "";
-  return api.get(
-    `/api/v1/public/colleges/by-slug/${slug}/courses/${courseId}/other-courses-offered?page=${page}&per_page=${perPage}${searchParam}`,
   );
 }
 

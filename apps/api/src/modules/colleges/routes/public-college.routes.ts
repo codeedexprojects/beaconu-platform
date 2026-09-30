@@ -33,10 +33,6 @@ router.get(
   CourseTabsController.listPublicCourseReviews,
 );
 router.get(
-  "/by-slug/:slug/courses/:courseId/other-courses-offered",
-  CourseTabsController.listPublicOtherCoursesOffered,
-);
-router.get(
   "/by-slug/:slug/courses/:courseId/clubs-associations/:clubId",
   CourseTabsController.getPublicClubDetail,
 );

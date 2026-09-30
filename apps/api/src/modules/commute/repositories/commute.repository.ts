@@ -65,6 +65,52 @@ export class CommuteRepository {
     });
   }
 
+  static async listPublicRoutesForCollege(
+    collegeId: string,
+    routeIds?: string[],
+  ) {
+    return prisma.commuteRoute.findMany({
+      where: {
+        collegeId,
+        isActive: true,
+        ...(routeIds ? { id: { in: routeIds } } : {}),
+      },
+      select: {
+        ...ROUTE_SELECT,
+        isVerified: true,
+        conductPolicy: true,
+        stops: {
+          select: { ...STOP_SELECT, isPickupPoint: true },
+          orderBy: { stopOrder: "asc" },
+        },
+        buses: {
+          where: { isActive: true },
+          select: {
+            busNumber: true,
+            busModel: true,
+            totalSeats: true,
+            monthlyFee: true,
+          },
+          orderBy: { busNumber: "asc" },
+        },
+      },
+      orderBy: { name: "asc" },
+    });
+  }
+
+  static async countActiveRoutesForCollege(
+    collegeId: string,
+    routeIds?: string[],
+  ) {
+    return prisma.commuteRoute.count({
+      where: {
+        collegeId,
+        isActive: true,
+        ...(routeIds ? { id: { in: routeIds } } : {}),
+      },
+    });
+  }
+
   static async findRouteForCollege(routeId: string, collegeId: string) {
     return prisma.commuteRoute.findFirst({
       where: { id: routeId, collegeId, isActive: true },
@@ -105,7 +151,7 @@ export class CommuteRepository {
 
   static async findStopForRoute(stopId: string, routeId: string) {
     return prisma.commuteRouteStop.findFirst({
-      where: { id: stopId, routeId },
+      where: { id: stopId, routeId, isPickupPoint: true },
       select: { id: true },
     });
   }
@@ -148,10 +194,18 @@ export class CommuteRepository {
     });
   }
 
-  static async closeEnrollment(tx: Prisma.TransactionClient, id: string) {
+  static async updateEnrollmentSelection(
+    tx: Prisma.TransactionClient,
+    id: string,
+    data: { routeId: string; busId: string; pickupStopId: string },
+  ) {
     return tx.commuteEnrollment.update({
       where: { id },
-      data: { status: "inactive", enrolledUntil: new Date() },
+      data: {
+        routeId: data.routeId,
+        busId: data.busId,
+        pickupStopId: data.pickupStopId,
+      },
       select: { id: true },
     });
   }

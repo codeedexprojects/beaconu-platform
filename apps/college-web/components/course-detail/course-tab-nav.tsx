@@ -11,13 +11,13 @@ const TAB_LABELS: Record<string, string> = {
   fees: "Fees",
   financial_aid: "Financial Aid",
   student_housing: "Student Housing",
+  commute: "Commute",
   exam_policy: "Exam Policy",
   faculty: "Faculty",
   review: "Reviews",
   library: "Library",
   clubs_associations: "Clubs & Associations",
   alliance: "Alliance",
-  other_courses_offered: "Other Courses Offered",
   demo_graphics: "Demographics",
 };
 
@@ -27,13 +27,13 @@ const TAB_PATHS: Record<string, string> = {
   fees: "fees",
   financial_aid: "financial-aid",
   student_housing: "student-housing",
+  commute: "commute",
   exam_policy: "exam-policy",
   faculty: "faculty",
   review: "reviews",
   library: "library",
   clubs_associations: "clubs-associations",
   alliance: "alliance",
-  other_courses_offered: "other-courses-offered",
   demo_graphics: "demo-graphics",
 };
 
@@ -48,10 +48,10 @@ const IMPLEMENTED_TABS = new Set([
   "faculty",
   "review",
   "student_housing",
+  "commute",
   "library",
   "clubs_associations",
   "alliance",
-  "other_courses_offered",
 ]);
 
 interface CourseTabNavProps {

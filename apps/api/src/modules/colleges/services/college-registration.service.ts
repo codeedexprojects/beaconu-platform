@@ -12,17 +12,27 @@ import {
 } from "../validators/college-registration.validator";
 import { InstitutionGroupService } from "./institution-group.service";
 import { InstitutionDepartmentsQuery } from "../queries/institution-departments.query";
-import { COURSE_SETUP_TAB_IDS } from "../validators/course-tabs.validator";
+import {
+  COURSE_SETUP_TAB_IDS,
+  OPTIONAL_SETUP_TAB_IDS,
+} from "../validators/course-tabs.validator";
 import { AcademicTaxonomyService } from "@/modules/universities/services/academic-taxonomy.service";
+import { CommuteService } from "@/modules/commute/services/commute.service";
 
-// The 19 tabs shown on the college-admin course-setup sidebar
-// (apps/college-admin/components/academics/constants.ts's COURSE_TABS):
-// 1 always-complete ("basic", the course itself), 13 tracked live in
-// Course.metadata.tabs by course-tabs.service.ts on every save
-// (COURSE_SETUP_TAB_IDS), 2 backed by their own relational tables
-// (course_quotas, fees), and 3 backed by dedicated Course columns that
-// aren't part of the metadata.tabs tracking array.
-const TOTAL_COURSE_SETUP_TABS = 1 + COURSE_SETUP_TAB_IDS.length + 2 + 3;
+// The tabs shown on the college-admin course-setup sidebar
+// (apps/college-admin/components/academics/constants.ts's COURSE_TABS) that
+// count towards completion: 1 always-complete ("basic", the course itself),
+// the required COURSE_SETUP_TAB_IDS tracked live in Course.metadata.tabs by
+// course-tabs.service.ts on every save, 2 backed by their own relational
+// tables (course_quotas, fees), and 3 backed by dedicated Course columns that
+// aren't part of the metadata.tabs tracking array. Optional tabs (commute)
+// are excluded.
+const REQUIRED_COURSE_SETUP_TAB_IDS: readonly string[] =
+  COURSE_SETUP_TAB_IDS.filter(
+    (tab) => !(OPTIONAL_SETUP_TAB_IDS as readonly string[]).includes(tab),
+  );
+const TOTAL_COURSE_SETUP_TABS =
+  1 + REQUIRED_COURSE_SETUP_TAB_IDS.length + 2 + 3;
 
 function isNonEmptyJsonArray(value: unknown): boolean {
   return Array.isArray(value) && value.length > 0;
@@ -52,7 +62,7 @@ function computeCourseSetupCompletion(course: {
     ? metadata.tabs.filter(
         (tab): tab is string =>
           typeof tab === "string" &&
-          (COURSE_SETUP_TAB_IDS as readonly string[]).includes(tab),
+          REQUIRED_COURSE_SETUP_TAB_IDS.includes(tab),
       )
     : [];
 
@@ -223,162 +233,6 @@ export class CollegeRegistrationService {
       : {};
   }
 
-  private static async buildDynamicCommuteSection(collegeId: string) {
-    const routes = await prisma.commuteRoute.findMany({
-      where: { collegeId },
-      include: {
-        stops: {
-          orderBy: { stopOrder: "asc" },
-        },
-        buses: {
-          where: { isActive: true },
-          orderBy: { createdAt: "desc" },
-        },
-      },
-      orderBy: { createdAt: "desc" },
-    });
-
-    const formatTime = (value: Date | null | undefined) => {
-      if (!value) return "";
-      // @db.Time already holds the IST wall-clock value; formatting it in
-      // Asia/Kolkata would add another 5h30m.
-      return value.toLocaleTimeString("en-IN", {
-        hour: "numeric",
-        minute: "2-digit",
-        hour12: true,
-        timeZone: "UTC",
-      });
-    };
-
-    const buildTimingWindow = (
-      stops: Array<{ morningTime: Date | null; eveningTime: Date | null }>,
-      key: "morningTime" | "eveningTime",
-    ) => {
-      const points = stops
-        .map((stop) => stop[key])
-        .filter((time): time is Date => Boolean(time));
-
-      if (points.length === 0) return "";
-
-      const first = points[0];
-      const last = points[points.length - 1];
-      return `${formatTime(first)} - ${formatTime(last)}`;
-    };
-
-    const pickupPoints = Array.from(
-      new Set(
-        routes
-          .map((route) => {
-            const firstPickupStop =
-              route.stops.find((stop) => stop.isPickupPoint) ?? route.stops[0];
-            return firstPickupStop?.stopName?.trim() || "";
-          })
-          .filter(Boolean),
-      ),
-    );
-
-    const selectedPickupPoint = pickupPoints[0] || "";
-
-    const formattedRoutes = routes.map((route) => {
-      const firstPickupStop =
-        route.stops.find((stop) => stop.isPickupPoint) ?? route.stops[0];
-      const primaryBus = route.buses[0];
-      const annualFee = primaryBus?.monthlyFee
-        ? Number(primaryBus.monthlyFee) * 12
-        : 0;
-
-      const conductRules = Array.isArray(route.conductPolicy)
-        ? route.conductPolicy
-            .map((item) => {
-              if (!this.isRecord(item)) return null;
-              const title = this.asText(item.title);
-              const description = this.asText(item.description);
-              if (!title && !description) return null;
-              return { title, description };
-            })
-            .filter(
-              (
-                item,
-              ): item is {
-                title: string;
-                description: string;
-              } => Boolean(item),
-            )
-        : [];
-
-      return {
-        pickup_point: firstPickupStop?.stopName || selectedPickupPoint,
-        route_name: route.name,
-        via: route.description || "",
-        status: route.isVerified ? "VERIFIED" : "UNVERIFIED",
-        timings: [
-          {
-            label: "Morning",
-            time: buildTimingWindow(route.stops, "morningTime"),
-          },
-          {
-            label: "Evening",
-            time: buildTimingWindow(route.stops, "eveningTime"),
-          },
-        ],
-        transport_fee: {
-          amount:
-            annualFee > 0 ? `₹${annualFee.toLocaleString("en-IN")} / Year` : "",
-          payment_structure: primaryBus?.paymentStructureNotes || "",
-        },
-        bus_information: {
-          registration_number: primaryBus?.busNumber || "",
-          seats: primaryBus?.totalSeats ?? null,
-          model: primaryBus?.busModel || primaryBus?.busName || "",
-        },
-        morning_pickup_points: route.stops
-          .filter((stop) => stop.isPickupPoint)
-          .map((stop) => ({
-            point: stop.stopName,
-            landmark: stop.landmark || "",
-            time: formatTime(stop.morningTime),
-          })),
-        evening_dropoff_points: [...route.stops].reverse().map((stop) => ({
-          point: stop.stopName,
-          landmark: stop.landmark || "",
-          time: formatTime(stop.eveningTime),
-        })),
-        rules_and_code_of_conduct: {
-          title: "Rules & Code of Conduct",
-          subtitle: "Detailed guidelines for student commuters",
-          intro:
-            "To ensure a safe and punctual commute for everyone, all students utilizing the transport facility must strictly adhere to the following code of conduct.",
-          rules: conductRules,
-        },
-      };
-    });
-
-    const sharedRules =
-      formattedRoutes[0]?.rules_and_code_of_conduct?.rules?.length > 0
-        ? formattedRoutes[0].rules_and_code_of_conduct.rules
-        : [];
-
-    return {
-      id: "commute",
-      enabled: true,
-      title: "Commute",
-      tab: "commute",
-      pickup_points: pickupPoints,
-      selected_pickup_point: selectedPickupPoint,
-      routes: formattedRoutes.map(
-        ({ rules_and_code_of_conduct, ...route }) => route,
-      ),
-      rules_and_code_of_conduct: {
-        title: "Rules & Code of Conduct",
-        subtitle: "Detailed guidelines for student commuters",
-        intro:
-          "To ensure a safe and punctual commute for everyone, all students utilizing the transport facility must strictly adhere to the following code of conduct.",
-        rules: sharedRules,
-      },
-      route_count: routes.length,
-    };
-  }
-
   static async buildDynamicInstitutionsSection(collegeId: string) {
     const membership =
       await InstitutionGroupService.getMyGroupMembership(collegeId);
@@ -462,36 +316,18 @@ export class CollegeRegistrationService {
     sections: Record<string, unknown>,
   ) {
     const [commuteSection, institutionsSection] = await Promise.all([
-      this.buildDynamicCommuteSection(collegeId),
+      CommuteService.buildPublicSection(collegeId),
       this.buildDynamicInstitutionsSection(collegeId),
     ]);
 
-    const storedCommute = this.isRecord(sections.commute)
-      ? (sections.commute as Record<string, unknown>)
-      : {};
-
-    // Stored data wins over live-computed commute so manually saved entries persist.
-    // Live data only fills fields not yet set by the user.
-    const mergedCommute = {
-      ...commuteSection,
-      ...storedCommute,
-      // Always reflect live route_count from DB, but only override routes/pickup_points
-      // from live data when the user has never saved any (empty stored arrays).
-      routes:
-        Array.isArray(storedCommute.routes) && storedCommute.routes.length > 0
-          ? storedCommute.routes
-          : commuteSection.routes,
-      pickup_points:
-        Array.isArray(storedCommute.pickup_points) &&
-        storedCommute.pickup_points.length > 0
-          ? storedCommute.pickup_points
-          : commuteSection.pickup_points,
-      route_count: commuteSection.route_count,
-    };
+    // Commute always comes from commute_routes (Commute page); any legacy
+    // profile_sections.commute blob is ignored.
+    const storedSections = { ...sections };
+    delete storedSections.commute;
 
     return {
-      ...sections,
-      commute: mergedCommute,
+      ...storedSections,
+      ...(commuteSection ? { commute: commuteSection } : {}),
       institutions_across_world: {
         ...(this.isRecord(sections.institutions_across_world)
           ? (sections.institutions_across_world as Record<string, unknown>)

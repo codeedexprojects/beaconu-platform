@@ -10,6 +10,7 @@ import { AdmissionCycleService } from "@/modules/admissions/services/admission-c
 import { PublicCollegeExtrasQuery } from "../queries/public-college-extras.query";
 import { PublicCollegeFilterQuery } from "../queries/public-college-filter.query";
 import { SiteAnnouncementService } from "../services/site-announcement.service";
+import { CommuteService } from "@/modules/commute/services/commute.service";
 
 function requestingStudentId(req: Request): string | null {
   return req.userType === "student" && req.userId ? req.userId : null;
@@ -137,7 +138,6 @@ const TAB_LABELS: Record<string, string> = {
   happenings: "Happenings",
   institutions_across_world: "Institutions Across the World",
   alliance: "Alliance",
-  other_courses_offered: "Other Courses Offered",
   demo_graphics: "Demographics",
 };
 
@@ -159,8 +159,15 @@ function toTabDisplayName(tabId: string): string {
   );
 }
 
-function buildTabList(profileSections: Record<string, unknown>) {
-  const seen = new Set<string>();
+// Commute is sourced from commute_routes, not profile_sections, so a stale
+// profile_sections.commute entry must never produce a tab on its own.
+const LIVE_ONLY_TAB_IDS = new Set(["commute"]);
+
+function buildTabList(
+  profileSections: Record<string, unknown>,
+  hasCommuteRoutes: boolean,
+) {
+  const seen = new Set<string>(LIVE_ONLY_TAB_IDS);
   const tabs: { sl: number; id: string; name: string }[] = [];
 
   for (const [tabKey, tabValue] of Object.entries(profileSections)) {
@@ -191,14 +198,26 @@ function buildTabList(profileSections: Record<string, unknown>) {
     }
   }
 
+  if (hasCommuteRoutes) {
+    tabs.push({
+      sl: tabs.length + 1,
+      id: "commute",
+      name: toTabDisplayName("commute"),
+    });
+  }
+
   return tabs;
 }
 
-function buildPublicProfileResponse(college: any, isWishlisted: boolean) {
+function buildPublicProfileResponse(
+  college: any,
+  isWishlisted: boolean,
+  hasCommuteRoutes: boolean,
+) {
   const profileSections = isRecord(college.profileSections)
     ? (college.profileSections as Record<string, unknown>)
     : {};
-  const tabs = buildTabList(profileSections);
+  const tabs = buildTabList(profileSections, hasCommuteRoutes);
 
   const {
     settings: _s,
@@ -422,16 +441,19 @@ export class PublicCollegeController {
     }
 
     const studentId = requestingStudentId(req);
-    const isWishlisted = studentId
-      ? await WishlistService.isWishlisted(studentId, college.id)
-      : false;
+    const [isWishlisted, hasCommuteRoutes] = await Promise.all([
+      studentId
+        ? WishlistService.isWishlisted(studentId, college.id)
+        : Promise.resolve(false),
+      CommuteService.hasPublicRoutes(college.id),
+    ]);
 
     return res
       .status(200)
       .json(
         ApiResponse.success(
           "College fetched successfully",
-          buildPublicProfileResponse(college, isWishlisted),
+          buildPublicProfileResponse(college, isWishlisted, hasCommuteRoutes),
         ),
       );
   }
@@ -439,6 +461,19 @@ export class PublicCollegeController {
   static async getCollegeSection(req: Request, res: Response) {
     const { collegeId, sectionName: sectionIdentifier } =
       publicCollegeSchemas.sectionParam.parse(req.params);
+
+    if (sectionIdentifier === "commute") {
+      const commute = await CommuteService.buildPublicSection(collegeId);
+      if (!commute) throw new NotFoundError("Section not found");
+      return res.status(200).json(
+        ApiResponse.success("College section fetched successfully", {
+          sectionName: "commute",
+          sectionId: "commute",
+          sectionKey: "commute",
+          data: commute,
+        }),
+      );
+    }
 
     const college = await prisma.college.findUnique({
       where: { id: collegeId },
@@ -508,16 +543,19 @@ export class PublicCollegeController {
     }
 
     const studentId = requestingStudentId(req);
-    const isWishlisted = studentId
-      ? await WishlistService.isWishlisted(studentId, college.id)
-      : false;
+    const [isWishlisted, hasCommuteRoutes] = await Promise.all([
+      studentId
+        ? WishlistService.isWishlisted(studentId, college.id)
+        : Promise.resolve(false),
+      CommuteService.hasPublicRoutes(college.id),
+    ]);
 
     return res
       .status(200)
       .json(
         ApiResponse.success(
           "College fetched successfully",
-          buildPublicProfileResponse(college, isWishlisted),
+          buildPublicProfileResponse(college, isWishlisted, hasCommuteRoutes),
         ),
       );
   }
