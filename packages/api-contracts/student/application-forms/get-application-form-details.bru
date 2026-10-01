@@ -49,4 +49,11 @@ docs {
     profile, they're stored directly on this specific Application row
     (per-application, not reusable across applications), so they're read
     straight off it instead.
+
+  Pre-fill from previous applications: when this application's own
+  entrance_exam_details is empty, it falls back to the most recent
+  previous application that has it. Likewise personal_details'
+  profile_photo_url and whatsapp_country_code/whatsapp_number fall back to
+  the most recent previous application when unset here. declaration is
+  never pre-filled.
 }
