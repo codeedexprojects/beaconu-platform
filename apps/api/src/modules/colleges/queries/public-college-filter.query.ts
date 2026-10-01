@@ -78,6 +78,18 @@ export class PublicCollegeFilterQuery {
     };
   }
 
+  /** `courses` select for GET /public/colleges once a course is picked
+   * (courseMasterId or courseName), returning only the courses that made the
+   * college match. `undefined` when no course is selected. */
+  static matchedCoursesSelect(filters: PublicCollegeFilterInput) {
+    if (!filters.courseMasterId && !filters.courseName) return undefined;
+    return {
+      where: courseCriteria(filters),
+      orderBy: { name: "asc" as const },
+      select: { id: true, name: true },
+    };
+  }
+
   /** State options (or, when `state` is given, district options within it)
    * for the filter flow, narrowed by every other selected filter.
    *
