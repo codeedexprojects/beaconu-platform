@@ -291,7 +291,7 @@ export class PublicCollegeController {
     const isFeeSort =
       sortOption === "fees_high_to_low" || sortOption === "fees_low_to_high";
 
-    const filters = PublicCollegeFilterQuery.buildCollegeListWhere({
+    const filterInput = {
       universityId,
       streamId,
       disciplineId,
@@ -302,7 +302,10 @@ export class PublicCollegeController {
       state,
       district,
       city,
-    });
+    };
+    const filters = PublicCollegeFilterQuery.buildCollegeListWhere(filterInput);
+    const matchedCoursesSelect =
+      PublicCollegeFilterQuery.matchedCoursesSelect(filterInput);
 
     let colleges = (await prisma.college.findMany({
       where: filters,
@@ -360,6 +363,7 @@ export class PublicCollegeController {
               },
             }
           : {}),
+        ...(matchedCoursesSelect ? { courses: matchedCoursesSelect } : {}),
       },
       orderBy:
         sortOption === "popularity"
@@ -413,9 +417,10 @@ export class PublicCollegeController {
         )
       : new Set<string>();
 
-    const collegesWithWishlist = colleges.map((college) => ({
+    const collegesWithWishlist = colleges.map(({ courses, ...college }) => ({
       ...college,
       isWishlisted: wishlistedIds.has(college.id),
+      ...(matchedCoursesSelect && { matchedCourses: courses }),
     }));
 
     return res

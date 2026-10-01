@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@/lib/zod-resolver";
 import * as z from "zod";
-import { Plus, Trash2, Info, Sparkles, Award } from "lucide-react";
+import { Plus, Trash2, Info, Sparkles, Award, FileText, X } from "lucide-react";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -318,27 +318,63 @@ export function GeneralOverviewTab({
                     context={`general-overview/accreditation-image-${idx}`}
                   />
                 </div>
-                <div>
+                <div className="min-w-0 space-y-1.5">
                   <Label className="text-xs">Certificate (PDF)</Label>
-                  <div className="flex gap-2">
-                    <Input
-                      type="file"
-                      accept="application/pdf"
-                      disabled={uploadingField === `accreditation_doc_${idx}`}
-                      onChange={(e) =>
-                        onFieldUpload(
-                          e.target.files?.[0] ?? null,
-                          `accreditation_doc_${idx}`,
-                          `accreditations/document_${idx}`,
-                          (url) =>
-                            setValue(
-                              `accreditations.items.${idx}.document`,
-                              url,
-                            ),
-                        )
-                      }
-                    />
-                  </div>
+                  {watch(`accreditations.items.${idx}.document`) ? (
+                    <div className="flex items-center gap-2 rounded-md border bg-muted/20 px-2 py-1.5 text-xs">
+                      <FileText className="h-4 w-4 shrink-0 text-muted-foreground" />
+                      <a
+                        href={watch(`accreditations.items.${idx}.document`)}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="truncate font-medium text-primary hover:underline"
+                      >
+                        View certificate
+                      </a>
+                      <button
+                        type="button"
+                        aria-label="Remove certificate"
+                        className="ml-auto shrink-0 text-destructive"
+                        onClick={() =>
+                          setValue(`accreditations.items.${idx}.document`, "", {
+                            shouldDirty: true,
+                          })
+                        }
+                      >
+                        <X className="h-3.5 w-3.5" />
+                      </button>
+                    </div>
+                  ) : null}
+                  <Input
+                    type="file"
+                    accept="application/pdf"
+                    aria-label={
+                      watch(`accreditations.items.${idx}.document`)
+                        ? "Replace certificate"
+                        : "Upload certificate"
+                    }
+                    disabled={uploadingField === `accreditation_doc_${idx}`}
+                    onChange={(e) => {
+                      const file = e.target.files?.[0] ?? null;
+                      e.target.value = "";
+                      onFieldUpload(
+                        file,
+                        `accreditation_doc_${idx}`,
+                        `accreditations/document_${idx}`,
+                        (url) =>
+                          setValue(
+                            `accreditations.items.${idx}.document`,
+                            url,
+                            {
+                              shouldDirty: true,
+                            },
+                          ),
+                      );
+                    }}
+                  />
+                  {uploadingField === `accreditation_doc_${idx}` && (
+                    <p className="text-xs text-muted-foreground">Uploading…</p>
+                  )}
                 </div>
                 <div>
                   <Label className="text-xs">Title</Label>

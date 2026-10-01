@@ -72,6 +72,9 @@ docs {
   - campuses: full active campus list [{ id, collegeId, name, address, city, state,
     pinCode, latitude, longitude, isMainCampus, status, createdAt, updatedAt }]
   - isWishlisted: boolean (see Auth note above)
+  - matchedCourses: only present when courseMasterId or courseName is sent.
+    The college's active courses that matched every course filter, sorted by name:
+    [{ id, name }]
 
   Note: tabs and profileSections are NOT included in the list response.
   Use Get College By Id for college details with tab listing.
