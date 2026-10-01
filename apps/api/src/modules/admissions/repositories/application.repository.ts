@@ -282,6 +282,25 @@ export class ApplicationRepository {
     return row?.entranceExamDetails ?? null;
   }
 
+  static async findRecentForPrefill(studentId: string, excludeId?: string) {
+    return prisma.application.findMany({
+      where: { studentId, ...(excludeId && { id: { not: excludeId } }) },
+      select: {
+        id: true,
+        nationality: true,
+        stateOfDomicile: true,
+        passportCountry: true,
+        passportNumber: true,
+        profilePhotoUrl: true,
+        whatsappCountryCode: true,
+        whatsappNumber: true,
+        entranceExamDetails: true,
+      },
+      orderBy: { createdAt: "desc" },
+      take: 10,
+    });
+  }
+
   static async updateDetailStep(
     id: string,
     jsonField: "declaration" | "entranceExamDetails",

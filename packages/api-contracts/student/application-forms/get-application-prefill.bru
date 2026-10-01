@@ -1,0 +1,48 @@
+meta {
+  name: Get Application Prefill
+  type: http
+  seq: 26
+}
+
+get {
+  url: {{baseUrl}}/api/v1/student/application-forms/prefill
+  body: none
+  auth: none
+}
+
+headers {
+  Authorization: Bearer {{studentAccessToken}}
+}
+
+docs {
+  Pre-fill data for a student starting their NEXT application, taken from
+  their previous applications (any college/cycle). Call this on the
+  Start Application screen, before Start Application — no applicationId
+  needed.
+
+  Response `data`:
+
+  {
+    hasPreviousApplication: boolean,
+    sourceApplicationId: string | null,   // most recent previous application
+    nationality: string | null,
+    state_of_domicile: string | null,
+    passport_country: string | null,
+    passport_number: string | null,
+    profile_photo_url: string | null,
+    whatsapp_country_code: string | null,
+    whatsapp_number: string | null,
+    entrance_exam_details: { exams: [...] } | null
+  }
+
+  nationality/state_of_domicile/passport_* come from the most recent
+  previous application. profile_photo_url, whatsapp_* and
+  entrance_exam_details each come from the most recent previous
+  application that has them set. All fields are null when
+  hasPreviousApplication is false.
+
+  The remaining form sections (personal/family/address/qualification/
+  academic records/achievements) don't need this endpoint — they live on
+  the Student profile and Get Application Form Details already returns
+  them for every application. Declaration is never pre-filled.
+}

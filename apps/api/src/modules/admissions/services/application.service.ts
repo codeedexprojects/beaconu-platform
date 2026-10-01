@@ -576,6 +576,34 @@ export class ApplicationService {
     return toDto(row!);
   }
 
+  /** Pre-fill for a student's next application. Profile-backed sections
+   * (personal/family/address/qualification/achievements) already carry
+   * over via getFormDetails; this covers the per-Application fields, each
+   * taken from the most recent previous application that has it set. */
+  static async getPrefill(studentId: string) {
+    const previous =
+      await ApplicationRepository.findRecentForPrefill(studentId);
+    const latest = previous[0];
+    const withPhoto = previous.find((a) => a.profilePhotoUrl);
+    const withWhatsapp = previous.find((a) => a.whatsappNumber);
+    const withEntranceExam = previous.find(
+      (a) => !isEmptyJson(a.entranceExamDetails),
+    );
+
+    return {
+      hasPreviousApplication: latest !== undefined,
+      sourceApplicationId: latest?.id ?? null,
+      nationality: latest?.nationality ?? null,
+      state_of_domicile: latest?.stateOfDomicile ?? null,
+      passport_country: latest?.passportCountry ?? null,
+      passport_number: latest?.passportNumber ?? null,
+      profile_photo_url: withPhoto?.profilePhotoUrl ?? null,
+      whatsapp_country_code: withWhatsapp?.whatsappCountryCode ?? null,
+      whatsapp_number: withWhatsapp?.whatsappNumber ?? null,
+      entrance_exam_details: withEntranceExam?.entranceExamDetails ?? null,
+    };
+  }
+
   /** Live read off the Student profile, to resume/pre-fill the wizard —
    * not the frozen per-application snapshot (that's submit()-only). Works
    * regardless of formStatus — even a submitted application's owner can
@@ -612,14 +640,35 @@ export class ApplicationService {
     if (section === "declaration") {
       return ApplicationRepository.findDeclaration(applicationId, studentId);
     }
+    // Per-application fields fall back to the student's previous
+    // applications when this one hasn't been filled in yet.
     if (section === "entrance_exam_details") {
-      return ApplicationRepository.findEntranceExamDetails(
+      const current = await ApplicationRepository.findEntranceExamDetails(
         applicationId,
         studentId,
       );
+      if (!isEmptyJson(current)) return current;
+      const previous = await ApplicationRepository.findRecentForPrefill(
+        studentId,
+        applicationId,
+      );
+      return (
+        previous.find((a) => !isEmptyJson(a.entranceExamDetails))
+          ?.entranceExamDetails ?? current
+      );
     }
 
-    const details = await StudentsService.getDetailsForSnapshot(studentId);
+    const needsPersonalFallback =
+      section === "personal_details" &&
+      (!application.profilePhotoUrl || !application.whatsappNumber);
+    const [details, previous] = await Promise.all([
+      StudentsService.getDetailsForSnapshot(studentId),
+      needsPersonalFallback
+        ? ApplicationRepository.findRecentForPrefill(studentId, applicationId)
+        : Promise.resolve([]),
+    ]);
+    const withPhoto = previous.find((a) => a.profilePhotoUrl);
+    const withWhatsapp = previous.find((a) => a.whatsappNumber);
     const qualification = details.qualificationDetails as Record<
       string,
       unknown
@@ -630,9 +679,17 @@ export class ApplicationService {
         details.personalDetails !== null
           ? details.personalDetails
           : {}),
-        profile_photo_url: application.profilePhotoUrl,
-        whatsapp_country_code: application.whatsappCountryCode,
-        whatsapp_number: application.whatsappNumber,
+        profile_photo_url:
+          application.profilePhotoUrl ?? withPhoto?.profilePhotoUrl ?? null,
+        ...(application.whatsappNumber
+          ? {
+              whatsapp_country_code: application.whatsappCountryCode,
+              whatsapp_number: application.whatsappNumber,
+            }
+          : {
+              whatsapp_country_code: withWhatsapp?.whatsappCountryCode ?? null,
+              whatsapp_number: withWhatsapp?.whatsappNumber ?? null,
+            }),
       },
       family_details: details.familyDetails,
       address_details: details.addressDetails,

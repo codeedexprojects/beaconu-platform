@@ -106,6 +106,11 @@ export class StudentApplicationController {
     return res.json(ApiResponse.success("Application status fetched", result));
   }
 
+  static async getPrefill(req: Request, res: Response) {
+    const result = await ApplicationService.getPrefill(req.userId as string);
+    return res.json(ApiResponse.success("Prefill data fetched", result));
+  }
+
   static async getFormDetails(req: Request, res: Response) {
     const query = getFormDetailsQuerySchema.parse(req.query);
     const result = await ApplicationService.getFormDetails(

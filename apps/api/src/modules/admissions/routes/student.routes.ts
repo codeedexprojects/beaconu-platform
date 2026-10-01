@@ -19,6 +19,7 @@ router.get(
 );
 
 router.get("/status", StudentApplicationController.getStatusAllCycles);
+router.get("/prefill", StudentApplicationController.getPrefill);
 
 router.get(
   "/my-applications/:applicationId/details",
