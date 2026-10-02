@@ -43,8 +43,12 @@ export function initChatSocketServer(httpServer: HttpServer): Server {
   // process behind a load balancer — infra-level transport plumbing for a
   // single feature, not a new inter-service messaging pattern. Confirmed
   // as an accepted, deliberate exception when this module was planned.
-  adapterPubClient = getRedisClient().duplicate();
-  adapterSubClient = getRedisClient().duplicate();
+  // The adapter fires subscribe/publish without catching, so a command
+  // rejected by the retry limit during a Redis reconnect becomes an unhandled
+  // rejection that kills the process. `null` keeps commands queued until the
+  // connection is back instead.
+  adapterPubClient = getRedisClient().duplicate({ maxRetriesPerRequest: null });
+  adapterSubClient = getRedisClient().duplicate({ maxRetriesPerRequest: null });
   // .duplicate() does NOT carry over the original client's error handling —
   // ioredis clients are EventEmitters, and an 'error' event with zero
   // listeners is an uncaught exception that crashes the whole process, not
