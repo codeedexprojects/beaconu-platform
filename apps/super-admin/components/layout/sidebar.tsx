@@ -295,6 +295,12 @@ const navSections: NavSection[] = [
         icon: Users,
         permission: "platform.admins.view",
       },
+      {
+        href: "/blink/withdrawals",
+        label: "Blink Withdrawals",
+        icon: Wallet,
+        permission: "blink.view",
+      },
     ],
   },
 ];

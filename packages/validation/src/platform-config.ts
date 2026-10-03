@@ -6,6 +6,7 @@ export const updatePlatformConfigSchema = z
     counsellorMinWithdrawalAmount: z.coerce.number().positive().optional(),
     studentReferralPercentage: z.coerce.number().min(0).max(100).optional(),
     studentMinWithdrawalAmount: z.coerce.number().positive().optional(),
+    blinkMinWithdrawalAmount: z.coerce.number().positive().optional(),
   })
   .refine((d) => Object.values(d).some((v) => v !== undefined), {
     message: "At least one field must be provided",

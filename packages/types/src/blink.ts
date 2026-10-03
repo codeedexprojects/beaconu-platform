@@ -164,6 +164,37 @@ export interface BlinkWithdrawalResult {
   balanceAfter: number;
 }
 
+export interface BlinkWithdrawalRequest {
+  id: string;
+  blinkUser: {
+    id: string;
+    fullName: string;
+    email: string;
+    phoneNumber: string | null;
+    agencyName: string | null;
+    roleName: string;
+    roleSlug: string;
+  };
+  amount: number;
+  withdrawalStatus: "pending" | "approved" | "rejected" | null;
+  description: string | null;
+  reviewRemarks: string | null;
+  /** The wallet's current bank details — not a snapshot from request time. */
+  bankDetails: BlinkBankDetails | null;
+  wallet: {
+    balance: number;
+    totalEarned: number;
+    totalWithdrawn: number;
+  };
+  createdAt: string;
+}
+
+export interface UpdateBlinkWithdrawalStatusResult {
+  id: string;
+  withdrawalStatus: string | null;
+  reviewRemarks: string | null;
+}
+
 export interface ReferralStudentProfile {
   id: string;
   fullName: string;

@@ -1,4 +1,5 @@
 import { prisma } from "@beaconu/db";
+import type { UpdatePlatformConfigInput } from "../validators/platform-config.validator";
 
 const CONFIG_ID = "default";
 
@@ -10,10 +11,7 @@ export class PlatformConfigRepository {
   }
 
   static async update(
-    data: {
-      meetingGstPercentage?: number;
-      counsellorMinWithdrawalAmount?: number;
-    },
+    data: UpdatePlatformConfigInput,
     updatedByAdminId: string,
   ) {
     return prisma.platformConfig.update({

@@ -20,6 +20,10 @@ export const updatePlatformConfigSchema = z
       .number()
       .positive("studentMinWithdrawalAmount must be greater than zero")
       .optional(),
+    blinkMinWithdrawalAmount: z
+      .number()
+      .positive("blinkMinWithdrawalAmount must be greater than zero")
+      .optional(),
   })
   .refine((d) => Object.values(d).some((v) => v !== undefined), {
     message: "At least one field must be provided",

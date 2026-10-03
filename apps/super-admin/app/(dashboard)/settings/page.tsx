@@ -54,6 +54,9 @@ const systemConfigSchema = z.object({
   studentMinWithdrawalAmount: z.coerce
     .number()
     .positive("Must be greater than zero"),
+  blinkMinWithdrawalAmount: z.coerce
+    .number()
+    .positive("Must be greater than zero"),
 });
 type SystemConfigInput = z.infer<typeof systemConfigSchema>;
 
@@ -76,6 +79,7 @@ function SystemConfigurationSection() {
       counsellorMinWithdrawalAmount: 0,
       studentReferralPercentage: 0,
       studentMinWithdrawalAmount: 0,
+      blinkMinWithdrawalAmount: 0,
     },
   });
 
@@ -86,6 +90,7 @@ function SystemConfigurationSection() {
         counsellorMinWithdrawalAmount: data.counsellorMinWithdrawalAmount,
         studentReferralPercentage: data.studentReferralPercentage,
         studentMinWithdrawalAmount: data.studentMinWithdrawalAmount,
+        blinkMinWithdrawalAmount: data.blinkMinWithdrawalAmount,
       });
     }
   }, [data, form]);
@@ -132,9 +137,8 @@ function SystemConfigurationSection() {
       <CardHeader>
         <CardTitle className="text-lg">System Configuration</CardTitle>
         <CardDescription>
-          Platform-wide values for counselling payouts and Student Hub
-          referrals. Blink referral commissions apply their own independent GST
-          percentage.
+          Platform-wide values for counselling payouts, Student Hub referrals
+          and Blink withdrawals.
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -223,6 +227,34 @@ function SystemConfigurationSection() {
             {form.formState.errors.studentMinWithdrawalAmount && (
               <p className="text-sm text-destructive">
                 {form.formState.errors.studentMinWithdrawalAmount.message}
+              </p>
+            )}
+          </div>
+          <Separator className="my-4" />
+          <div>
+            <h3 className="text-sm font-semibold">Blink</h3>
+            <p className="text-xs text-muted-foreground">
+              Associate admins and ambassadors withdraw their referral
+              commission from their Blink wallet.
+            </p>
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="blinkMinWithdrawalAmount">
+              Blink Minimum Withdrawal Amount (₹)
+            </Label>
+            <p className="text-xs text-muted-foreground">
+              Smallest amount a Blink user can request to withdraw from their
+              wallet.
+            </p>
+            <Input
+              id="blinkMinWithdrawalAmount"
+              type="number"
+              step="0.01"
+              {...form.register("blinkMinWithdrawalAmount")}
+            />
+            {form.formState.errors.blinkMinWithdrawalAmount && (
+              <p className="text-sm text-destructive">
+                {form.formState.errors.blinkMinWithdrawalAmount.message}
               </p>
             )}
           </div>

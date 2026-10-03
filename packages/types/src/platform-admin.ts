@@ -3,6 +3,7 @@ export interface PlatformConfig {
   counsellorMinWithdrawalAmount: number;
   studentReferralPercentage: number;
   studentMinWithdrawalAmount: number;
+  blinkMinWithdrawalAmount: number;
   updatedByAdminId: string | null;
   updatedAt: string;
 }

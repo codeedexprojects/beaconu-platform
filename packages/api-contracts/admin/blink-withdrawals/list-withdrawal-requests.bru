@@ -39,5 +39,14 @@ docs {
     page   (optional, default 1)
     limit  (optional, default 20, max 100)
 
-  Tables: blink_wallet_transactions, blink_users
+  Each item:
+  {
+    id, amount, withdrawalStatus, description, reviewRemarks, createdAt,
+    blinkUser: { id, fullName, email, phoneNumber, agencyName, roleName, roleSlug },
+    bankDetails: { accountHolderName, accountNumber, ifsc, bankName } | null,
+                 // the wallet's CURRENT bank details, not a request-time snapshot
+    wallet: { balance, totalEarned, totalWithdrawn }
+  }
+
+  Tables: blink_wallet_transactions, blink_users, blink_roles, blink_wallets
 }

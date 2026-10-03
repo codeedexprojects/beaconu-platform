@@ -97,6 +97,10 @@ export const QUERY_KEYS = {
     params
       ? ["withdrawal-requests", params]
       : (["withdrawal-requests"] as const),
+  blinkWithdrawalRequests: (params?: object) =>
+    params
+      ? ["blink-withdrawal-requests", params]
+      : (["blink-withdrawal-requests"] as const),
   refundRequests: (params?: object) =>
     params ? ["refund-requests", params] : (["refund-requests"] as const),
   studentRedemptions: (params?: object) =>

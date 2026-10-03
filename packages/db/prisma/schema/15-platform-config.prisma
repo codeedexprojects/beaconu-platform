@@ -4,6 +4,7 @@ model PlatformConfig {
   counsellorMinWithdrawalAmount Decimal  @default(500.00) @map("counsellor_min_withdrawal_amount") @db.Decimal(10, 2)
   studentReferralPercentage     Decimal  @default(0) @map("student_referral_percentage") @db.Decimal(5, 2)
   studentMinWithdrawalAmount    Decimal  @default(500.00) @map("student_min_withdrawal_amount") @db.Decimal(10, 2)
+  blinkMinWithdrawalAmount      Decimal  @default(500.00) @map("blink_min_withdrawal_amount") @db.Decimal(10, 2)
   updatedByAdminId              String?  @map("updated_by_admin_id")
   createdAt                     DateTime @default(now()) @map("created_at") @db.Timestamptz
   updatedAt                     DateTime @updatedAt @map("updated_at") @db.Timestamptz
