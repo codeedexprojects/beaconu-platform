@@ -23,7 +23,8 @@ body:json {
     "meetingGstPercentage": 18,
     "counsellorMinWithdrawalAmount": 500,
     "studentReferralPercentage": 30,
-    "studentMinWithdrawalAmount": 500
+    "studentMinWithdrawalAmount": 500,
+    "blinkMinWithdrawalAmount": 500
   }
 }
 
@@ -45,6 +46,8 @@ docs {
     Default 0 (referrals recorded, nothing paid; not back-paid when raised).
   - studentMinWithdrawalAmount (optional): > 0 — minimum BeaconU Card
     redemption request
+  - blinkMinWithdrawalAmount (optional): > 0 — minimum Blink wallet
+    withdrawal request (associate admins + ambassadors)
 
   Response: same shape as GET /admin/config. updatedByAdminId is set to the
   authenticated admin's id automatically.

@@ -12,6 +12,7 @@ import {
 import { ACCOUNT_STATUS, AccountStatus } from "@/shared/constants";
 import { BLINK_ROLES } from "../blink.permissions";
 import { BlinkRepository } from "../repositories/blink.repository";
+import { PlatformConfigService } from "@/modules/platform-config/services/platform-config.service";
 import {
   RegisterAssociateEmployeeInput,
   RegisterAmbassadorInput,
@@ -555,17 +556,38 @@ export class BlinkService {
         "No earnings wallet found. Nothing to withdraw.",
       );
     }
-    const available = Number(wallet.balance);
-    if (data.amount > available) {
+
+    const config = await PlatformConfigService.getConfig();
+    if (data.amount < config.blinkMinWithdrawalAmount) {
       throw new ValidationError(
-        `Insufficient balance. Available: ₹${available.toFixed(2)}`,
+        `Minimum withdrawal amount is ₹${config.blinkMinWithdrawalAmount.toFixed(2)}`,
       );
     }
+
+    const bankDetails = (wallet.bankDetails ?? {}) as Record<string, string>;
+    const hasBankDetails = Boolean(
+      bankDetails.accountHolderName &&
+      bankDetails.accountNumber &&
+      bankDetails.ifsc &&
+      bankDetails.bankName,
+    );
+    if (!hasBankDetails) {
+      throw new ValidationError(
+        "Add your bank details before requesting a withdrawal",
+      );
+    }
+
     const result = await BlinkRepository.processWithdrawal(
       userId,
       data.amount,
       data.description ?? "Withdrawal request",
     );
+    if (!result) {
+      const latest = await BlinkRepository.getWalletByUserId(userId);
+      throw new ValidationError(
+        `Insufficient balance. Available: ₹${Number(latest?.balance ?? 0).toFixed(2)}`,
+      );
+    }
     return {
       transactionId: result.transaction.id,
       amount: Number(result.transaction.amount),
@@ -674,19 +696,40 @@ export class BlinkService {
     );
 
     return {
-      requests: rows.map((r) => ({
-        id: r.id,
-        blinkUser: {
-          id: r.blinkUser.id,
-          fullName: r.blinkUser.fullName,
-          email: r.blinkUser.email,
-        },
-        amount: Number(r.amount),
-        withdrawalStatus: r.withdrawalStatus,
-        description: r.description ?? null,
-        reviewRemarks: r.reviewRemarks ?? null,
-        createdAt: r.createdAt.toISOString(),
-      })),
+      requests: rows.map((r) => {
+        const raw = r.wallet.bankDetails as Record<string, string> | null;
+        return {
+          id: r.id,
+          blinkUser: {
+            id: r.blinkUser.id,
+            fullName: r.blinkUser.fullName,
+            email: r.blinkUser.email,
+            phoneNumber: r.blinkUser.phoneNumber ?? null,
+            agencyName: r.blinkUser.agencyName ?? null,
+            roleName: r.blinkUser.blinkRole.name,
+            roleSlug: r.blinkUser.blinkRole.slug,
+          },
+          amount: Number(r.amount),
+          withdrawalStatus: r.withdrawalStatus,
+          description: r.description ?? null,
+          reviewRemarks: r.reviewRemarks ?? null,
+          bankDetails:
+            raw && Object.keys(raw).length > 0
+              ? {
+                  accountHolderName: raw.accountHolderName ?? "",
+                  accountNumber: raw.accountNumber ?? "",
+                  ifsc: raw.ifsc ?? "",
+                  bankName: raw.bankName ?? "",
+                }
+              : null,
+          wallet: {
+            balance: Number(r.wallet.balance),
+            totalEarned: Number(r.wallet.totalEarned),
+            totalWithdrawn: Number(r.wallet.totalWithdrawn),
+          },
+          createdAt: r.createdAt.toISOString(),
+        };
+      }),
       meta: PaginationHelper.createMeta(total, page, limit),
     };
   }
@@ -701,13 +744,7 @@ export class BlinkService {
     if (!transaction || transaction.withdrawalStatus === null) {
       throw new NotFoundError("Withdrawal request not found");
     }
-    if (transaction.withdrawalStatus !== "pending") {
-      throw new ConflictError(
-        "This withdrawal request has already been reviewed",
-      );
-    }
 
-    const amount = Number(transaction.amount);
     const updated =
       data.status === "approved"
         ? await BlinkRepository.approveWithdrawal(
@@ -717,11 +754,14 @@ export class BlinkService {
           )
         : await BlinkRepository.rejectWithdrawal(
             transactionId,
-            transaction.blinkUserId,
-            amount,
             adminId,
             data.remarks,
           );
+    if (!updated) {
+      throw new ConflictError(
+        "This withdrawal request has already been reviewed",
+      );
+    }
 
     logger.info(
       {

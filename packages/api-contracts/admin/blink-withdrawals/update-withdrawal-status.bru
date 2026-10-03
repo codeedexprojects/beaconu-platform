@@ -36,6 +36,11 @@ docs {
     approved — status flips only, no balance change (funds already sent).
     rejected — status flips AND the balance is credited back (reverses the
                earlier debit); totalWithdrawn is decremented accordingly.
+               The refund is recorded as a separate credit transaction, so the
+               original debit keeps its request-time balanceAfter.
+
+  The status flip is conditional on `pending`, so two concurrent reviews can't
+  both succeed (no double refund).
 
   Returns 409 if the transaction has already been reviewed (not pending).
   Returns 404 if the transaction id doesn't exist or isn't a withdrawal.

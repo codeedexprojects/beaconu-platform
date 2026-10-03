@@ -11,6 +11,7 @@ export class PlatformConfigService {
       ),
       studentReferralPercentage: Number(config.studentReferralPercentage),
       studentMinWithdrawalAmount: Number(config.studentMinWithdrawalAmount),
+      blinkMinWithdrawalAmount: Number(config.blinkMinWithdrawalAmount),
       updatedByAdminId: config.updatedByAdminId,
       updatedAt: config.updatedAt.toISOString(),
     };
@@ -25,6 +26,7 @@ export class PlatformConfigService {
       ),
       studentReferralPercentage: Number(updated.studentReferralPercentage),
       studentMinWithdrawalAmount: Number(updated.studentMinWithdrawalAmount),
+      blinkMinWithdrawalAmount: Number(updated.blinkMinWithdrawalAmount),
       updatedByAdminId: updated.updatedByAdminId,
       updatedAt: updated.updatedAt.toISOString(),
     };

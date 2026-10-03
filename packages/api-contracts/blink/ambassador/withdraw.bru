@@ -36,14 +36,20 @@ docs {
   Requires: campus ambassador access token (blink_ambassador userType).
 
   Validation:
-    amount      — positive number, must not exceed current balance
+    amount      — positive number, ≥ platform config `blinkMinWithdrawalAmount`,
+                  must not exceed current balance
     description — optional, max 255 chars
 
-  On success: creates a blink_wallet_transaction (type: debit, withdrawalStatus: pending)
-  and decrements the wallet balance atomically.
+  Bank details must be saved first (PUT /wallet/bank-details).
 
+  On success: creates a blink_wallet_transaction (type: debit, withdrawalStatus: pending)
+  and decrements the wallet balance atomically. The balance check is part of the
+  same UPDATE, so concurrent requests can never take the balance below zero.
+
+  Returns 422 if amount is below the minimum withdrawal amount.
+  Returns 422 if no bank details are saved.
   Returns 422 if amount exceeds available balance.
   Returns 422 if no wallet exists (no commissions recorded yet).
 
-  Tables: blink_wallets, blink_wallet_transactions
+  Tables: blink_wallets, blink_wallet_transactions, platform_configs
 }

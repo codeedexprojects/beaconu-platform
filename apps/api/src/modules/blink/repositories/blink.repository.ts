@@ -291,18 +291,26 @@ export class BlinkRepository {
     });
   }
 
+  /** Debits at request time. The balance guard lives in the update's WHERE
+   * so two concurrent requests can never take the wallet below zero —
+   * returns null when the balance can't cover the amount. */
   static async processWithdrawal(
     blinkUserId: string,
     amount: number,
     description: string,
   ) {
     return prisma.$transaction(async (tx) => {
-      const wallet = await tx.blinkWallet.update({
-        where: { blinkUserId },
+      const debited = await tx.blinkWallet.updateMany({
+        where: { blinkUserId, balance: { gte: amount } },
         data: {
           balance: { decrement: amount },
           totalWithdrawn: { increment: amount },
         },
+      });
+      if (debited.count === 0) return null;
+
+      const wallet = await tx.blinkWallet.findUniqueOrThrow({
+        where: { blinkUserId },
       });
       const transaction = await tx.blinkWalletTransaction.create({
         data: {
@@ -598,7 +606,22 @@ export class BlinkRepository {
         take: limit,
         include: {
           blinkUser: {
-            select: { id: true, fullName: true, email: true },
+            select: {
+              id: true,
+              fullName: true,
+              email: true,
+              phoneNumber: true,
+              agencyName: true,
+              blinkRole: { select: { name: true, slug: true } },
+            },
+          },
+          wallet: {
+            select: {
+              balance: true,
+              totalEarned: true,
+              totalWithdrawn: true,
+              bankDetails: true,
+            },
           },
         },
       }),
@@ -617,49 +640,79 @@ export class BlinkRepository {
   }
 
   /** No wallet change — processWithdrawal already debited the balance at
-   * request time, so approving just confirms the payout went out. */
+   * request time, so approving just confirms the payout went out. The
+   * status flip is conditional on `pending`, so a concurrent second review
+   * claims nothing; returns null in that case. */
   static async approveWithdrawal(
     transactionId: string,
     adminId: string,
     remarks: string | undefined,
   ) {
-    return prisma.blinkWalletTransaction.update({
-      where: { id: transactionId },
-      data: {
-        withdrawalStatus: "approved",
-        reviewedBy: adminId,
-        reviewRemarks: remarks,
-      },
+    return prisma.$transaction(async (tx) => {
+      const claimed = await tx.blinkWalletTransaction.updateMany({
+        where: {
+          id: transactionId,
+          type: "debit",
+          withdrawalStatus: "pending",
+        },
+        data: {
+          withdrawalStatus: "approved",
+          reviewedBy: adminId,
+          reviewRemarks: remarks,
+        },
+      });
+      if (claimed.count === 0) return null;
+      return tx.blinkWalletTransaction.findUniqueOrThrow({
+        where: { id: transactionId },
+      });
     });
   }
 
   /** Reverses the earlier eager debit from processWithdrawal, since the
-   * money never actually left. */
+   * money never actually left. The refund is its own credit row so the
+   * debit keeps the balance it recorded at request time. Returns null if
+   * the request was already reviewed. */
   static async rejectWithdrawal(
     transactionId: string,
-    blinkUserId: string,
-    amount: number,
     adminId: string,
     remarks: string | undefined,
   ) {
     return prisma.$transaction(async (tx) => {
-      const wallet = await tx.blinkWallet.update({
-        where: { blinkUserId },
-        data: {
-          balance: { increment: amount },
-          totalWithdrawn: { decrement: amount },
+      const claimed = await tx.blinkWalletTransaction.updateMany({
+        where: {
+          id: transactionId,
+          type: "debit",
+          withdrawalStatus: "pending",
         },
-      });
-
-      return tx.blinkWalletTransaction.update({
-        where: { id: transactionId },
         data: {
           withdrawalStatus: "rejected",
           reviewedBy: adminId,
           reviewRemarks: remarks,
+        },
+      });
+      if (claimed.count === 0) return null;
+
+      const debit = await tx.blinkWalletTransaction.findUniqueOrThrow({
+        where: { id: transactionId },
+      });
+      const wallet = await tx.blinkWallet.update({
+        where: { id: debit.walletId },
+        data: {
+          balance: { increment: debit.amount },
+          totalWithdrawn: { decrement: debit.amount },
+        },
+      });
+      await tx.blinkWalletTransaction.create({
+        data: {
+          walletId: wallet.id,
+          blinkUserId: debit.blinkUserId,
+          type: "credit",
+          amount: debit.amount,
+          description: `Refund for rejected withdrawal ${debit.id}`,
           balanceAfter: wallet.balance,
         },
       });
+      return debit;
     });
   }
 }
